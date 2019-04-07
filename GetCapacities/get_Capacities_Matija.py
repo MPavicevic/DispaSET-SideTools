@@ -386,7 +386,9 @@ for c in cap:
         
     allunits[c]  = units 
 
-
+pkl_file = open('pp_capacities.p', 'wb')
+pickle.dump(allunits,pkl_file)
+pkl_file.close()
    
 # #%% Write csv file:
 # '''    
