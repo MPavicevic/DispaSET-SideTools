@@ -23,11 +23,11 @@ from functools import reduce
 
 #%% Adjustable inputs that should be modified
     
-year = 2016                  # considered year
+year = 2050                  # considered year
 write_csv = False            # Write csv database
-threshold = 0.035            # threshold (%) below which a technology is considered negligible and no unit is created
+threshold = 0.0038            # threshold (%) below which a technology is considered negligible and no unit is created
 include_chp = False          # Switch CHP units on/off
-tes_capacity = 0             # No of storage hours in TES
+tes_capacity = 24             # No of storage hours in TES
 
 #%% Inputs
 '''Get typical units:'''
@@ -51,11 +51,11 @@ bevs = pd.read_csv('BEVS_2016_2030_2050.csv',index_col=0)
 if year == 2030:
     capacities = pd.read_csv('EU_TIMES_ProRes1_2030.csv',index_col=0)
     df = pd.read_csv('EU_TIMES_ProRes1_BEVS_2030.csv',index_col=0)
-    bevs_cap = pd.DataFrame(df['BEVS']/18)
+    bevs_cap = pd.DataFrame(df['BEVS']/13.7)
 elif year == 2050:
     capacities = pd.read_csv('EU_TIMES_ProRes1_2050.csv',index_col=0)
     df = pd.read_csv('EU_TIMES_ProRes1_BEVS_2050.csv',index_col=0)
-    bevs_cap = pd.DataFrame(df['BEVS']/18)
+    bevs_cap = pd.DataFrame(df['BEVS']/13.7)
 elif year == 2016:
     bevs_cap = pd.DataFrame(bevs['P_2016']).rename(columns = {'P_2016':'BEVS'})
 else:
@@ -69,7 +69,6 @@ reservoirs['BE'] = 6000             # About 4.5 hours at full load
 reservoirs['DE'] = 718728           # From Eurelectrics
 reservoirs['EL'] = 1.7E6           # From Eurelectrics
    
-
 if year == 2016:
     cap,cap_chp = pickle.load(open('chp_and_nonchp_capacities'+str(year)+'.p','rb'))
     countries = list(cap)
@@ -85,69 +84,15 @@ else:
     file_CHP = 'CHP_EU_input_data_2016.csv'
     data_CHP = pd.read_csv(file_CHP, index_col=0)
     data_CHP_heat_capacity = pd.read_csv(file_CHP_heat_capacity, index_col=0)
-    # Proces data
-    data_CHP['Power2Heat'] = data_CHP['Power'] / data_CHP['Heat']
-    chp_max_capacities = pd.DataFrame(index=capacities.index,columns = capacities.columns) # zamjeni index i column
-    
-    for f_stur in ['BIO', 'HRD', 'LIG', 'PEA', 'OIL', 'WST', 'GEO']:
-        chp_max_capacities[f_stur] = capacities[f_stur] / typical_chp.loc[(typical_chp['Fuel']==f_stur) & (typical_chp['Technology']=='STUR'),'CHPPowerToHeat'].values 
-    chp_max_capacities['GAS'] = capacities['GAS'] / typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='COMC'),'CHPPowerToHeat'].values
-    
-    def chp_heat_cap(Q,Q_max):
-        fuel = Q_max.name
-        tmp_Q = pd.DataFrame([Q,Q_max]).T
-        tmp_Q.fillna(0,inplace = True)
-        tmp_Q.loc[tmp_Q['Heat'] >= tmp_Q[fuel],'Fuel'] = tmp_Q[fuel]
-        tmp_Q.loc[tmp_Q['Heat'] < tmp_Q[fuel],'Fuel'] = tmp_Q['Heat']
-        Q_fuel = tmp_Q['Fuel']
-        Q_new = Q - Q_fuel
-        Q_fuel = pd.DataFrame(Q_fuel)
-        Q_fuel.columns = [fuel]
-        Q_new = pd.DataFrame(Q_new)
-        Q_new.columns = ['Heat']
-        return Q_fuel, Q_new
-    
-    fuels = ['BIO','GAS','HRD','LIG','PEA','WST','OIL','GEO']
-    Q = data_CHP_heat_capacity['Heat']
-    tmp = {}
-    chp_heat_capacities = pd.DataFrame()
-    chp_power_capacities = pd.DataFrame()
-    for f in fuels:
-        Q_max = chp_max_capacities[f]
-        tmp[f] = chp_heat_cap(Q,Q_max)
-        Q = tmp[f][1].iloc[:,0]
-        new_df = tmp[f][0]
-        if f == 'GAS':
-            new_df_pow = new_df * typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='COMC'),'CHPPowerToHeat'].values
-        else:
-            new_df_pow = new_df * typical_chp.loc[(typical_chp['Fuel']==f) & (typical_chp['Technology']=='STUR'),'CHPPowerToHeat'].values
-        chp_heat_capacities = pd.concat([chp_heat_capacities, new_df], axis=1)
-        chp_power_capacities = pd.concat([chp_power_capacities, new_df_pow], axis=1)
-    # chp_power_capacities['HYD','NUC','SUN', 'WAT','WIN']
-    chp_power_capacities.fillna(0,inplace=True)   
-    
-    
-    # # Load reservoir capacities from entso-e (maximum value of the provided time series)
-    # reservoirs = pd.read_csv('hydro_capacities.csv',index_col=0,header=None)
-    # reservoirs = reservoirs[1]
-    # # Add the missing data:
-    # reservoirs['BE'] = 6000             # About 4.5 hours at full load
-    # reservoirs['DE'] = 718728           # From Eurelectrics
-    # reservoirs['EL'] = 1.7E6           # From Eurelectrics
-    
-    # countries = list(capacities.index)
-    # capacities = capacities.transpose()
-    no_chp_capacities = capacities.sub(chp_power_capacities,fill_value=0)
-    no_chp_capacities.fillna(0,inplace=True)
-    no_chp_capacities = no_chp_capacities.transpose()
-    chp_power_capacities = chp_power_capacities.T
-    
     #%% Generate capacities for each country
     hydro_clustering = 'Yes'
     no_countries = len(countries)
     typical_tech = pd.read_csv('typical_technologies.csv',index_col=0)
     typical_stur = pd.DataFrame(np.ones(no_countries),index=countries,columns=['STUR'])
-    
+    #%% Proces data
+    data_CHP['Power2Heat'] = data_CHP['Power'] / data_CHP['Heat']
+    chp_max_capacities = pd.DataFrame(index=capacities.index,columns = capacities.columns) # zamjeni index i column
+
     #%% WIND
     typical_win = pd.DataFrame([typical_tech['WTON'],typical_tech['WTOF']]).transpose()
     typical_win['sum'] = typical_win.sum(axis=1)
@@ -172,7 +117,75 @@ else:
         typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
     #%% SOLAR
     typical_sun = pd.DataFrame(typical_tech['PHOT'])
+
+    #%% Determine CHP max heat capacities based on P2H ratio  
+    tmp_chp_max_capacities = pd.DataFrame()
+    for f_stur in ['BIO', 'HRD', 'LIG', 'PEA', 'OIL', 'WST', 'GEO']:
+        chp_max_capacities[f_stur] = capacities[f_stur] / typical_chp.loc[(typical_chp['Fuel']==f_stur) & (typical_chp['Technology']=='STUR'),'CHPPowerToHeat'].values 
+    # chp_max_capacities['GAS'] = capacities['GAS'] / typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='COMC'),'CHPPowerToHeat'].values
+    tmp_chp_max_capacities['GAS_COMC'] = capacities['GAS'] * typical_gas['COMC'] / typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='COMC'),'CHPPowerToHeat'].values
+    tmp_chp_max_capacities['GAS_GTUR'] = capacities['GAS'] * typical_gas['GTUR'] / typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='GTUR'),'CHPPowerToHeat'].values
+    tmp_chp_max_capacities['GAS_STUR'] = capacities['GAS'] * typical_gas['STUR'] / typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='STUR'),'CHPPowerToHeat'].values
+    tmp_chp_max_capacities['GAS_ICEN'] = capacities['GAS'] * typical_gas['ICEN'] / typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='ICEN'),'CHPPowerToHeat'].values
+    chp_max_capacities['GAS'] = tmp_chp_max_capacities.sum(axis=1)
+   
+    def chp_heat_cap(Q,Q_max):
+        fuel = Q_max.name
+        tmp_Q = pd.DataFrame([Q,Q_max]).T
+        tmp_Q.fillna(0,inplace = True)
+        tmp_Q.loc[tmp_Q['Heat'] >= tmp_Q[fuel],'Fuel'] = tmp_Q[fuel]
+        tmp_Q.loc[tmp_Q['Heat'] < tmp_Q[fuel],'Fuel'] = tmp_Q['Heat']
+        Q_fuel = tmp_Q['Fuel']
+        Q_new = Q - Q_fuel
+        Q_fuel = pd.DataFrame(Q_fuel)
+        Q_fuel.columns = [fuel]
+        Q_new = pd.DataFrame(Q_new)
+        Q_new.columns = ['Heat']
+        return Q_fuel, Q_new
     
+    fuels = ['BIO','GAS','HRD','LIG','PEA','WST','OIL','GEO']
+    countries = list(chp_max_capacities.index)
+    Q = data_CHP_heat_capacity['Heat']
+    Q = (Q[Q.index.isin(countries)])
+    tmp = {}
+    chp_heat_capacities = pd.DataFrame()
+    chp_power_capacities = pd.DataFrame()
+    tmp_new_df_pow_gas = pd.DataFrame()
+    for f in fuels:
+        Q_max = chp_max_capacities[f]
+        tmp[f] = chp_heat_cap(Q,Q_max)
+        Q = tmp[f][1].iloc[:,0]
+        new_df = tmp[f][0]
+        if f == 'GAS':
+            # new_df_pow = new_df * typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='COMC'),'CHPPowerToHeat'].values
+            tmp_new_df_pow_gas['GAS_COMC'] = new_df[f] * typical_gas['COMC'] * typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='COMC'),'CHPPowerToHeat'].values
+            tmp_new_df_pow_gas['GAS_GTUR'] = new_df[f] * typical_gas['GTUR'] * typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='GTUR'),'CHPPowerToHeat'].values
+            tmp_new_df_pow_gas['GAS_STUR'] = new_df[f] * typical_gas['STUR'] * typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='STUR'),'CHPPowerToHeat'].values
+            tmp_new_df_pow_gas['GAS_ICEN'] = new_df[f] * typical_gas['ICEN'] * typical_chp.loc[(typical_chp['Fuel']== 'GAS') & (typical_chp['Technology']=='ICEN'),'CHPPowerToHeat'].values
+            new_df_pow = pd.DataFrame(tmp_new_df_pow_gas.sum(axis=1),columns=['GAS'])
+        else:
+            new_df_pow = new_df * typical_chp.loc[(typical_chp['Fuel']==f) & (typical_chp['Technology']=='STUR'),'CHPPowerToHeat'].values
+        chp_heat_capacities = pd.concat([chp_heat_capacities, new_df], axis=1)
+        chp_power_capacities = pd.concat([chp_power_capacities, new_df_pow], axis=1)
+    # chp_power_capacities['HYD','NUC','SUN', 'WAT','WIN']
+    chp_power_capacities.fillna(0,inplace=True)   
+    
+    
+    # # Load reservoir capacities from entso-e (maximum value of the provided time series)
+    # reservoirs = pd.read_csv('hydro_capacities.csv',index_col=0,header=None)
+    # reservoirs = reservoirs[1]
+    # # Add the missing data:
+    # reservoirs['BE'] = 6000             # About 4.5 hours at full load
+    # reservoirs['DE'] = 718728           # From Eurelectrics
+    # reservoirs['EL'] = 1.7E6           # From Eurelectrics
+    
+    # countries = list(capacities.index)
+    # capacities = capacities.transpose()
+    no_chp_capacities = capacities.sub(chp_power_capacities,fill_value=0)
+    no_chp_capacities.fillna(0,inplace=True)
+    no_chp_capacities = no_chp_capacities.transpose()
+    chp_power_capacities = chp_power_capacities.T
+       
     #%% Non CHP units
     cap = {} 
     cap_chp = {}
@@ -192,19 +205,24 @@ else:
                                   tmp_cap['NUC'],tmp_cap['OIL'],tmp_cap['PEA'],tmp_cap['WST']]).transpose()
         tmp_other.rename(index={c: 'STUR'},inplace=True)
         df_merged = tmp_other.merge(tmp_GAS, how='outer', left_index=True, right_index=True)
-        total_cap = df_merged.sum().sum()
-        min_cap = total_cap*threshold
-        df_merged[df_merged < min_cap] = 0
+        # total_cap = df_merged.sum().sum()
+        # min_cap = total_cap*threshold
+        # df_merged[df_merged < min_cap] = 0
         df_merged = df_merged.merge(tmp_WAT, how='outer', left_index=True, right_index=True)
         df_merged = df_merged.merge(tmp_WIN, how='outer', left_index=True, right_index=True)
         df_merged = df_merged.merge(tmp_SUN, how='outer', left_index=True, right_index=True)
+        total_cap = df_merged.sum().sum()
+        min_cap = total_cap*threshold
+        df_merged[df_merged < min_cap] = 0
         df_merged = df_merged.merge(tmp_BEV, how='outer', left_index=True, right_index=True)
         cap[c] = df_merged
         cap[c].fillna(0,inplace=True)    
         # CHP
         tmp_cap_chp = pd.DataFrame(chp_power_capacities[c]).transpose()
-        tmp_GAS_chp = pd.DataFrame(tmp_cap_chp['GAS'])
-        tmp_GAS_chp.rename(index={c: 'COMC'},inplace=True)
+        # tmp_GAS_chp = pd.DataFrame(tmp_cap_chp['GAS'])
+        # tmp_GAS_chp.rename(index={c: 'COMC'},inplace=True)
+        tmp_GAS_chp = pd.DataFrame(typical_gas.loc[c])*tmp_cap_chp['GAS']
+        tmp_GAS_chp.rename(columns={c: 'GAS'},inplace=True)
         tmp_other_chp = pd.DataFrame([tmp_cap_chp['GEO'],tmp_cap_chp['BIO'],tmp_cap_chp['HRD'],tmp_cap_chp['LIG'],
                                     tmp_cap_chp['OIL'],tmp_cap_chp['PEA'],tmp_cap_chp['WST']]).transpose()
         tmp_other_chp.rename(index={c: 'STUR'},inplace=True)
@@ -390,20 +408,26 @@ pkl_file = open('pp_capacities.p', 'wb')
 pickle.dump(allunits,pkl_file)
 pkl_file.close()
    
-# #%% Write csv file:
-# '''    
-# inputs (power plant file name as a string)
-# :pp_filename:     clustered for example
-# :units:           allunits for example
-# '''
-# def write_csv_files(pp_filename,units):
-#     filename = pp_filename + '.csv'
-#     allunits = units
-#     for c in allunits:
-#         make_dir('Database')
-#         folder = 'Database/PowerPlants/'
-#         make_dir(folder)
-#         make_dir(folder + c)
-#         allunits[c].to_csv(folder + c + '/' + filename)     
+#%% Write csv file:
+'''    
+inputs (power plant file name as a string)
+:pp_filename:     clustered for example
+:units:           allunits for example
+'''
+def write_csv_files(pp_filename,units):
+    filename = pp_filename + '.csv'
+    allunits = units
+    for c in allunits:
+        make_dir('Database')
+        folder = 'Database/PowerPlants/'
+        make_dir(folder)
+        make_dir(folder + c)
+        allunits[c].to_csv(folder + c + '/' + filename)     
 
-#write_csv_files('clustered_' + str(year),allunits)
+write_csv_files('clustered_' + str(year),allunits)
+
+#%% Count total number of units
+unit_count = 0
+for c in allunits:
+    unit_count = unit_count + allunits[c]['Unit'].count()
+print('Total number of units in the region is ' + str(unit_count))
