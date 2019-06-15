@@ -2,13 +2,7 @@
 """
 This script generates the PowerPlant Dispa-SET data for the EU run
 
-All the times in the data are in UTC!
- 
-CTA: Control Area
-BZN: Bidding zone
-CTY: Country 
-
-@authors: Matija Pavičević, KU leuven
+@authors: Matija Pavičević, KU Leuven
           Sylvain Quoilin, KU Leuven
 """
 # System imports
@@ -36,6 +30,11 @@ output_folder = '../../Outputs/'# Standard output folder
 # Load typical units
 '''Get typical units:'''
 def get_typical_units(typical_units, CHP_Type=None):
+    '''
+    Function that:
+        - loads typical units from the Inputs/Typical_Units.csv file 
+        - assigns CHP units based on type: Extraction, back-pressure or None (no CHP units)
+    '''
     if CHP_Type == 'Extraction':
         typical_units = typical_units.copy()
     elif CHP_Type == 'back-pressure':
@@ -63,22 +62,6 @@ def get_typical_capacities(capacities,year=None):
     typical_capacities = capacities.copy()
     return typical_capacities
 
-
-# if YEAR == 2030:
-#     capacities = pd.read_csv('EU_TIMES_ProRes1_2030.csv',index_col=0)
-#     df = pd.read_csv('EU_TIMES_ProRes1_BEVS_2030.csv',index_col=0)
-#     bevs_cap = pd.DataFrame(df['BEVS']/13.7)
-# elif YEAR == 2050:
-#     capacities = pd.read_csv('EU_TIMES_ProRes1_2050.csv',index_col=0)
-#     # df = pd.read_csv('EU_TIMES_ProRes1_BEVS_2050.csv',index_col=0)
-#     df = pd.read_csv('EU_TIMES_ProRes1_BEVS_2050_NOFLEX.csv',index_col=0)
-#     bevs_cap = pd.DataFrame(df['BEVS']/13.7)
-# elif YEAR == 2016:
-#     bevs_cap = pd.DataFrame(bevs['2016']).rename(columns = {'2016':'BEVS'})
-#     # bevs_cap = pd.DataFrame(bevs['P_2016']).rename(columns = {'P_2016':'BEVS'})
-# else:
-#     print('selected year is not 2030 or 2050')
-
 #%% Load reservoir capacities from entso-e (maximum value of the provided time series)
 #TODO
 def get_reservoir_capacities():
@@ -86,14 +69,7 @@ def get_reservoir_capacities():
     reservoirs = reservoirs[1]
     return reservoirs
 
-# reservoirs = pd.read_csv('hydro_capacities_2050.csv',index_col=0,header=None)
-# reservoirs = pd.read_csv('hydro_capacities_2050_NOFLEX.csv',index_col=0,header=None)
 reservoirs = get_reservoir_capacities()
-# reservoirs = reservoirs[1]
-# Add the missing data:
-# reservoirs['BE'] = 6000*1.1             # About 4.5 hours at full load
-# reservoirs['DE'] = 718728*1.1           # From Eurelectrics
-# reservoirs['EL'] = 1.7E6*1.1           # From Eurelectrics
    
 if YEAR == 2016:
     cap,cap_chp = pickle.load(open('chp_and_nonchp_capacities'+str(YEAR)+'.p','rb'))
@@ -117,11 +93,9 @@ else:
 #TODO
     typical_tech = pd.read_csv(input_folder + 'Typical_Technologies.csv',index_col=0)
 
-    # typical_tech = pd.read_csv('typical_technologies_2050_NOFLEX.csv',index_col=0)
     typical_stur = pd.DataFrame(np.ones(no_countries),index=countries,columns=['STUR'])
 
     #%% Proces data
-    # data_CHP['Power2Heat'] = data_CHP['Power'] / data_CHP['Heat']
     chp_max_capacities = pd.DataFrame(index=capacities.index,columns = capacities.columns) # zamjeni index i column
 
     #%% WIND
@@ -140,6 +114,12 @@ else:
 #TODO
     # Make a function with three statements, hydro can either HROR only, HDAM+HPHS, or each technology individually 
     def get_typical_hydro(typical_hydro,clustering=None):
+        '''
+        Function that loads typical hydro units from the typical_tech and assigns one of several clustering options:
+            - HROR only
+            - HROR & HPHS (HPHS + HDAM)
+            - HROR, HPHS & HDAM individually 
+        '''
         if clustering == 'On':
             typical_wat = typical_hydro.copy()
             typical_wat['cluster'],typical_wat['sum'] = typical_wat['HDAM'] + typical_wat['HPHS'], typical_wat.sum(axis=1)
@@ -170,6 +150,10 @@ else:
     chp_max_capacities['GAS'] = tmp_chp_max_capacities.sum(axis=1)
    
     def chp_heat_cap(Q,Q_max):
+        '''
+        Function that assigns heat capacity to specific fuel type based on Q < Q_max or Q => Q_max
+        This is used later on to asign remaining heat demand to other CHP technologies and fuels
+        '''
         fuel = Q_max.name
         tmp_Q = pd.DataFrame([Q,Q_max]).T
         tmp_Q.fillna(0,inplace = True)
@@ -210,17 +194,6 @@ else:
     # chp_power_capacities['HYD','NUC','SUN', 'WAT','WIN']
     chp_power_capacities.fillna(0,inplace=True)   
     
-    
-    # # Load reservoir capacities from entso-e (maximum value of the provided time series)
-    # reservoirs = pd.read_csv('hydro_capacities.csv',index_col=0,header=None)
-    # reservoirs = reservoirs[1]
-    # # Add the missing data:
-    # reservoirs['BE'] = 6000             # About 4.5 hours at full load
-    # reservoirs['DE'] = 718728           # From Eurelectrics
-    # reservoirs['EL'] = 1.7E6           # From Eurelectrics
-    
-    # countries = list(capacities.index)
-    # capacities = capacities.transpose()
     no_chp_capacities = capacities.sub(chp_power_capacities,fill_value=0)
     no_chp_capacities.fillna(0,inplace=True)
     no_chp_capacities = no_chp_capacities.transpose()
@@ -245,9 +218,6 @@ else:
                                   tmp_cap['NUC'],tmp_cap['OIL'],tmp_cap['PEA'],tmp_cap['WST']]).transpose()
         tmp_other.rename(index={c: 'STUR'},inplace=True)
         df_merged = tmp_other.merge(tmp_GAS, how='outer', left_index=True, right_index=True)
-        # total_cap = df_merged.sum().sum()
-        # min_cap = total_cap*TECHNOLOGY_THRESHOLD
-        # df_merged[df_merged < min_cap] = 0
         df_merged = df_merged.merge(tmp_WAT, how='outer', left_index=True, right_index=True)
         df_merged = df_merged.merge(tmp_WIN, how='outer', left_index=True, right_index=True)
         df_merged = df_merged.merge(tmp_SUN, how='outer', left_index=True, right_index=True)
@@ -259,8 +229,6 @@ else:
         cap[c].fillna(0,inplace=True)    
         # CHP
         tmp_cap_chp = pd.DataFrame(chp_power_capacities[c]).transpose()
-        # tmp_GAS_chp = pd.DataFrame(tmp_cap_chp['GAS'])
-        # tmp_GAS_chp.rename(index={c: 'COMC'},inplace=True)
         tmp_GAS_chp = pd.DataFrame(typical_gas.loc[c])*tmp_cap_chp['GAS']
         tmp_GAS_chp.rename(columns={c: 'GAS'},inplace=True)
         tmp_other_chp = pd.DataFrame([tmp_cap_chp['GEO'],tmp_cap_chp['BIO'],tmp_cap_chp['HRD'],tmp_cap_chp['LIG'],
@@ -447,6 +415,11 @@ for c in cap:
     allunits[c]  = units 
 
 def write_pickle_file(units,file_name):
+    '''
+    Function that creates a pickle file and saves newly created power plants
+    :units:         allunits for example
+    :file_name:     name of the pickle file (has to be a string)
+    '''
     allunits = units
     pkl_file = open(file_name + '.p', 'wb')
     pickle.dump(allunits,pkl_file)
@@ -456,20 +429,26 @@ def write_pickle_file(units,file_name):
 
 #%% Count total number of units
 def unit_count(units):
+    '''
+    Function that counts number of units (powerplants) generatd by the script
+    (This is useful to check the size of the problem)
+    :units:         allunits for example
+    '''
     allunits = units
     unit_count = 0
     for c in allunits:
         unit_count = unit_count + allunits[c]['Unit'].count()
     print('[INFO    ]: '+'Total number of units in the region is ' + str(unit_count))
 
-unit_count(allunits)   
+unit_count(allunits)  
+ 
 #%% Write csv file:
-'''    
-inputs (power plant file name as a string)
-:power_plant_filename:      clustered for example
-:units:                     allunits for example
-'''
 def write_csv_files(power_plant_filename,units,write_csv=None):
+    '''
+    Function that generates .csv files in the Output/Database/PowerPlants/ folder
+    :power_plant_filename:      clustered for example (has to be a string)
+    :units:                     allunits for example
+    '''
     filename = power_plant_filename + '.csv'
     allunits = units
     if write_csv == True:
