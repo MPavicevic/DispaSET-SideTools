@@ -31,6 +31,7 @@ TES_CAPACITY = 24               # No of storage hours in TES
 CHP_TYPE = 'Extraction'         # Define CHP type: None, back-pressure or Extraction
 
 input_folder = '../../Inputs/'  # Standard input folder
+output_folder = '../../Outputs/'# Standard output folder
 #%% Inputs
 # Load typical units
 '''Get typical units:'''
@@ -287,22 +288,22 @@ for c in cap:
             if len(tmp)==0:
                 # try the generic entries in the dataframe:
                 if len(typical[(typical.Technology == i) & (typical.Fuel=="*")]):
-                    print('Country ' + c + ' (' + i + ',' + j + '): no typical unit found, using the generic unit for the provided technology')
+                    print('[INFO    ]: ' + 'Country ' + c + ' (' + i + ',' + j + '): no typical unit found, using the generic unit for the provided technology')
                     tmp = typical[(typical.Technology == i) & (typical.Fuel=="*")]
                     units[name] = tmp.iloc[0,:]
                     units.loc['Technology',name],units.loc['Fuel',name]=i,j
                 elif len(typical[(typical.Technology == i) & (typical.Fuel=="*")]):
-                    print('Country ' + c + ' (' + i + ',' + j + '): no typical unit found, using the generic unit for the provided fuel')
+                    print('[INFO    ]: ' + 'Country ' + c + ' (' + i + ',' + j + '): no typical unit found, using the generic unit for the provided fuel')
                     tmp = typical[(typical.Technology == i) & (typical.Fuel=="*")]
                     units[name] = tmp.iloc[0,:]
                     units.loc['Technology',name],units.loc['Fuel',name]=i,j
                 elif len(typical[(typical.Technology == '*') & (typical.Fuel=="*")]):
-                    print('Country ' + c + ' (' + i + ',' + j + '): no typical unit found, using the generic unit definition (*,*)')
+                    print('[INFO    ]: ' + 'Country ' + c + ' (' + i + ',' + j + '): no typical unit found, using the generic unit definition (*,*)')
                     tmp = typical[(typical.Technology == '*') & (typical.Fuel=="*")]
                     units[name] = tmp.iloc[0,:]
                     units.loc['Technology',name],units.loc['Fuel',name]=i,j
                 else:
-                    print('Country ' + c + ' (' + i + ',' + j + '): no typical unit found, no generic unit found. The entry will be discarded!!')
+                    print('[INFO    ]: ' + 'Country ' + c + ' (' + i + ',' + j + '): no typical unit found, no generic unit found. The entry will be discarded!!')
             elif len(tmp) ==1:
                 units[name] = tmp.iloc[0,:]
             elif len(tmp)>1:
@@ -324,7 +325,7 @@ for c in cap:
         del units['Year']
         units.Zone=c
     else:
-        print('Country ' + c + ': no units found. Skipping')
+        print('[INFO    ]: ' + 'Country ' + c + ': no units found. Skipping')
         continue
 
 # CHP and TES
@@ -338,26 +339,26 @@ for c in cap:
             if len(tmp)==0:
                 # try the generic entries in the dataframe:
                 if len(typical_chp[(typical_chp.Technology == i) & (typical_chp.Fuel=="*")]):
-                    print('Country ' + c + ' (' + i + ',' + j + '): no typical CHP unit found, using the generic unit for the provided technology')
+                    print('[INFO    ]: ' + 'Country ' + c + ' (' + i + ',' + j + '): no typical CHP unit found, using the generic unit for the provided technology')
                     tmp = typical_chp[(typical_chp.Technology == i) & (typical_chp.Fuel=="*")]
                     units_chp[name] = tmp.iloc[0,:]
                     units_chp.loc['Technology',name],units_chp.loc['Fuel',name]=i,j
                 elif len(typical_chp[(typical_chp.Technology == i) & (typical_chp.Fuel=="*")]):
-                    print('Country ' + c + ' (' + i + ',' + j + '): no typical CHP unit found, using the generic unit for the provided fuel')
+                    print('[INFO    ]: ' + 'Country ' + c + ' (' + i + ',' + j + '): no typical CHP unit found, using the generic unit for the provided fuel')
                     tmp = typical_chp[(typical_chp.Technology == i) & (typical_chp.Fuel=="*")]
                     units_chp[name] = tmp.iloc[0,:]
                     units_chp.loc['Technology',name],units_chp.loc['Fuel',name]=i,j
                 elif len(typical_chp[(typical_chp.Technology == '*') & (typical_chp.Fuel=="*")]):
-                    print('Country ' + c + ' (' + i + ',' + j + '): no typical CHP unit found, using the generic unit definition (*,*)')
+                    print('[INFO    ]: ' + 'Country ' + c + ' (' + i + ',' + j + '): no typical CHP unit found, using the generic unit definition (*,*)')
                     tmp = typical_chp[(typical_chp.Technology == '*') & (typical_chp.Fuel=="*")]
                     units_chp[name] = tmp.iloc[0,:]
                     units_chp.loc['Technology',name],units_chp.loc['Fuel',name]=i,j
                 else:
-                    print('Country ' + c + ' (' + i + ',' + j + '): no typical CHP unit found, no generic unit found. The entry will be discarded!!')
+                    print('[INFO    ]: ' + 'Country ' + c + ' (' + i + ',' + j + '): no typical CHP unit found, no generic unit found. The entry will be discarded!!')
             elif len(tmp) ==1:
                 units_chp[name] = tmp.iloc[0,:]
             elif len(tmp)>1:
-                print('Country ' + c + ' (' + i + ',' + j + '): more than one typical CHP unit found, taking average')
+                print('[INFO    ]: ' + 'Country ' + c + ' (' + i + ',' + j + '): more than one typical CHP unit found, taking average')
                 units_chp[name] = tmp.mean()
                 units_chp.loc['Technology',name],units_chp.loc['Fuel',name]=i,j
                 
@@ -372,7 +373,7 @@ for c in cap:
                 units_chp.loc['PowerCapacity',name] = cap_tot_chp.loc[i,j]/units_chp.loc['Nunits',name]
             
             if TES_CAPACITY == 0:
-                print('Country ' + c + ' (' + name + '): no TES unit')
+                print('[INFO    ]: ' + 'Country ' + c + ' (' + name + '): no TES unit')
             else:
                 # units_chp.loc['STOCapacity',name] = units_chp[name, 'PowerCapacity'].values * TES_CAPACITY
                 tmp_tes = units_chp.T
@@ -385,7 +386,7 @@ for c in cap:
         units_chp.Zone=c
         units = units.append(units_chp)
     else:
-        print('Country ' + c + ': no CHP units found. Skipping')
+        print('[INFO    ]: ' + 'Country ' + c + ': no CHP units found. Skipping')
 
     
     #%%
@@ -410,7 +411,7 @@ for c in cap:
         if c in reservoirs.index:
             hphsdata['STOCapacity'] = reservoirs[c]
         else:
-            print('Country ' + c + ' No Reservoir Capacity data for country ' + c + '. Assuming a conservative 5 hours of storage')
+            print('[INFO    ]: ' + 'Country ' + c + ' No Reservoir Capacity data for country ' + c + '. Assuming a conservative 5 hours of storage')
             hphsdata['STOCapacity'] = hphsdata['PowerCapacity']*5
         units.loc[hphsindex,:] = hphsdata
     elif len(tmp)==0:
@@ -419,14 +420,14 @@ for c in cap:
             if c in reservoirs.index:
                 units.loc[tmp.index[0],'STOCapacity'] = reservoirs[c]
             else:
-                print('Country ' + c + ' No Reservoir Capacity data for country ' + c + '. Assuming a conservative 5 hours of storage')
+                print('[INFO    ]: ' + 'Country ' + c + ' No Reservoir Capacity data for country ' + c + '. Assuming a conservative 5 hours of storage')
                 units.loc[tmp.index[0],'STOCapacity'] = units.loc[tmp.index[0],'PowerCapacity'] * 5
     else:
         sys.exit('Various HPHS units!')            
     
     # Special treatment for BEVS
     if units[units.Technology == 'BEVS'].empty == True:
-        print('Country '+ c + ' (BEVS) capacity is 0 or BEVS are not present')
+        print('[INFO    ]: ' + 'Country '+ c + ' (BEVS) capacity is 0 or BEVS are not present')
     else:
         tmp_bev = units[units.Technology == 'BEVS']
         bevsindex = tmp_bev.index[0]
@@ -445,34 +446,40 @@ for c in cap:
         
     allunits[c]  = units 
 
-pkl_file = open('pp_capacities.p', 'wb')
-pickle.dump(allunits,pkl_file)
-pkl_file.close()
+def write_pickle_file(units,file_name):
+    allunits = units
+    pkl_file = open(file_name + '.p', 'wb')
+    pickle.dump(allunits,pkl_file)
+    pkl_file.close()
+    print('[INFO    ]: ' + 'Pickle file ' + file_name + ' has been written')
+# write_pickle_file(allunits, 'Test')
 
 #%% Count total number of units
-unit_count = 0
-for c in allunits:
-    unit_count = unit_count + allunits[c]['Unit'].count()
-print('[INFO    ]: '+'Total number of units in the region is ' + str(unit_count))
-   
+def unit_count(units):
+    allunits = units
+    unit_count = 0
+    for c in allunits:
+        unit_count = unit_count + allunits[c]['Unit'].count()
+    print('[INFO    ]: '+'Total number of units in the region is ' + str(unit_count))
+
+unit_count(allunits)   
 #%% Write csv file:
 '''    
 inputs (power plant file name as a string)
 :power_plant_filename:      clustered for example
 :units:                     allunits for example
 '''
-def write_csv_files(power_plant_filename,units):
+def write_csv_files(power_plant_filename,units,write_csv=None):
     filename = power_plant_filename + '.csv'
     allunits = units
-    for c in allunits:
-        
-        make_dir('Database')
-        folder = 'Database/PowerPlants/'
-        make_dir(folder)
-        make_dir(folder + c)
-        allunits[c].to_csv(folder + c + '/' + filename)     
+    if write_csv == True:
+        for c in allunits:
+            make_dir(output_folder + 'Database')
+            folder = output_folder + 'Database/PowerPlants/'
+            make_dir(folder)
+            make_dir(folder + c)
+            allunits[c].to_csv(folder + c + '/' + filename)     
+    else:
+        print('[WARNING ]: '+'WRITE_CSV_FILES = False, unable to write .csv files')
 
-if WRITE_CSV_FILES == True:
-    write_csv_files('clustered_' + str(YEAR) + '_THFLEX',allunits)
-else:
-    print('[WARNING ]: '+'WRITE_CSV_FILES = False, unable to write .csv files')
+write_csv_files('clustered_' + str(YEAR) + '_THFLEX',allunits,WRITE_CSV_FILES)
