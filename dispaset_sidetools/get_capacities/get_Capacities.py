@@ -8,9 +8,10 @@ CTA: Control Area
 BZN: Bidding zone
 CTY: Country 
 
-@author: S. Quoilin, JRC
+@authors: Matija Pavičević, KU leuven
+          Sylvain Quoilin, KU Leuven
 """
-
+# System imports
 from __future__ import division
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -18,79 +19,108 @@ import numpy as np
 import os
 import sys
 import pickle
-from common import mapping,outliers_vre,fix_na,make_dir,entsoe_types,commons
-from functools import reduce
+# Third-party imports
+# Local source tree imports
+from dispaset_sidetools.common import mapping,outliers_vre,fix_na,make_dir,entsoe_types,commons
 
 #%% Adjustable inputs that should be modified
-    
-year = 2050                  # considered year
-write_csv = False            # Write csv database
-threshold = 0.0038            # threshold (%) below which a technology is considered negligible and no unit is created
-include_chp = False          # Switch CHP units on/off
-tes_capacity = 24             # No of storage hours in TES
+YEAR = 2050                     # considered year
+WRITE_CSV_FILES = False         # Write csv database
+TECHNOLOGY_THRESHOLD = 0.0038   # threshold (%) below which a technology is considered negligible and no unit is created
+TES_CAPACITY = 24               # No of storage hours in TES
+CHP_TYPE = 'Extraction'         # Define CHP type: None, back-pressure or Extraction
 
+input_folder = '../../Inputs/'  # Standard input folder
 #%% Inputs
+# Load typical units
 '''Get typical units:'''
-typical = pd.read_excel('typical_units_matija.xlsx')
-typical_chp = pd.read_excel('typical_units_chp_matija.xlsx')
+def get_typical_units(typical_units, CHP_Type=None):
+    if CHP_Type == 'Extraction':
+        typical_units = typical_units.copy()
+    elif CHP_Type == 'back-pressure':
+        typical_units = typical_units.copy()
+        typical_units['CHPPowerLossFactor'].values[typical_units['CHPPowerLossFactor'] > 0] = 0
+        typical_units['CHPType'].replace(to_replace ='Extraction', value ='back-pressure',inplace=True) 
+    elif CHP_Type == None:
+        typical_units = typical_units.copy()
+        typical_units['CHPType'],typical_units['CHPPowerLossFactor'],typical_units['CHPPowerToHeat'] = np.nan, np.nan ,np.nan  
+    else:
+        print('[CRITICAL ]: CHP_Type is of wrong string (should be set to None, Extraction or back-pressure)')
+    return typical_units
 
+typical = get_typical_units(typical_units=pd.read_csv(input_folder + 'Typical_Units.csv'))
+typical_chp = get_typical_units(typical_units=pd.read_csv(input_folder + 'Typical_Units.csv'), CHP_Type = CHP_TYPE)
+
+#
 '''Get capacities:'''
+batteries = pd.read_csv(input_folder + 'Electric_Vehicles.csv',index_col=0)
+bevs_cap = pd.DataFrame(batteries['BEVS'])
+capacities = pd.read_csv(input_folder + 'Available_Capacities.csv',index_col=0)
 
-bevs = pd.read_csv('BEVS_2016_2030_2050.csv',index_col=0)
-#if year == 2030:
-#    capacities = pd.read_csv('capacities_2030.csv',index_col=0)
-#    bevs_cap = pd.DataFrame(bevs['P_2030']).rename(columns = {'P_2030':'BEVS'})
-#elif year == 2050:
-#    capacities = pd.read_csv('capacities_2050.csv',index_col=0)
-#    bevs_cap = pd.DataFrame(bevs['P_2050']).rename(columns = {'P_2050':'BEVS'})
-#elif year == 2016:
-#    bevs_cap = pd.DataFrame(bevs['P_2016']).rename(columns = {'P_2016':'BEVS'})
-#else:
-#    print('selected year is not 2030 or 2050')
+#TODO
+def get_typical_capacities(capacities,year=None):
+    typical_capacities = capacities.copy()
+    return typical_capacities
 
-if year == 2030:
-    capacities = pd.read_csv('EU_TIMES_ProRes1_2030.csv',index_col=0)
-    df = pd.read_csv('EU_TIMES_ProRes1_BEVS_2030.csv',index_col=0)
-    bevs_cap = pd.DataFrame(df['BEVS']/13.7)
-elif year == 2050:
-    capacities = pd.read_csv('EU_TIMES_ProRes1_2050.csv',index_col=0)
-    df = pd.read_csv('EU_TIMES_ProRes1_BEVS_2050.csv',index_col=0)
-    bevs_cap = pd.DataFrame(df['BEVS']/13.7)
-elif year == 2016:
-    bevs_cap = pd.DataFrame(bevs['P_2016']).rename(columns = {'P_2016':'BEVS'})
-else:
-    print('selected year is not 2030 or 2050')
+
+# if YEAR == 2030:
+#     capacities = pd.read_csv('EU_TIMES_ProRes1_2030.csv',index_col=0)
+#     df = pd.read_csv('EU_TIMES_ProRes1_BEVS_2030.csv',index_col=0)
+#     bevs_cap = pd.DataFrame(df['BEVS']/13.7)
+# elif YEAR == 2050:
+#     capacities = pd.read_csv('EU_TIMES_ProRes1_2050.csv',index_col=0)
+#     # df = pd.read_csv('EU_TIMES_ProRes1_BEVS_2050.csv',index_col=0)
+#     df = pd.read_csv('EU_TIMES_ProRes1_BEVS_2050_NOFLEX.csv',index_col=0)
+#     bevs_cap = pd.DataFrame(df['BEVS']/13.7)
+# elif YEAR == 2016:
+#     bevs_cap = pd.DataFrame(bevs['2016']).rename(columns = {'2016':'BEVS'})
+#     # bevs_cap = pd.DataFrame(bevs['P_2016']).rename(columns = {'P_2016':'BEVS'})
+# else:
+#     print('selected year is not 2030 or 2050')
 
 #%% Load reservoir capacities from entso-e (maximum value of the provided time series)
-reservoirs = pd.read_csv('hydro_capacities.csv',index_col=0,header=None)
-reservoirs = reservoirs[1]
+#TODO
+def get_reservoir_capacities():
+    reservoirs = pd.read_csv(input_folder + 'Hydro_Reservoirs.csv',index_col=0,header=None)
+    reservoirs = reservoirs[1]
+    return reservoirs
+
+# reservoirs = pd.read_csv('hydro_capacities_2050.csv',index_col=0,header=None)
+# reservoirs = pd.read_csv('hydro_capacities_2050_NOFLEX.csv',index_col=0,header=None)
+reservoirs = get_reservoir_capacities()
+# reservoirs = reservoirs[1]
 # Add the missing data:
-reservoirs['BE'] = 6000             # About 4.5 hours at full load
-reservoirs['DE'] = 718728           # From Eurelectrics
-reservoirs['EL'] = 1.7E6           # From Eurelectrics
+# reservoirs['BE'] = 6000*1.1             # About 4.5 hours at full load
+# reservoirs['DE'] = 718728*1.1           # From Eurelectrics
+# reservoirs['EL'] = 1.7E6*1.1           # From Eurelectrics
    
-if year == 2016:
-    cap,cap_chp = pickle.load(open('chp_and_nonchp_capacities'+str(year)+'.p','rb'))
+if YEAR == 2016:
+    cap,cap_chp = pickle.load(open('chp_and_nonchp_capacities'+str(YEAR)+'.p','rb'))
     countries = list(cap)
     for c in countries:
         tmp_BEV = pd.DataFrame(bevs_cap.loc[c])
         tmp_BEV.rename(columns={c: 'OTH'},inplace=True)
         cap[c] = cap[c].add(tmp_BEV,fill_value=0)
+
 else:
     #%% CHP data
     countries = list(capacities.index)
     # Load data
-    file_CHP_heat_capacity = 'heat_capacity_2016.csv'
-    file_CHP = 'CHP_EU_input_data_2016.csv'
-    data_CHP = pd.read_csv(file_CHP, index_col=0)
-    data_CHP_heat_capacity = pd.read_csv(file_CHP_heat_capacity, index_col=0)
+    # file_CHP_heat_capacity = 'heat_capacity_2050.csv'
+    # file_CHP = 'CHP_EU_input_data_2016.csv'
+    # data_CHP = pd.read_csv(file_CHP, index_col=0)
+    # data_CHP_heat_capacity = pd.read_csv(file_CHP_heat_capacity, index_col=0)
+    data_CHP_heat_capacity = pd.read_csv(input_folder + 'Heat_Capacities.csv', index_col=0)    
     #%% Generate capacities for each country
-    hydro_clustering = 'Yes'
     no_countries = len(countries)
-    typical_tech = pd.read_csv('typical_technologies.csv',index_col=0)
+#TODO
+    typical_tech = pd.read_csv(input_folder + 'Typical_Technologies.csv',index_col=0)
+
+    # typical_tech = pd.read_csv('typical_technologies_2050_NOFLEX.csv',index_col=0)
     typical_stur = pd.DataFrame(np.ones(no_countries),index=countries,columns=['STUR'])
+
     #%% Proces data
-    data_CHP['Power2Heat'] = data_CHP['Power'] / data_CHP['Heat']
+    # data_CHP['Power2Heat'] = data_CHP['Power'] / data_CHP['Heat']
     chp_max_capacities = pd.DataFrame(index=capacities.index,columns = capacities.columns) # zamjeni index i column
 
     #%% WIND
@@ -98,23 +128,32 @@ else:
     typical_win['sum'] = typical_win.sum(axis=1)
     typical_win = (typical_win.loc[:,'WTON':'WTOF'].div(typical_win['sum'], axis=0))
     typical_win = typical_win[typical_win.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
+
     #%% GAS
     typical_gas = pd.DataFrame([typical_tech['COMC'],typical_tech['GTUR'],typical_tech['ICEN'],typical_tech['STUR']]).transpose()
     typical_gas['sum'] = typical_gas.sum(axis=1)
     typical_gas = (typical_gas.loc[:,'COMC':'STUR'].div(typical_gas['sum'], axis=0))
     typical_gas = typical_gas[typical_win.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
+
     #%% HYDRO
-    typical_wat = pd.DataFrame([typical_tech['HDAM'],typical_tech['HROR'],typical_tech['HPHS']]).transpose()
-    if hydro_clustering == 'Yes':
-        typical_wat['cluster'],typical_wat['sum'] = typical_wat['HDAM'] + typical_wat['HPHS'], typical_wat.sum(axis=1)
-        typical_wat.drop(['HDAM', 'HPHS'], axis=1,inplace=True)
-        typical_wat = (typical_wat.loc[:,'HROR':'cluster'].div(typical_wat['sum'], axis=0))
-        typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
-        typical_wat.rename(columns={'cluster': 'HPHS'},inplace=True)
-    else:
-        typical_wat['sum'] = typical_wat.sum(axis=1)
-        typical_wat = (typical_wat.loc[:,'HDAM':'HPHS'].div(typical_wat['sum'], axis=0))
-        typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
+#TODO
+    # Make a function with three statements, hydro can either HROR only, HDAM+HPHS, or each technology individually 
+    def get_typical_hydro(typical_hydro,clustering=None):
+        if clustering == 'On':
+            typical_wat = typical_hydro.copy()
+            typical_wat['cluster'],typical_wat['sum'] = typical_wat['HDAM'] + typical_wat['HPHS'], typical_wat.sum(axis=1)
+            typical_wat.drop(['HDAM', 'HPHS'], axis=1,inplace=True)
+            typical_wat = (typical_wat.loc[:,'HROR':'cluster'].div(typical_wat['sum'], axis=0))
+            typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
+            typical_wat.rename(columns={'cluster': 'HPHS'},inplace=True)
+        else:
+            typical_wat = typical_hydro.copy()
+            typical_wat['sum'] = typical_wat.sum(axis=1)
+            typical_wat = (typical_wat.loc[:,'HDAM':'HPHS'].div(typical_wat['sum'], axis=0))
+            typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
+        return typical_wat
+    typical_wat = get_typical_hydro(typical_hydro = pd.DataFrame([typical_tech['HDAM'],typical_tech['HROR'],typical_tech['HPHS']]).transpose(),clustering='Off')
+
     #%% SOLAR
     typical_sun = pd.DataFrame(typical_tech['PHOT'])
 
@@ -206,13 +245,13 @@ else:
         tmp_other.rename(index={c: 'STUR'},inplace=True)
         df_merged = tmp_other.merge(tmp_GAS, how='outer', left_index=True, right_index=True)
         # total_cap = df_merged.sum().sum()
-        # min_cap = total_cap*threshold
+        # min_cap = total_cap*TECHNOLOGY_THRESHOLD
         # df_merged[df_merged < min_cap] = 0
         df_merged = df_merged.merge(tmp_WAT, how='outer', left_index=True, right_index=True)
         df_merged = df_merged.merge(tmp_WIN, how='outer', left_index=True, right_index=True)
         df_merged = df_merged.merge(tmp_SUN, how='outer', left_index=True, right_index=True)
         total_cap = df_merged.sum().sum()
-        min_cap = total_cap*threshold
+        min_cap = total_cap*TECHNOLOGY_THRESHOLD
         df_merged[df_merged < min_cap] = 0
         df_merged = df_merged.merge(tmp_BEV, how='outer', left_index=True, right_index=True)
         cap[c] = df_merged
@@ -289,7 +328,7 @@ for c in cap:
         continue
 
 # CHP and TES
-    # tes_capacity = 1      #No of storage hours in TES
+    # TES_CAPACITY = 1      #No of storage hours in TES
     cap_tot_chp = cap_chp[c]
     units_chp = pd.DataFrame()        
     for j,i in cap_tot_chp.unstack().index:
@@ -332,12 +371,12 @@ for c in cap:
                 units_chp.loc['Nunits',name] = np.ceil(cap_tot_chp.loc[i,j]/units_chp.loc['PowerCapacity',name])
                 units_chp.loc['PowerCapacity',name] = cap_tot_chp.loc[i,j]/units_chp.loc['Nunits',name]
             
-            if tes_capacity == 0:
+            if TES_CAPACITY == 0:
                 print('Country ' + c + ' (' + name + '): no TES unit')
             else:
-                # units_chp.loc['STOCapacity',name] = units_chp[name, 'PowerCapacity'].values * tes_capacity
+                # units_chp.loc['STOCapacity',name] = units_chp[name, 'PowerCapacity'].values * TES_CAPACITY
                 tmp_tes = units_chp.T
-                tmp_tes['STOCapacity'] = tmp_tes['PowerCapacity'] / tmp_tes['CHPPowerToHeat'] * tes_capacity
+                tmp_tes['STOCapacity'] = tmp_tes['PowerCapacity'] / tmp_tes['CHPPowerToHeat'] * TES_CAPACITY
                 tmp_tes['STOSelfDischarge'] = str(0.03)
                 units_chp.update(tmp_tes)
     if len(units_chp)>0:
@@ -350,6 +389,8 @@ for c in cap:
 
     
     #%%
+    #TODO
+    # Avoid merging units at this stage, just assign units as they were before
     # Special treatment for the hydro data.
     # HDAM and HPHS are merged into a single unit with the total reservoir capacity
     # Find if there are HPHS units:
@@ -407,27 +448,31 @@ for c in cap:
 pkl_file = open('pp_capacities.p', 'wb')
 pickle.dump(allunits,pkl_file)
 pkl_file.close()
+
+#%% Count total number of units
+unit_count = 0
+for c in allunits:
+    unit_count = unit_count + allunits[c]['Unit'].count()
+print('[INFO    ]: '+'Total number of units in the region is ' + str(unit_count))
    
 #%% Write csv file:
 '''    
 inputs (power plant file name as a string)
-:pp_filename:     clustered for example
-:units:           allunits for example
+:power_plant_filename:      clustered for example
+:units:                     allunits for example
 '''
-def write_csv_files(pp_filename,units):
-    filename = pp_filename + '.csv'
+def write_csv_files(power_plant_filename,units):
+    filename = power_plant_filename + '.csv'
     allunits = units
     for c in allunits:
+        
         make_dir('Database')
         folder = 'Database/PowerPlants/'
         make_dir(folder)
         make_dir(folder + c)
         allunits[c].to_csv(folder + c + '/' + filename)     
 
-write_csv_files('clustered_' + str(year),allunits)
-
-#%% Count total number of units
-unit_count = 0
-for c in allunits:
-    unit_count = unit_count + allunits[c]['Unit'].count()
-print('Total number of units in the region is ' + str(unit_count))
+if WRITE_CSV_FILES == True:
+    write_csv_files('clustered_' + str(YEAR) + '_THFLEX',allunits)
+else:
+    print('[WARNING ]: '+'WRITE_CSV_FILES = False, unable to write .csv files')

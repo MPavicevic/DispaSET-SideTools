@@ -70,6 +70,6 @@ def write_csv_files(dem_filename,heat_demand):
         make_dir(folder + c)
         allunits[c].to_csv(folder + c + '/' + filename)     
 
-write_csv_files(str(year),h_dem)
+# write_csv_files(str(year),h_dem)
 
 
