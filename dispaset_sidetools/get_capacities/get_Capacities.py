@@ -15,12 +15,12 @@ import sys
 import pickle
 # Third-party imports
 # Local source tree imports
-from dispaset_sidetools.common import mapping,outliers_vre,fix_na,make_dir,entsoe_types,commons
+#from .common import mapping,outliers_vre,fix_na,make_dir,entsoe_types,commons
 
 #%% Adjustable inputs that should be modified
 YEAR = 2050                     # considered year
 WRITE_CSV_FILES = False         # Write csv database
-TECHNOLOGY_THRESHOLD = 0.0038   # threshold (%) below which a technology is considered negligible and no unit is created
+TECHNOLOGY_THRESHOLD = 0.002   # threshold (%) below which a technology is considered negligible and no unit is created
 TES_CAPACITY = 24               # No of storage hours in TES
 CHP_TYPE = 'Extraction'         # Define CHP type: None, back-pressure or Extraction
 
@@ -53,8 +53,6 @@ typical_chp = get_typical_units(typical_units=pd.read_csv(input_folder + 'Typica
 
 #
 '''Get capacities:'''
-batteries = pd.read_csv(input_folder + 'Electric_Vehicles.csv',index_col=0)
-bevs_cap = pd.DataFrame(batteries['BEVS'])
 capacities = pd.read_csv(input_folder + 'Available_Capacities.csv',index_col=0)
 
 #TODO
@@ -72,6 +70,8 @@ def get_reservoir_capacities():
 reservoirs = get_reservoir_capacities()
    
 if YEAR == 2016:
+    batteries = pd.read_csv(input_folder + 'Electric_Vehicles.csv',index_col=0)
+    bevs_cap = pd.DataFrame(batteries['BEVS'])
     cap,cap_chp = pickle.load(open('chp_and_nonchp_capacities'+str(YEAR)+'.p','rb'))
     countries = list(cap)
     for c in countries:
@@ -82,6 +82,8 @@ if YEAR == 2016:
 else:
     #%% CHP data
     countries = list(capacities.index)
+    batteries = pd.read_csv(input_folder + 'EU_TIMES_ProRes1_BEVS_2050.csv',index_col=0)
+    bevs_cap = pd.DataFrame(batteries['BEVS'])
     # Load data
     # file_CHP_heat_capacity = 'heat_capacity_2050.csv'
     # file_CHP = 'CHP_EU_input_data_2016.csv'
@@ -399,8 +401,9 @@ for c in cap:
     else:
         tmp_bev = units[units.Technology == 'BEVS']
         bevsindex = tmp_bev.index[0]
-        tmp_bev['STOMaxChargingPower'] = tmp_bev['PowerCapacity']
-        tmp_bev['STOCapacity'] = tmp_bev['PowerCapacity']*4618.28
+        tmp_bev['STOMaxChargingPower'] = tmp_bev['PowerCapacity']/8.974294288
+        tmp_bev['STOCapacity'] = tmp_bev['PowerCapacity']
+        tmp_bev['PowerCapacity'] = tmp_bev['STOMaxChargingPower']
         units.update(tmp_bev)
         
     #Sort columns as they should be and check if Zone is defined
@@ -461,4 +464,4 @@ def write_csv_files(power_plant_filename,units,write_csv=None):
     else:
         print('[WARNING ]: '+'WRITE_CSV_FILES = False, unable to write .csv files')
 
-write_csv_files('clustered_' + str(YEAR) + '_THFLEX',allunits,WRITE_CSV_FILES)
+# write_csv_files('clustered_' + str(YEAR) + '_THFLEX',allunits,WRITE_CSV_FILES)
