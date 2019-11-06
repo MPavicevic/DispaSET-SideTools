@@ -1,5 +1,4 @@
-.. image:: https://img.shields.io/badge/license-EUPL%20v1.2-blue
-   :target: ../master/LICENSE.md
+![Image of License](https://img.shields.io/badge/license-EUPL%20v1.2-blue)
 
 DispaSET-SideTools
 ==================
