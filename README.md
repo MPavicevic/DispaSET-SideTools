@@ -28,7 +28,7 @@ Anaconda Prompt
 git clone https://github.com/MPavicevic/DispaSET-SideTools.git
 cd Documents\git\dispaset-sidetools
 conda env create  # Automatically creates environment based on environment.yml
-conda activate dispaset # Activate the environment
+conda activate dispaset-sidetools # Activate the environment
 pip install -e . # Install editable local version
 ```
 
