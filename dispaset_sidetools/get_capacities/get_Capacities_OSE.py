@@ -31,12 +31,12 @@ output_folder = '../../Outputs/'# Standard output folder
 # model = 'DIETER'                      
 # model = 'dynELMOD'
 # model = 'EMMA'
-model = 'URBS'
-# model = 'PLEXOS'
+# model = 'URBS'
+model = 'PLEXOS'
 
-scenario = 'Baseline battery costs'     # Chose one of 3 scenarios
+#scenario = 'Baseline battery costs'     # Chose one of 3 scenarios
 # scenario = '50percent battery costs'
-# scenario = '25percent battery costs'
+scenario = '25percent battery costs'
 
 coverage = 'Full geographic coverage'   # Chose germany only or full geographic coverage
 # coverage = 'Germany only'
@@ -65,7 +65,7 @@ def get_typical_units(typical_units, CHP_Type=None):
 typical = get_typical_units(typical_units=pd.read_csv(input_folder + 'Typical_Units.csv'))
 typical_chp = get_typical_units(typical_units=pd.read_csv(input_folder + 'Typical_Units.csv'), CHP_Type = CHP_TYPE)
 
-data = pd.read_excel(input_folder + 'results_190701.xlsx','raw_all')
+data = pd.read_excel(input_folder + 'results_191113.xlsx','raw_all')
 data['Variable'] = data['Variable'].str.replace('coal','Coal')
 data['Variable'] = data['Variable'].str.replace('onshore','Onshore')
 data['Variable'] = data['Variable'].str.replace('offshore','Offshore')
@@ -102,12 +102,13 @@ model_data.drop(indexNames , inplace=True)
 
 #
 '''Get capacities:'''
-batteries = pd.read_csv(input_folder + 'Electric_Vehicles.csv',index_col=0)
+batteries = pd.read_csv(input_folder + 'Electric_Vehicles_v2.csv',index_col=0)
 bevs_cap = pd.DataFrame(batteries['BEVS'])
 bevs_cap = bevs_cap*0
 # bats_cap = pd.DataFrame(batteries['BATS'])
 # capacities = pd.read_csv(input_folder + 'Available_Capacities.csv',index_col=0)
 zones = list(bevs_cap.index.unique())
+
 
 region_list = list(model_data['Region'].unique())
 batteries,batteries_stor,batteries_crate = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()

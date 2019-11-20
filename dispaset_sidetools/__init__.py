@@ -1,6 +1,3 @@
-#import logging.config
-import os
-
 # Sets the __version__ variable
 from ._version import __version__
 from .common import commons
@@ -12,6 +9,12 @@ def get_git_revision_tag():
         return check_output(["git", "describe", "--tags", "--always"]).strip()
     except:
         return 'NA'
+
 #from .preprocessing.preprocessing import get_git_revision_tag
 __gitversion__ = get_git_revision_tag()
 
+# if somebody does "from dispaset_sidetools import *", this is what they will
+# be able to access:
+__all__ = [
+    'commons',
+]
