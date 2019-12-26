@@ -24,7 +24,11 @@ YEAR = 2050  # considered year
 WRITE_CSV_FILES = False  # Write csv database
 TECHNOLOGY_THRESHOLD = 0.002  # threshold (%) below which a technology is considered negligible and no unit is created
 TES_CAPACITY = 24  # No of storage hours in TES
+CSP_TES_CAPACITY = 7.5  # No of storage hours in CSP units (usually 7.5 hours)
 CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
+BIOGAS = 'BIO'  # Define what biogas fuel equals to (BIO or GAS)
+OCEAN = 'WAT'  # Define what ocean fuel equals to (WAT or OTH)
+CCS = False  # Turn Carbon capture and sotrage on/off
 
 input_folder = '../../Inputs/'  # Standard input folder
 output_folder = '../../Outputs/'  # Standard output folder
@@ -39,6 +43,10 @@ def get_typical_units(typical_units, chp_type=None):
         - loads typical units from the Inputs/Typical_Units.csv file
         - assigns CHP units based on type: Extraction, back-pressure or None (no CHP units)
     """
+    if CCS is False:
+        indexNames = typical_units[typical_units['Year'] == 2050].index
+        typical_units.drop(indexNames, inplace=True)
+
     if chp_type == 'Extraction':
         typical_units = typical_units.copy()
     elif chp_type == 'back-pressure':
@@ -59,7 +67,15 @@ typical_chp = get_typical_units(typical_units=pd.read_csv(input_folder + 'Typica
 
 #
 '''Get capacities:'''
-capacities = pd.read_csv(input_folder + 'Available_Capacities.csv', index_col=0)
+fuel_types = ['BIO', 'GAS', 'GEO', 'HRD', 'HYD', 'LIG', 'NUC', 'OIL', 'PEA', 'SUN', 'WAT', 'WIN']
+capacities = pd.read_csv(input_folder + 'TIMES_Capacities_fuel_2050.csv', index_col=0)
+capacities[BIOGAS] = capacities[BIOGAS] + capacities['Biogas']
+capacities.drop(columns=['Biogas'], inplace=True)
+capacities[OCEAN] = capacities[OCEAN] + capacities['Ocean']
+capacities.drop(columns=['Ocean'], inplace=True)
+capacities = pd.DataFrame(capacities, columns=fuel_types).fillna(0)
+# if capacities.where(capacities < 0).count() > 0:
+#     print('There are ' + capacities.where(capacities < 0).count() + ' is negative')
 
 
 # TODO
@@ -78,198 +94,198 @@ def get_reservoir_capacities():
 
 reservoirs = get_reservoir_capacities()
 
-if YEAR == 2016:
-    batteries = pd.read_csv(input_folder + 'Electric_Vehicles.csv', index_col=0)
-    bevs_cap = pd.DataFrame(batteries['BEVS'])
-    cap, cap_chp = pickle.load(open('chp_and_nonchp_capacities' + str(YEAR) + '.p', 'rb'))
-    countries = list(cap)
-    for c in countries:
-        tmp_BEV = pd.DataFrame(bevs_cap.loc[c])
-        tmp_BEV.rename(columns={c: 'OTH'}, inplace=True)
-        cap[c] = cap[c].add(tmp_BEV, fill_value=0)
-
+# %% CHP data
+countries = list(capacities.index)
+batteries = pd.read_excel(input_folder + 'TIMES_EV_Capacities.xlsx', index_col=0)
+bevs_cap = pd.DataFrame(batteries[str(YEAR)]*1000)
+# Load data
+# file_CHP_heat_capacity = 'heat_capacity_2050.csv'
+# file_CHP = 'CHP_EU_input_data_2016.csv'
+# data_CHP = pd.read_csv(file_CHP, index_col=0)
+# data_CHP_heat_capacity = pd.read_csv(file_CHP_heat_capacity, index_col=0)
+# TODO
+data_CHP_heat_capacity = pd.read_csv(input_folder + 'Heat_Capacities.csv', index_col=0)
+# %% Generate capacities for each country
+no_countries = len(countries)
+# TODO
+typical_tech_input = pd.read_csv(input_folder + 'TIMES_Capacities_technology_2050 (gas_wat_win).csv', index_col=0)
+if CCS is False:
+    typical_tech = typical_tech_input.copy()
+    typical_tech['COMC'] = typical_tech['COMC'] + typical_tech['COMC_CCS']
+    typical_tech.drop(columns=['COMC_CCS'], inplace=True)
+if BIOGAS == 'GAS':
+    typical_tech.rename(columns={"ICEN_Biogas": "ICEN"})
 else:
-    # %% CHP data
-    countries = list(capacities.index)
-    batteries = pd.read_csv(input_folder + 'EU_TIMES_ProRes1_BEVS_2050.csv', index_col=0)
-    bevs_cap = pd.DataFrame(batteries['BEVS'])
-    # Load data
-    # file_CHP_heat_capacity = 'heat_capacity_2050.csv'
-    # file_CHP = 'CHP_EU_input_data_2016.csv'
-    # data_CHP = pd.read_csv(file_CHP, index_col=0)
-    # data_CHP_heat_capacity = pd.read_csv(file_CHP_heat_capacity, index_col=0)
-    data_CHP_heat_capacity = pd.read_csv(input_folder + 'Heat_Capacities.csv', index_col=0)
-    # %% Generate capacities for each country
-    no_countries = len(countries)
-    # TODO
-    typical_tech = pd.read_csv(input_folder + 'Typical_Technologies.csv', index_col=0)
-
-    typical_stur = pd.DataFrame(np.ones(no_countries), index=countries, columns=['STUR'])
-
-    # %% Proces data
-    chp_max_capacities = pd.DataFrame(index=capacities.index, columns=capacities.columns)  # zamjeni index i column
-
-    # %% WIND
-    typical_win = pd.DataFrame([typical_tech['WTON'], typical_tech['WTOF']]).transpose()
-    typical_win['sum'] = typical_win.sum(axis=1)
-    typical_win = (typical_win.loc[:, 'WTON':'WTOF'].div(typical_win['sum'], axis=0))
-    typical_win = typical_win[typical_win.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
-
-    # %% GAS
-    typical_gas = pd.DataFrame(
-        [typical_tech['COMC'], typical_tech['GTUR'], typical_tech['ICEN'], typical_tech['STUR']]).transpose()
-    typical_gas['sum'] = typical_gas.sum(axis=1)
-    typical_gas = (typical_gas.loc[:, 'COMC':'STUR'].div(typical_gas['sum'], axis=0))
-    typical_gas = typical_gas[typical_win.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
+    typical_tech.drop(columns=['ICEN_Biogas'], inplace=True)
+typical_tech.drop(columns=['Autoproducers'], inplace=True)
 
 
-    # %% HYDRO
-    # TODO
-    # Make a function with three statements, hydro can either HROR only, HDAM+HPHS, or each technology individually 
-    def get_typical_hydro(typical_hydro, clustering=None):
-        """
-        Function that loads typical hydro units from the typical_tech and assigns one of several clustering options:
-            - HROR only
-            - HROR & HPHS (HPHS + HDAM)
-            - HROR, HPHS & HDAM individually
-        """
-        if clustering == 'On':
-            typical_wat = typical_hydro.copy()
-            typical_wat['cluster'], typical_wat['sum'] = typical_wat['HDAM'] + typical_wat['HPHS'], typical_wat.sum(
-                axis=1)
-            typical_wat.drop(['HDAM', 'HPHS'], axis=1, inplace=True)
-            typical_wat = (typical_wat.loc[:, 'HROR':'cluster'].div(typical_wat['sum'], axis=0))
-            typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
-            typical_wat.rename(columns={'cluster': 'HPHS'}, inplace=True)
-        else:
-            typical_wat = typical_hydro.copy()
-            typical_wat['sum'] = typical_wat.sum(axis=1)
-            typical_wat = (typical_wat.loc[:, 'HDAM':'HPHS'].div(typical_wat['sum'], axis=0))
-            typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
-        return typical_wat
+typical_stur = pd.DataFrame(np.ones(no_countries), index=countries, columns=['STUR'])
+
+# %% Proces data
+chp_max_capacities = pd.DataFrame(index=capacities.index, columns=capacities.columns)  # zamjeni index i column
+
+# %% WIND
+typical_win = pd.DataFrame([typical_tech['WTON'], typical_tech['WTOF']]).transpose()
+typical_win['sum'] = typical_win.sum(axis=1)
+typical_win = (typical_win.loc[:, 'WTON':'WTOF'].div(typical_win['sum'], axis=0))
+typical_win = typical_win[typical_win.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
+
+# %% GAS
+typical_gas = pd.DataFrame(
+    [typical_tech['COMC'], typical_tech['GTUR'], typical_tech['ICEN'], typical_tech['STUR']]).transpose()
+typical_gas['sum'] = typical_gas.sum(axis=1)
+typical_gas = (typical_gas.loc[:, 'COMC':'STUR'].div(typical_gas['sum'], axis=0))
+typical_gas = typical_gas[typical_win.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
 
 
-    typical_wat = get_typical_hydro(
-        typical_hydro=pd.DataFrame([typical_tech['HDAM'], typical_tech['HROR'], typical_tech['HPHS']]).transpose(),
-        clustering='Off')
-
-    # %% SOLAR
-    typical_sun = pd.DataFrame(typical_tech['PHOT'])
-
-    # %% Determine CHP max heat capacities based on P2H ratio
-    tmp_chp_max_capacities = pd.DataFrame()
-    for f_stur in ['BIO', 'HRD', 'LIG', 'PEA', 'OIL', 'WST', 'GEO']:
-        chp_max_capacities[f_stur] = capacities[f_stur] / typical_chp.loc[
-            (typical_chp['Fuel'] == f_stur) & (typical_chp['Technology'] == 'STUR'), 'CHPPowerToHeat'].values
-        # chp_max_capacities['GAS'] = capacities['GAS'] / typical_chp.loc[
-        #     (typical_chp['Fuel']== 'GAS') & (typical_chp['Technology'] == 'COMC'), 'CHPPowerToHeat'].values
-    tmp_chp_max_capacities['GAS_COMC'] = capacities['GAS'] * typical_gas['COMC'] / typical_chp.loc[
-        (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'COMC'), 'CHPPowerToHeat'].values
-    tmp_chp_max_capacities['GAS_GTUR'] = capacities['GAS'] * typical_gas['GTUR'] / typical_chp.loc[
-        (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'GTUR'), 'CHPPowerToHeat'].values
-    tmp_chp_max_capacities['GAS_STUR'] = capacities['GAS'] * typical_gas['STUR'] / typical_chp.loc[
-        (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'STUR'), 'CHPPowerToHeat'].values
-    tmp_chp_max_capacities['GAS_ICEN'] = capacities['GAS'] * typical_gas['ICEN'] / typical_chp.loc[
-        (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'ICEN'), 'CHPPowerToHeat'].values
-    chp_max_capacities['GAS'] = tmp_chp_max_capacities.sum(axis=1)
-
-
-    def chp_heat_cap(Q, Q_max):
-        """
-        Function that assigns heat capacity to specific fuel type based on Q < Q_max or Q => Q_max
-        This is used later on to asign remaining heat demand to other CHP technologies and fuels
-        """
-        fuel = Q_max.name
-        tmp_Q = pd.DataFrame([Q, Q_max]).T
-        tmp_Q.fillna(0, inplace=True)
-        tmp_Q.loc[tmp_Q['Heat'] >= tmp_Q[fuel], 'Fuel'] = tmp_Q[fuel]
-        tmp_Q.loc[tmp_Q['Heat'] < tmp_Q[fuel], 'Fuel'] = tmp_Q['Heat']
-        Q_fuel = tmp_Q['Fuel']
-        Q_new = Q - Q_fuel
-        Q_fuel = pd.DataFrame(Q_fuel)
-        Q_fuel.columns = [fuel]
-        Q_new = pd.DataFrame(Q_new)
-        Q_new.columns = ['Heat']
-        return Q_fuel, Q_new
+# %% HYDRO
+# TODO
+# Make a function with three statements, hydro can either HROR only, HDAM+HPHS, or each technology individually
+def get_typical_hydro(typical_hydro, clustering=None):
+    """
+    Function that loads typical hydro units from the typical_tech and assigns one of several clustering options:
+        - HROR only
+        - HROR & HPHS (HPHS + HDAM)
+        - HROR, HPHS & HDAM individually
+    """
+    if clustering == 'On':
+        typical_wat = typical_hydro.copy()
+        typical_wat['cluster'], typical_wat['sum'] = typical_wat['HDAM'] + typical_wat['HPHS'], typical_wat.sum(
+            axis=1)
+        typical_wat.drop(['HDAM', 'HPHS'], axis=1, inplace=True)
+        typical_wat = (typical_wat.loc[:, 'HROR':'cluster'].div(typical_wat['sum'], axis=0))
+        typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
+        typical_wat.rename(columns={'cluster': 'HPHS'}, inplace=True)
+    else:
+        typical_wat = typical_hydro.copy()
+        typical_wat['sum'] = typical_wat.sum(axis=1)
+        typical_wat = (typical_wat.loc[:, 'HDAM':'HPHS'].div(typical_wat['sum'], axis=0))
+        typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
+    return typical_wat
 
 
-    fuels = ['BIO', 'GAS', 'HRD', 'LIG', 'PEA', 'WST', 'OIL', 'GEO']
-    countries = list(chp_max_capacities.index)
-    Q = data_CHP_heat_capacity['Heat']
-    Q = (Q[Q.index.isin(countries)])
-    tmp = {}
-    chp_heat_capacities = pd.DataFrame()
-    chp_power_capacities = pd.DataFrame()
-    tmp_new_df_pow_gas = pd.DataFrame()
-    for f in fuels:
-        Q_max = chp_max_capacities[f]
-        tmp[f] = chp_heat_cap(Q, Q_max)
-        Q = tmp[f][1].iloc[:, 0]
-        new_df = tmp[f][0]
-        if f == 'GAS':
-            # new_df_pow = new_df * typical_chp.loc[(typical_chp['Fuel']== 'GAS') &
-            #     (typical_chp['Technology']=='COMC'),'CHPPowerToHeat'].values
-            tmp_new_df_pow_gas['GAS_COMC'] = new_df[f] * typical_gas['COMC'] * typical_chp.loc[
-                (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'COMC'), 'CHPPowerToHeat'].values
-            tmp_new_df_pow_gas['GAS_GTUR'] = new_df[f] * typical_gas['GTUR'] * typical_chp.loc[
-                (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'GTUR'), 'CHPPowerToHeat'].values
-            tmp_new_df_pow_gas['GAS_STUR'] = new_df[f] * typical_gas['STUR'] * typical_chp.loc[
-                (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'STUR'), 'CHPPowerToHeat'].values
-            tmp_new_df_pow_gas['GAS_ICEN'] = new_df[f] * typical_gas['ICEN'] * typical_chp.loc[
-                (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'ICEN'), 'CHPPowerToHeat'].values
-            new_df_pow = pd.DataFrame(tmp_new_df_pow_gas.sum(axis=1), columns=['GAS'])
-        else:
-            new_df_pow = new_df * typical_chp.loc[
-                (typical_chp['Fuel'] == f) & (typical_chp['Technology'] == 'STUR'), 'CHPPowerToHeat'].values
-        chp_heat_capacities = pd.concat([chp_heat_capacities, new_df], axis=1)
-        chp_power_capacities = pd.concat([chp_power_capacities, new_df_pow], axis=1)
-    # chp_power_capacities['HYD','NUC','SUN', 'WAT','WIN']
-    chp_power_capacities.fillna(0, inplace=True)
+typical_wat = get_typical_hydro(
+    typical_hydro=pd.DataFrame([typical_tech['HDAM'], typical_tech['HROR'], typical_tech['HPHS']]).transpose(),
+    clustering='Off')
 
-    no_chp_capacities = capacities.sub(chp_power_capacities, fill_value=0)
-    no_chp_capacities.fillna(0, inplace=True)
-    no_chp_capacities = no_chp_capacities.transpose()
-    chp_power_capacities = chp_power_capacities.T
+# %% SOLAR
+typical_sun = pd.DataFrame(typical_tech['PHOT'])
 
-    # %% Non CHP units
-    cap = {}
-    cap_chp = {}
-    for c in countries:
-        tmp_cap = pd.DataFrame(no_chp_capacities[c]).transpose()
-        tmp_SUN = pd.DataFrame(typical_sun.loc[c]) * tmp_cap['SUN']
-        tmp_SUN.rename(columns={c: 'SUN'}, inplace=True)
-        tmp_WAT = pd.DataFrame(typical_wat.loc[c]) * tmp_cap['WAT']
-        tmp_WAT.rename(columns={c: 'WAT'}, inplace=True)
-        tmp_WIN = pd.DataFrame(typical_win.loc[c]) * tmp_cap['WIN']
-        tmp_WIN.rename(columns={c: 'WIN'}, inplace=True)
-        tmp_GAS = pd.DataFrame(typical_gas.loc[c]) * tmp_cap['GAS']
-        tmp_GAS.rename(columns={c: 'GAS'}, inplace=True)
-        tmp_BEV = pd.DataFrame(bevs_cap.loc[c])
-        tmp_BEV.rename(columns={c: 'OTH'}, inplace=True)
-        tmp_other = pd.DataFrame([tmp_cap['GEO'], tmp_cap['BIO'], tmp_cap['HRD'], tmp_cap['LIG'],
-                                  tmp_cap['NUC'], tmp_cap['OIL'], tmp_cap['PEA'], tmp_cap['WST']]).transpose()
-        tmp_other.rename(index={c: 'STUR'}, inplace=True)
-        df_merged = tmp_other.merge(tmp_GAS, how='outer', left_index=True, right_index=True)
-        df_merged = df_merged.merge(tmp_WAT, how='outer', left_index=True, right_index=True)
-        df_merged = df_merged.merge(tmp_WIN, how='outer', left_index=True, right_index=True)
-        df_merged = df_merged.merge(tmp_SUN, how='outer', left_index=True, right_index=True)
-        total_cap = df_merged.sum().sum()
-        min_cap = total_cap * TECHNOLOGY_THRESHOLD
-        df_merged[df_merged < min_cap] = 0
-        df_merged = df_merged.merge(tmp_BEV, how='outer', left_index=True, right_index=True)
-        cap[c] = df_merged
-        cap[c].fillna(0, inplace=True)
-        # CHP
-        tmp_cap_chp = pd.DataFrame(chp_power_capacities[c]).transpose()
-        tmp_GAS_chp = pd.DataFrame(typical_gas.loc[c]) * tmp_cap_chp['GAS']
-        tmp_GAS_chp.rename(columns={c: 'GAS'}, inplace=True)
-        tmp_other_chp = pd.DataFrame([tmp_cap_chp['GEO'], tmp_cap_chp['BIO'], tmp_cap_chp['HRD'], tmp_cap_chp['LIG'],
-                                      tmp_cap_chp['OIL'], tmp_cap_chp['PEA'], tmp_cap_chp['WST']]).transpose()
-        tmp_other_chp.rename(index={c: 'STUR'}, inplace=True)
-        df_merged_chp = tmp_other_chp.merge(tmp_GAS_chp, how='outer', left_index=True, right_index=True)
-        df_merged_chp[df_merged_chp < min_cap] = 0
-        cap_chp[c] = df_merged_chp
-        cap_chp[c].fillna(0, inplace=True)
+# %% Determine CHP max heat capacities based on P2H ratio
+tmp_chp_max_capacities = pd.DataFrame()
+for f_stur in ['BIO', 'HRD', 'LIG', 'PEA', 'OIL', 'WST', 'GEO']:
+    chp_max_capacities[f_stur] = capacities[f_stur] / typical_chp.loc[
+        (typical_chp['Fuel'] == f_stur) & (typical_chp['Technology'] == 'STUR'), 'CHPPowerToHeat'].values
+    # chp_max_capacities['GAS'] = capacities['GAS'] / typical_chp.loc[
+    #     (typical_chp['Fuel']== 'GAS') & (typical_chp['Technology'] == 'COMC'), 'CHPPowerToHeat'].values
+tmp_chp_max_capacities['GAS_COMC'] = capacities['GAS'] * typical_gas['COMC'] / typical_chp.loc[
+    (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'COMC'), 'CHPPowerToHeat'].values
+tmp_chp_max_capacities['GAS_GTUR'] = capacities['GAS'] * typical_gas['GTUR'] / typical_chp.loc[
+    (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'GTUR'), 'CHPPowerToHeat'].values
+tmp_chp_max_capacities['GAS_STUR'] = capacities['GAS'] * typical_gas['STUR'] / typical_chp.loc[
+    (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'STUR'), 'CHPPowerToHeat'].values
+tmp_chp_max_capacities['GAS_ICEN'] = capacities['GAS'] * typical_gas['ICEN'] / typical_chp.loc[
+    (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'ICEN'), 'CHPPowerToHeat'].values
+chp_max_capacities['GAS'] = tmp_chp_max_capacities.sum(axis=1)
+
+
+def chp_heat_cap(Q, Q_max):
+    """
+    Function that assigns heat capacity to specific fuel type based on Q < Q_max or Q => Q_max
+    This is used later on to asign remaining heat demand to other CHP technologies and fuels
+    """
+    fuel = Q_max.name
+    tmp_Q = pd.DataFrame([Q, Q_max]).T
+    tmp_Q.fillna(0, inplace=True)
+    tmp_Q.loc[tmp_Q['Heat'] >= tmp_Q[fuel], 'Fuel'] = tmp_Q[fuel]
+    tmp_Q.loc[tmp_Q['Heat'] < tmp_Q[fuel], 'Fuel'] = tmp_Q['Heat']
+    Q_fuel = tmp_Q['Fuel']
+    Q_new = Q - Q_fuel
+    Q_fuel = pd.DataFrame(Q_fuel)
+    Q_fuel.columns = [fuel]
+    Q_new = pd.DataFrame(Q_new)
+    Q_new.columns = ['Heat']
+    return Q_fuel, Q_new
+
+
+fuels = ['BIO', 'GAS', 'HRD', 'LIG', 'PEA', 'WST', 'OIL', 'GEO']
+countries = list(chp_max_capacities.index)
+Q = data_CHP_heat_capacity['Heat']
+Q = (Q[Q.index.isin(countries)])
+tmp = {}
+chp_heat_capacities = pd.DataFrame()
+chp_power_capacities = pd.DataFrame()
+tmp_new_df_pow_gas = pd.DataFrame()
+for f in fuels:
+    Q_max = chp_max_capacities[f]
+    tmp[f] = chp_heat_cap(Q, Q_max)
+    Q = tmp[f][1].iloc[:, 0]
+    new_df = tmp[f][0]
+    if f == 'GAS':
+        # new_df_pow = new_df * typical_chp.loc[(typical_chp['Fuel']== 'GAS') &
+        #     (typical_chp['Technology']=='COMC'),'CHPPowerToHeat'].values
+        tmp_new_df_pow_gas['GAS_COMC'] = new_df[f] * typical_gas['COMC'] * typical_chp.loc[
+            (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'COMC'), 'CHPPowerToHeat'].values
+        tmp_new_df_pow_gas['GAS_GTUR'] = new_df[f] * typical_gas['GTUR'] * typical_chp.loc[
+            (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'GTUR'), 'CHPPowerToHeat'].values
+        tmp_new_df_pow_gas['GAS_STUR'] = new_df[f] * typical_gas['STUR'] * typical_chp.loc[
+            (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'STUR'), 'CHPPowerToHeat'].values
+        tmp_new_df_pow_gas['GAS_ICEN'] = new_df[f] * typical_gas['ICEN'] * typical_chp.loc[
+            (typical_chp['Fuel'] == 'GAS') & (typical_chp['Technology'] == 'ICEN'), 'CHPPowerToHeat'].values
+        new_df_pow = pd.DataFrame(tmp_new_df_pow_gas.sum(axis=1), columns=['GAS'])
+    else:
+        new_df_pow = new_df * typical_chp.loc[
+            (typical_chp['Fuel'] == f) & (typical_chp['Technology'] == 'STUR'), 'CHPPowerToHeat'].values
+    chp_heat_capacities = pd.concat([chp_heat_capacities, new_df], axis=1)
+    chp_power_capacities = pd.concat([chp_power_capacities, new_df_pow], axis=1)
+# chp_power_capacities['HYD','NUC','SUN', 'WAT','WIN']
+chp_power_capacities.fillna(0, inplace=True)
+
+no_chp_capacities = capacities.sub(chp_power_capacities, fill_value=0)
+no_chp_capacities.fillna(0, inplace=True)
+no_chp_capacities = no_chp_capacities.transpose()
+chp_power_capacities = chp_power_capacities.T
+
+# %% Non CHP units
+cap = {}
+cap_chp = {}
+for c in countries:
+    tmp_cap = pd.DataFrame(no_chp_capacities[c]).transpose()
+    tmp_SUN = pd.DataFrame(typical_sun.loc[c]) * tmp_cap['SUN']
+    tmp_SUN.rename(columns={c: 'SUN'}, inplace=True)
+    tmp_WAT = pd.DataFrame(typical_wat.loc[c]) * tmp_cap['WAT']
+    tmp_WAT.rename(columns={c: 'WAT'}, inplace=True)
+    tmp_WIN = pd.DataFrame(typical_win.loc[c]) * tmp_cap['WIN']
+    tmp_WIN.rename(columns={c: 'WIN'}, inplace=True)
+    tmp_GAS = pd.DataFrame(typical_gas.loc[c]) * tmp_cap['GAS']
+    tmp_GAS.rename(columns={c: 'GAS'}, inplace=True)
+    tmp_BEV = pd.DataFrame(bevs_cap.loc[c])
+    tmp_BEV.rename(columns={c: 'OTH'}, inplace=True)
+    tmp_other = pd.DataFrame([tmp_cap['GEO'], tmp_cap['BIO'], tmp_cap['HRD'], tmp_cap['LIG'],
+                              tmp_cap['NUC'], tmp_cap['OIL'], tmp_cap['PEA'], tmp_cap['WST']]).transpose()
+    tmp_other.rename(index={c: 'STUR'}, inplace=True)
+    df_merged = tmp_other.merge(tmp_GAS, how='outer', left_index=True, right_index=True)
+    df_merged = df_merged.merge(tmp_WAT, how='outer', left_index=True, right_index=True)
+    df_merged = df_merged.merge(tmp_WIN, how='outer', left_index=True, right_index=True)
+    df_merged = df_merged.merge(tmp_SUN, how='outer', left_index=True, right_index=True)
+    total_cap = df_merged.sum().sum()
+    min_cap = total_cap * TECHNOLOGY_THRESHOLD
+    df_merged[df_merged < min_cap] = 0
+    df_merged = df_merged.merge(tmp_BEV, how='outer', left_index=True, right_index=True)
+    cap[c] = df_merged
+    cap[c].fillna(0, inplace=True)
+    # CHP
+    tmp_cap_chp = pd.DataFrame(chp_power_capacities[c]).transpose()
+    tmp_GAS_chp = pd.DataFrame(typical_gas.loc[c]) * tmp_cap_chp['GAS']
+    tmp_GAS_chp.rename(columns={c: 'GAS'}, inplace=True)
+    tmp_other_chp = pd.DataFrame([tmp_cap_chp['GEO'], tmp_cap_chp['BIO'], tmp_cap_chp['HRD'], tmp_cap_chp['LIG'],
+                                  tmp_cap_chp['OIL'], tmp_cap_chp['PEA'], tmp_cap_chp['WST']]).transpose()
+    tmp_other_chp.rename(index={c: 'STUR'}, inplace=True)
+    df_merged_chp = tmp_other_chp.merge(tmp_GAS_chp, how='outer', left_index=True, right_index=True)
+    df_merged_chp[df_merged_chp < min_cap] = 0
+    cap_chp[c] = df_merged_chp
+    cap_chp[c].fillna(0, inplace=True)
 
 # %% Typical unit allocation
 allunits = {}
