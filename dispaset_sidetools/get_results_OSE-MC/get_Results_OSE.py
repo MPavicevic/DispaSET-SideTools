@@ -10,6 +10,7 @@ Created on Wed Sep  4 11:14:36 2019
 from __future__ import division
 import matplotlib.pyplot as plt
 import pandas as pd
+pd.options.mode.chained_assignment = None
 import numpy as np
 import dispaset as ds
 import os
@@ -30,20 +31,21 @@ input_folder = '../../Inputs/OSE_MC_Results/'  # Standard input folder
 output_folder = '../../Outputs/'# Standard output folder
 
 # model = 'CALLIOPE'                    # Chose one of 6 models
-model = 'DIETER'                      
+# model = 'DIETER'
 # model = 'dynELMOD'
 # model = 'EMMA'
-# model = 'URBS'
+model = 'URBS'
 # model = 'PLEXOS'
+# model = 'MIN'
 
 # scenario = 'Baseline battery costs'     # Chose one of 3 scenarios
 # scenario = '50percent battery costs'
 scenario = '25percent battery costs'
 
-coverage = 'Full geographic coverage'   # Chose germany only or full geographic coverage
-# coverage = 'Germany only'
+# coverage = 'Full geographic coverage'   # Chose germany only or full geographic coverage
+coverage = 'Germany only'
 
-model_db = ['CALLIOPE','DIETER','dynELMOD','EMMA','URBS','PLEXOS']
+model_db = ['CALLIOPE','DIETER','dynELMOD','EMMA','URBS','PLEXOS','MIN','MEAN','MEDIAN','MAX']
 scenario_db = ['Baseline battery costs','50percent battery costs','25percent battery costs']
 coverage_db = ['Full geographic coverage','Germany only']
 
@@ -53,28 +55,27 @@ coverage_db = ['Full geographic coverage','Germany only']
 def get_OSE_MC(model,scenario,coverage):
     
     if scenario == 'Baseline battery costs':
-        scenario_folder = '_BC'
+        scenario_folder = '_Baseline battery costs'
     elif scenario == '50percent battery costs':
-        scenario_folder = '_50'
+        scenario_folder = '_50percent battery costs'
     elif scenario == '25percent battery costs':
-        scenario_folder = '_25'
+        scenario_folder = '_25percent battery costs'
     
     if coverage == 'Full geographic coverage':
-        coverage_folder = '_WC'
+        coverage_folder = '_Full_geographic_coverage'
     elif coverage == 'Germany only':
-        coverage_folder = '_DEC'
+        coverage_folder = '_Germany_only'
     
-    path = input_folder + 'simulationOSE_MC_' + model + coverage_folder + scenario_folder 
+    path = input_folder + 'simulation_OSE_' + model + scenario_folder + coverage_folder
     if os.path.isdir(path) == False:
         print('Path: ' + path + ' does not exist')
     else:
         inputs,results = ds.get_sim_results(path=path,cache=False)
         ppt = ds.get_indicators_powerplant(inputs,results)
         ppt.reset_index(inplace=True)
-        
+
         ## Get caoacities
         def capacity_df(df):
-        
             df.loc[(df['Fuel'] == 'HRD') & (df['Technology'] == 'STUR'),'Variable'] = 'Capacity|Electricity|Hard coal'
             df.loc[(df['Fuel'] == 'NUC') & (df['Technology'] == 'STUR'),'Variable'] = 'Capacity|Electricity|Nuclear'
             df.loc[(df['Fuel'] == 'LIG') & (df['Technology'] == 'STUR'),'Variable'] = 'Capacity|Electricity|Lignite'
@@ -91,16 +92,37 @@ def get_OSE_MC(model,scenario,coverage):
             df.loc[(df['Fuel'] == 'WAT') & (df['Technology'] == 'HPHS'),'Variable'] = 'Capacity|Electricity|Storage|Pumped hydro|Power'
             df.loc[(df['Fuel'] == 'WAT') & (df['Technology'] == 'HDAM'),'Variable'] = 'Capacity|Electricity|Hydro Reservoir'
             df.loc[(df['Fuel'] == 'OTH') & (df['Technology'] == 'BATS'),'Variable'] = 'Capacity|Electricity|Storage|Liion|Power'
-       
             df['Value'] = df['Nunits'] * df['PowerCapacity'] / 1e3
+            # Total capacity
+            df_total = df.groupby(['Variable'])['Value'].sum().reset_index()
+            df_total.reset_index(inplace=True)
+            df_total.rename(columns={'index': 'Zone'}, inplace=True)
+            df_total['Zone'] = 'Whole Region'
+            df = df.append(df_total, ignore_index=True, sort=True)
             df['Unit'] = 'GW'
             df = df[['Zone','Variable','Unit','Value']]
             return df
         df_capacity = capacity_df(ppt)
         
-        ## Get generation, shedding and curtailment
-        def generation_df(df,results):
-        
+        ## Get generation, shedding,emmisions and curtailment
+        def generation_df(df,results,inputs):
+            df.set_index('index', inplace=True)
+            df['CO2'] = df['Generation'] / inputs['units']['Efficiency'] * inputs['units']['EmissionRate']
+            co2_zone = df.groupby(['Zone'])['CO2'].sum().reset_index()
+            co2_zone.reset_index(inplace=True)
+            co2_zone['Variable'] = 'Carbon emissions'
+            co2_zone['Unit'] = 't_CO2'
+            co2_zone.rename(columns={'CO2': 'Value'}, inplace=True)
+            # df.groupby(['Fruit', 'Name'])['Number'].sum().reset_index()
+        # CO2 Emissions
+            co2 = {'Value': [df['CO2'].sum()]}
+            co2 = pd.DataFrame(co2)
+            co2.reset_index(inplace=True)
+            co2['Variable'] = 'Carbon emissions'
+            co2['Unit'] = 't_CO2'
+            co2['Zone'] = 'Whole Region'
+
+
             df.loc[(df['Fuel'] == 'HRD') & (df['Technology'] == 'STUR'),'Variable'] = 'Energy|Electricity|Hard coal'
             df.loc[(df['Fuel'] == 'NUC') & (df['Technology'] == 'STUR'),'Variable'] = 'Energy|Electricity|Nuclear'
             df.loc[(df['Fuel'] == 'LIG') & (df['Technology'] == 'STUR'),'Variable'] = 'Energy|Electricity|Lignite'
@@ -121,23 +143,100 @@ def get_OSE_MC(model,scenario,coverage):
         # Curtailment
             tmp_df = pd.DataFrame(results['OutputCurtailedPower'].sum() / 1e6)
             tmp_df.reset_index(inplace=True)
-            tmp_df.rename(columns={'index':'Zone',
-                                  0:'Value'},
-                         inplace=True)
+            tmp_df.rename(columns={'index':'Zone', 0:'Value'}, inplace=True)
             tmp_df['Variable'] = 'Energy|Electricity|Renewable curtailment|Absolute'
             df = df.append(tmp_df, ignore_index=True, sort = True)
+        # Total generation
+            df_total = df.groupby(['Variable'])['Value'].sum().reset_index()
+            df_total.reset_index(inplace=True)
+            df_total.rename(columns={'index': 'Zone'}, inplace=True)
+            df_total['Zone'] = 'Whole Region'
+            df = df.append(df_total, ignore_index=True, sort = True)
         # Shedding
             tmp_df = pd.DataFrame(results['OutputShedLoad'].sum() / 1e6)
             tmp_df.reset_index(inplace=True)
-            tmp_df.rename(columns={'index':'Zone',
-                                  0:'Value'},
-                         inplace=True)
+            tmp_df.rename(columns={'index':'Zone', 0:'Value'}, inplace=True)
             tmp_df['Variable'] = 'Energy|Electricity|Load Shedding'
             df = df.append(tmp_df, ignore_index=True, sort = True)
             df['Unit'] = 'TWh'
             df = df[['Zone','Variable','Unit','Value']]
+        # Reserves
+            # LL_2D
+            lost_load_2D = pd.DataFrame(results['LostLoad_2D'].sum() / 1e6)
+            lost_load_2D.reset_index(inplace=True)
+            lost_load_2D.rename(columns={'index':'Zone', 0:'Value'}, inplace=True)
+            lost_load_2D['Variable'] = 'Energy|Electricity|Lost Load 2D'
+            lost_load_2D['Unit'] = 'TWh'
+            df = df.append(lost_load_2D, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            # LL_2U
+            lost_load_2U = pd.DataFrame(results['LostLoad_2U'].sum() / 1e6)
+            lost_load_2U.reset_index(inplace=True)
+            lost_load_2U.rename(columns={'index':'Zone', 0:'Value'}, inplace=True)
+            lost_load_2U['Variable'] = 'Energy|Electricity|Lost Load 2U'
+            lost_load_2U['Unit'] = 'TWh'
+            df = df.append(lost_load_2U, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            # LL_3U
+            lost_load_3U = pd.DataFrame(results['LostLoad_3U'].sum() / 1e6)
+            lost_load_3U.reset_index(inplace=True)
+            lost_load_3U.rename(columns={'index':'Zone', 0:'Value'}, inplace=True)
+            lost_load_3U['Variable'] = 'Energy|Electricity|Lost Load 3U'
+            lost_load_3U['Unit'] = 'TWh'
+            df = df.append(lost_load_3U, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            # LL_Max_Power
+            lost_load_max_power = pd.DataFrame(results['LostLoad_MaxPower'].sum() / 1e6)
+            lost_load_max_power.reset_index(inplace=True)
+            lost_load_max_power.rename(columns={'index':'Zone', 0:'Value'}, inplace=True)
+            lost_load_max_power['Variable'] = 'Energy|Electricity|Lost Load Max Power'
+            lost_load_max_power['Unit'] = 'TWh'
+            df = df.append(lost_load_max_power, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            # LL_Min_Power
+            lost_load_min_power = pd.DataFrame(results['LostLoad_MinPower'].sum() / 1e6)
+            lost_load_min_power.reset_index(inplace=True)
+            lost_load_min_power.rename(columns={'index':'Zone', 0:'Value'}, inplace=True)
+            lost_load_min_power['Variable'] = 'Energy|Electricity|Lost Load Min Power'
+            lost_load_min_power['Unit'] = 'TWh'
+            df = df.append(lost_load_min_power, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            # LL_Ramp_Down
+            lost_load_ramp_down = pd.DataFrame(results['LostLoad_RampDown'].sum() / 1e6)
+            lost_load_ramp_down.reset_index(inplace=True)
+            lost_load_ramp_down.rename(columns={'index':'Zone', 0:'Value'}, inplace=True)
+            lost_load_ramp_down['Variable'] = 'Energy|Electricity|Lost Load Ramp Down'
+            lost_load_ramp_down['Unit'] = 'TWh'
+            df = df.append(lost_load_ramp_down, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            # LL_Ramp_Up
+            lost_load_ramp_up = pd.DataFrame(results['LostLoad_RampUp'].sum() / 1e6)
+            lost_load_ramp_up.reset_index(inplace=True)
+            lost_load_ramp_up.rename(columns={'index':'Zone', 0:'Value'}, inplace=True)
+            lost_load_ramp_up['Variable'] = 'Energy|Electricity|Lost Load Ramp Up'
+            lost_load_ramp_up['Unit'] = 'TWh'
+            df = df.append(lost_load_ramp_up, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            # LL_Total
+            lost_load = pd.DataFrame([results['LostLoad_2D'].sum(),results['LostLoad_2U'].sum(),
+                                    results['LostLoad_3U'].sum(),results['LostLoad_MaxPower'].sum(),
+                                    results['LostLoad_MinPower'].sum(), results['LostLoad_RampDown'].sum(),
+                                    results['LostLoad_RampUp'].sum()])
+            lost_load = lost_load / 1e6
+            lost_load = lost_load.sum(skipna=True)
+            lost_load.reset_index(inplace=True)
+            lost_load.rename(columns={'index':'Zone', 0:'Value'}, inplace=True)
+            lost_load['Variable'] = 'Energy|Electricity|Lost Load Total'
+            lost_load['Unit'] = 'TWh'
+            df = df.append(lost_load, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+        # CO2
+            df = df.append(co2_zone, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            df = df.append(co2, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
             return df
-        df_generation = generation_df(ppt,results)
+        df_generation = generation_df(ppt,results,inputs)
         tmp_df = df_capacity.append(df_generation, ignore_index=True)
         
         # Get startups & costs
@@ -165,6 +264,7 @@ def get_OSE_MC(model,scenario,coverage):
             tmp_df = pd.DataFrame(tmp_df)
             tmp_df.reset_index(inplace=True)
             tmp_df['Variable'] = 'Cost|Total system'
+            tmp_df['Zone'] = 'Whole Region'
             tmp_df['Unit'] = 'EUR'
             df = df.append(tmp_df, ignore_index=True, sort = True)
             df = df[['Zone','Variable','Unit','Value']]
@@ -199,30 +299,101 @@ def get_OSE_MC(model,scenario,coverage):
             sto_units = inputs['units'][isstorage]
             sto_units['Value'] = pd.DataFrame(tmp_stor_input[0]/sto_units['StorageCapacity'])
             sto_units.reset_index(inplace=True)
-            sto_units.loc[(sto_units['Fuel'] == 'OTH') & (sto_units['Technology'] == 'BATS'),'Variable'] = 'Cycles|Electricity|Storage|Liion'
-            sto_units.loc[(sto_units['Fuel'] == 'WAT') & (sto_units['Technology'] == 'HPHS'),'Variable'] = 'Cycles|Electricity|Storage|Pumped hydro'
+            sto_units.loc[(sto_units['Fuel'] == 'OTH') & (sto_units['Technology'] == 'BATS'),'Variable'] = \
+                            'Cycles|Electricity|Storage|Liion'
+            sto_units.loc[(sto_units['Fuel'] == 'WAT') & (sto_units['Technology'] == 'HPHS'),'Variable'] = \
+                            'Cycles|Electricity|Storage|Pumped hydro'
             sto_units = sto_units.drop(sto_units.loc[(sto_units['Fuel'] == 'WAT') & (sto_units['Technology'] == 'HDAM')].index)
             sto_units['Unit'] = '##'
             df = df.append(sto_units, ignore_index=True, sort = True)
             sto_capacity = inputs['units']
             sto_capacity.rename(columns={'StorageCapacity':'Value'}, inplace=True)
-            sto_capacity.loc[(sto_capacity['Fuel'] == 'OTH') & (sto_capacity['Technology'] == 'BATS'),'Variable'] = 'Capacity|Electricity|Storage|Liion|Energy'
-            sto_capacity.loc[(sto_capacity['Fuel'] == 'WAT') & (sto_capacity['Technology'] == 'HPHS'),'Variable'] = 'Capacity|Electricity|Storage|Pumped hydro|Energy'
+            sto_capacity.loc[(sto_capacity['Fuel'] == 'OTH') & (sto_capacity['Technology'] == 'BATS'),'Variable'] = \
+                            'Capacity|Electricity|Storage|Liion|Energy'
+            sto_capacity.loc[(sto_capacity['Fuel'] == 'WAT') & (sto_capacity['Technology'] == 'HPHS'),'Variable'] = \
+                            'Capacity|Electricity|Storage|Pumped hydro|Energy'
             sto_capacity['Value'] = sto_capacity['Value'] / 1e3
             sto_capacity['Unit'] = 'GWh'
             df1 = sto_capacity.loc[(sto_capacity['Fuel'] == 'OTH') & (sto_capacity['Technology'] == 'BATS')]
             df2 = sto_capacity.loc[(sto_capacity['Fuel'] == 'WAT') & (sto_capacity['Technology'] == 'HPHS')]
             sto_capacity = df1.append(df2, ignore_index=True, sort = True)
             df = df.append(sto_capacity, ignore_index=True, sort = True)
-            lost_load = {'Value': [(results['LostLoad_2D'].sum().sum() + results['LostLoad_2U'].sum().sum() + results['LostLoad_3U'].sum().sum() + results['LostLoad_MaxPower'].sum().sum() + results['LostLoad_MinPower'].sum().sum() + results['LostLoad_RampDown'].sum().sum() + results['LostLoad_RampUp'].sum().sum()) / 1e6]}
+            # Reserves
+            lost_load_2D = {'Value': [results['LostLoad_2D'].sum().sum() / 1e6]}
+            lost_load_2D = pd.DataFrame(lost_load_2D)
+            lost_load_2D.reset_index(inplace=True)
+            lost_load_2D['Variable'] = 'Energy|Electricity|Lost Load 2D'
+            lost_load_2D['Unit'] = 'TWh'
+            lost_load_2D['Zone'] = 'Whole Region'
+            df = df.append(lost_load_2D, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            lost_load_2U = {'Value': [results['LostLoad_2U'].sum().sum() / 1e6]}
+            lost_load_2U = pd.DataFrame(lost_load_2U)
+            lost_load_2U.reset_index(inplace=True)
+            lost_load_2U['Variable'] = 'Energy|Electricity|Lost Load 2U'
+            lost_load_2U['Unit'] = 'TWh'
+            lost_load_2U['Zone'] = 'Whole Region'
+            df = df.append(lost_load_2U, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            lost_load_3U = {'Value': [results['LostLoad_3U'].sum().sum() / 1e6]}
+            lost_load_3U = pd.DataFrame(lost_load_3U)
+            lost_load_3U.reset_index(inplace=True)
+            lost_load_3U['Variable'] = 'Energy|Electricity|Lost Load 3U'
+            lost_load_3U['Unit'] = 'TWh'
+            lost_load_3U['Zone'] = 'Whole Region'
+            df = df.append(lost_load_3U, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            lost_load_max_power = {'Value': [results['LostLoad_MaxPower'].sum().sum() / 1e6]}
+            lost_load_max_power = pd.DataFrame(lost_load_max_power)
+            lost_load_max_power.reset_index(inplace=True)
+            lost_load_max_power['Variable'] = 'Energy|Electricity|Lost Load Max Power'
+            lost_load_max_power['Unit'] = 'TWh'
+            lost_load_max_power['Zone'] = 'Whole Region'
+            df = df.append(lost_load_max_power, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            lost_load_min_power = {'Value': [results['LostLoad_MinPower'].sum().sum() / 1e6]}
+            lost_load_min_power = pd.DataFrame(lost_load_min_power)
+            lost_load_min_power.reset_index(inplace=True)
+            lost_load_min_power['Variable'] = 'Energy|Electricity|Lost Load Min Power'
+            lost_load_min_power['Unit'] = 'TWh'
+            lost_load_min_power['Zone'] = 'Whole Region'
+            df = df.append(lost_load_min_power, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            lost_load_ramp_down = {'Value': [results['LostLoad_RampDown'].sum().sum() / 1e6]}
+            lost_load_ramp_down = pd.DataFrame(lost_load_ramp_down)
+            lost_load_ramp_down.reset_index(inplace=True)
+            lost_load_ramp_down['Variable'] = 'Energy|Electricity|Lost Load Ramp Down'
+            lost_load_ramp_down['Unit'] = 'TWh'
+            lost_load_ramp_down['Zone'] = 'Whole Region'
+            df = df.append(lost_load_ramp_down, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            lost_load_ramp_up = {'Value': [results['LostLoad_RampUp'].sum().sum() / 1e6]}
+            lost_load_ramp_up = pd.DataFrame(lost_load_ramp_up)
+            lost_load_ramp_up.reset_index(inplace=True)
+            lost_load_ramp_up['Variable'] = 'Energy|Electricity|Lost Load Ramp Up'
+            lost_load_ramp_up['Unit'] = 'TWh'
+            lost_load_ramp_up['Zone'] = 'Whole Region'
+            df = df.append(lost_load_ramp_up, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
+            lost_load = {'Value': [(results['LostLoad_2D'].sum().sum() + results['LostLoad_2U'].sum().sum() +
+                                    results['LostLoad_3U'].sum().sum() + results['LostLoad_MaxPower'].sum().sum() +
+                                    results['LostLoad_MinPower'].sum().sum() + results['LostLoad_RampDown'].sum().sum() +
+                                    results['LostLoad_RampUp'].sum().sum()) / 1e6]}
             lost_load = pd.DataFrame(lost_load)
             lost_load.reset_index(inplace=True)
-            lost_load['Variable'] = 'Energy|Electricity|Lost Load'
+            lost_load['Variable'] = 'Energy|Electricity|Lost Load Total'
             lost_load['Unit'] = 'TWh'
             lost_load['Zone'] = 'Whole Region'
             df = df.append(lost_load, ignore_index=True, sort = True)
             df = df[['Zone','Variable','Unit','Value']]
-            
+            shed_load = {'Value': [results['OutputShedLoad'].sum().sum() / 1e6]}
+            shed_load = pd.DataFrame(shed_load)
+            shed_load.reset_index(inplace=True)
+            shed_load['Variable'] = 'Energy|Electricity|Load Shedding'
+            shed_load['Unit'] = 'TWh'
+            shed_load['Zone'] = 'Whole Region'
+            df = df.append(shed_load, ignore_index=True, sort = True)
+            df = df[['Zone','Variable','Unit','Value']]
             return df
         df_cap_factor = cap_factor_df(ppt,results)
         OSE_report = tmp_df.append(df_cap_factor, ignore_index=True)
@@ -240,11 +411,13 @@ def get_OSE_MC(model,scenario,coverage):
         
         return OSE_report
 
-OSE_report = pd.DataFrame()
-for m in model_db:
-    for c in coverage_db:
-        for s in scenario_db:
-            tmp_data = get_OSE_MC(m,s,c)
-            OSE_report = OSE_report.append(tmp_data, ignore_index=True)
+tmp_data = get_OSE_MC(model,scenario,coverage)
 
-OSE_report.to_excel(output_folder + 'Dispa-SET_preliminary_results.xlsx')
+# OSE_report = pd.DataFrame()
+# for m in model_db:
+#     for c in coverage_db:
+#         for s in scenario_db:
+#             tmp_data = get_OSE_MC(m,s,c)
+#             OSE_report = OSE_report.append(tmp_data, ignore_index=True)
+#
+# OSE_report.to_excel(output_folder + 'Dispa-SET_preliminary_results.xlsx')

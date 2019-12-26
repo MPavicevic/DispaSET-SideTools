@@ -16,6 +16,8 @@ import pickle
 # Third-party imports
 # Local source tree imports
 #from .common import mapping,outliers_vre,fix_na,make_dir,entsoe_types,commons
+from dispaset_sidetools.common import make_dir
+
 
 #%% Adjustable inputs that should be modified
 YEAR = 2050                     # considered year
@@ -464,4 +466,4 @@ def write_csv_files(power_plant_filename,units,write_csv=None):
     else:
         print('[WARNING ]: '+'WRITE_CSV_FILES = False, unable to write .csv files')
 
-# write_csv_files('clustered_' + str(YEAR) + '_THFLEX',allunits,WRITE_CSV_FILES)
+write_csv_files('clustered_' + str(YEAR) + '_THFLEX',allunits,WRITE_CSV_FILES)
