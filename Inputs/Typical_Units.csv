@@ -1,6 +1,8 @@
 ﻿PowerCapacity,Unit,Year,Zone,Technology,Fuel,Efficiency,MinUpTime,MinDownTime,RampUpRate,RampDownRate,StartUpCost_pu,NoLoadCost_pu,RampingCost,PartLoadMin,MinEfficiency,StartUpTime,CO2Intensity,CHPType,CHPPowerToHeat,CHPPowerLossFactor,STOCapacity,STOSelfDischarge,STOMaxChargingPower,STOChargingEfficiency,CHPMaxHeat
 25,Vao,2009,BE,STUR,PEA,0.4,4,6,0.02,0.02,120,12.5,1.3,0.4,0.35,1,0,Extraction,0.5,0.2,,,,,
 180,Rodenhuize,2009,BE,STUR,BIO,0.4,4,6,0.02,0.02,120,12.5,1.3,0.4,0.35,1,0,Extraction,0.45,0.238,,,,,
+64,XYZ,2009,XYZ,GTUR,BIO,0.33,1,1,0.166666667,0.166666667,25,2.9,0.25,0.2,0.33,0.166666667,0.727272727,back-pressure,0.55,0,,,,,
+420,XYZ,2009,XYZ,COMC,BIO,0.51,3,3,0.07,0.07,55,2.9,0.25,0.062171053,0.57,1,0.42,Extraction,0.95,0.213,,,,,
 25,PZ Osatina_Bovis,1989,HR,ICEN,BIO,0.36,1,1,0.04,0.04,24,0,0.63,0.25,0.49,1,0,back-pressure,0.75,0,,,,,
 420,Amercoeur,2009,BE,COMC,GAS,0.51,3,3,0.07,0.07,55,2.9,0.25,0.062171053,0.57,1,0.42,Extraction,0.95,0.213,,,,,
 64,Angleur 4 GT 1,2012,BE,GTUR,GAS,0.33,1,1,0.166666667,0.166666667,25,2.9,0.25,0.2,0.33,0.166666667,0.727272727,back-pressure,0.55,0,,,,,
