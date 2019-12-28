@@ -20,24 +20,36 @@ import pandas as pd
 from dispaset_sidetools.common import make_dir
 
 # %% Adjustable inputs that should be modified
+# Scenario definition
 YEAR = 2050  # considered year
 WRITE_CSV_FILES = False  # Write csv database
+SCENARIO = 'ProRes1'  # Scenario name, used for naming csv files
+CASE = 'ALLFLEX'  # Case name, used for naming csv files
+SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
+
+# Technology definition
 TECHNOLOGY_THRESHOLD = 0  # threshold (%) below which a technology is considered negligible and no unit is created
 TES_CAPACITY = 24  # No of storage hours in TES
 CSP_TES_CAPACITY = 7.5  # No of storage hours in CSP units (usually 7.5 hours)
 CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
+V2G_SHARE = 0.25 # Define how many EV's are V2G
+
+# Clustering options (reduce the number of units - healthy number of units should be <300)
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
 OCEAN = 'WAT'  # Define what ocean fuel equals to (WAT or OTH)
-CCS = False  # Turn Carbon capture and sotrage on/off
-CSP = True
-HYDRO_CLUSTERING = 'HROR'  # Define type of hydro clustering (OFF, HPHS, HROR)
-SCENARIO = 'ProRes1'
-CASE = 'ALLFLEX'
-TECH_CLUSTERING = True
+CSP = True  # Turn Concentrated solar power on/off (when False grouped with PHOT)
+HYDRO_CLUSTERING = 'OFF'  # Define type of hydro clustering (OFF, HPHS, HROR)
+TECH_CLUSTERING = True  # Clusters technologies by treshold (efficient way to reduce total number of units)
+CLUSTER_TRESHOLD = 0  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
 
+# TODO:
+CCS = False  # Turn Carbon capture and sotrage on/off  (When false grouped by same Fuel type)
+
+# %% Inputs
+# Folder destinations
 input_folder = '../../Inputs/'  # Standard input folder
 output_folder = '../../Outputs/'  # Standard output folder
-# %% Inputs
+
 # Load typical units
 '''Get typical units:'''
 
@@ -143,11 +155,73 @@ elif BIOGAS == 'BIO':
     chp_bio['STUR'] = chp_bio['STUR'] + chp_capacities['Biogas_STUR']
 
 # TODO
-data_CHP_heat_capacity = pd.read_csv(input_folder + 'Heat_Capacities.csv', index_col=0)
+# data_CHP_heat_capacity = pd.read_csv(input_folder + 'Heat_Capacities.csv', index_col=0)
 
 # %% Generate capacities for each country
 no_countries = len(countries)
-# TODO
+
+
+def get_above_tech_treshold(typical_tech, treshold):
+    tmp = pd.DataFrame(typical_tech, columns=['COMC', 'ICEN', 'GTUR', 'STUR']).fillna(0)
+    tmp['sum'] = typical_tech.sum(axis=1)
+    cond1 = tmp["COMC"] > tmp["sum"] * treshold
+    cond2 = tmp["ICEN"] > tmp["sum"] * treshold
+    cond3 = tmp["GTUR"] > tmp["sum"] * treshold
+    cond4 = tmp["STUR"] > tmp["sum"] * treshold
+    tmp1 = tmp['COMC'][cond1]
+    tmp2 = tmp['ICEN'][cond2]
+    tmp3 = tmp['GTUR'][cond3]
+    tmp4 = tmp['STUR'][cond4]
+    tmp = pd.DataFrame([tmp1, tmp2, tmp3, tmp4]).fillna(0).T
+    return tmp
+
+
+def get_below_tech_treshold(typical_tech, treshold):
+    tmp = pd.DataFrame(typical_tech, columns=['COMC', 'ICEN', 'GTUR', 'STUR']).fillna(0)
+    tmp['sum'] = typical_tech.sum(axis=1)
+    cond1 = tmp["COMC"] < tmp["sum"] * treshold
+    cond2 = tmp["ICEN"] < tmp["sum"] * treshold
+    cond3 = tmp["GTUR"] < tmp["sum"] * treshold
+    cond4 = tmp["STUR"] < tmp["sum"] * treshold
+    tmp1 = tmp['COMC'][cond1]
+    tmp2 = tmp['ICEN'][cond2]
+    tmp3 = tmp['GTUR'][cond3]
+    tmp4 = tmp['STUR'][cond4]
+    tmp = pd.DataFrame([tmp1, tmp2, tmp3, tmp4]).fillna(0).T
+    return tmp
+
+
+def get_tech_treshold(typical_tech, treshold):
+    tmp_above = get_above_tech_treshold(typical_tech, treshold)
+    tmp_below = get_below_tech_treshold(typical_tech, treshold)
+    tmp_below['sum'] = tmp_below.sum(axis=1)
+    tmp = pd.DataFrame(index=countries)
+    tmp['COMC'] = tmp_above.loc[(tmp_above["COMC"] > tmp_above["STUR"]) &
+                                (tmp_above["COMC"] > tmp_above["GTUR"]) &
+                                (tmp_above["COMC"] > tmp_above["ICEN"]),
+                                ["COMC"]]
+    tmp['COMC'] = tmp['COMC'] + tmp_below['sum']
+
+    tmp['ICEN'] = tmp_above.loc[(tmp_above["ICEN"] > tmp_above["STUR"]) &
+                                (tmp_above["ICEN"] > tmp_above["GTUR"]) &
+                                (tmp_above["ICEN"] > tmp_above["COMC"]),
+                                ["ICEN"]]
+    tmp['ICEN'] = tmp['ICEN'] + tmp_below['sum']
+
+    tmp['GTUR'] = tmp_above.loc[(tmp_above["GTUR"] > tmp_above["STUR"]) &
+                                (tmp_above["GTUR"] > tmp_above["COMC"]) &
+                                (tmp_above["GTUR"] > tmp_above["ICEN"]),
+                                ["GTUR"]]
+    tmp['GTUR'] = tmp['GTUR'] + tmp_below['sum']
+
+    tmp['STUR'] = tmp_above.loc[(tmp_above["STUR"] > tmp_above["COMC"]) &
+                                (tmp_above["STUR"] > tmp_above["GTUR"]) &
+                                (tmp_above["STUR"] > tmp_above["ICEN"]),
+                                ["STUR"]]
+    tmp['STUR'] = tmp['STUR'] + tmp_below['sum']
+    tmp.fillna(0, inplace=True)
+    aa = pd.concat([tmp, tmp_above]).max(level=0)
+    return aa
 
 
 # %% Generate Typical_tech dataframes
@@ -192,65 +266,16 @@ typical_tech_oil = pd.DataFrame([typical_tech_input['OIL_COMC'], typical_tech_in
                                  typical_tech_input['OIL_STUR']], index=['COMC', 'GTUR', 'STUR']).T
 
 if TECH_CLUSTERING is True:
-    tmp = pd.DataFrame(index=countries)
-    tmp['COMC'] = typical_tech_bio.loc[(typical_tech_bio["COMC"] > typical_tech_bio["STUR"]) &
-                                       (typical_tech_bio["COMC"] > typical_tech_bio["GTUR"]) &
-                                       (typical_tech_bio["COMC"] > typical_tech_bio["ICEN"]),
-                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
-    tmp['ICEN'] = typical_tech_bio.loc[(typical_tech_bio["ICEN"] > typical_tech_bio["STUR"]) &
-                                       (typical_tech_bio["ICEN"] > typical_tech_bio["GTUR"]) &
-                                       (typical_tech_bio["ICEN"] > typical_tech_bio["COMC"]),
-                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
-    tmp['GTUR'] = typical_tech_bio.loc[(typical_tech_bio["GTUR"] > typical_tech_bio["STUR"]) &
-                                       (typical_tech_bio["GTUR"] > typical_tech_bio["COMC"]) &
-                                       (typical_tech_bio["GTUR"] > typical_tech_bio["ICEN"]),
-                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
-    tmp['STUR'] = typical_tech_bio.loc[(typical_tech_bio["STUR"] > typical_tech_bio["COMC"]) &
-                                       (typical_tech_bio["STUR"] > typical_tech_bio["GTUR"]) &
-                                       (typical_tech_bio["STUR"] > typical_tech_bio["ICEN"]),
-                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
-    typical_tech_bio = tmp.fillna(0)
-    tmp = pd.DataFrame(index=countries)
-    tmp['COMC'] = typical_tech_gas.loc[(typical_tech_gas["COMC"] > typical_tech_gas["STUR"]) &
-                                       (typical_tech_gas["COMC"] > typical_tech_gas["GTUR"]) &
-                                       (typical_tech_gas["COMC"] > typical_tech_gas["ICEN"]),
-                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
-    tmp['ICEN'] = typical_tech_gas.loc[(typical_tech_gas["ICEN"] > typical_tech_gas["STUR"]) &
-                                       (typical_tech_gas["ICEN"] > typical_tech_gas["GTUR"]) &
-                                       (typical_tech_gas["ICEN"] > typical_tech_gas["COMC"]),
-                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
-    tmp['GTUR'] = typical_tech_gas.loc[(typical_tech_gas["GTUR"] > typical_tech_gas["STUR"]) &
-                                       (typical_tech_gas["GTUR"] > typical_tech_gas["COMC"]) &
-                                       (typical_tech_gas["GTUR"] > typical_tech_gas["ICEN"]),
-                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
-    tmp['STUR'] = typical_tech_gas.loc[(typical_tech_gas["STUR"] > typical_tech_gas["COMC"]) &
-                                       (typical_tech_gas["STUR"] > typical_tech_gas["GTUR"]) &
-                                       (typical_tech_gas["STUR"] > typical_tech_gas["ICEN"]),
-                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
-    typical_tech_gas = tmp.fillna(0)
-    tmp = pd.DataFrame(index=countries)
-    tmp['COMC'] = typical_tech_hrd.loc[(typical_tech_hrd["COMC"] > typical_tech_hrd["STUR"]),
-                                       ["COMC", "STUR"]].sum(axis=1)
-    tmp['STUR'] = typical_tech_hrd.loc[(typical_tech_hrd["STUR"] > typical_tech_hrd["COMC"]),
-                                       ["COMC", "STUR"]].sum(axis=1)
-    typical_tech_hrd = tmp.fillna(0)
-    tmp = pd.DataFrame(index=countries)
-    tmp['COMC'] = typical_tech_oil.loc[(typical_tech_oil["COMC"] > typical_tech_oil["STUR"]) &
-                                       (typical_tech_oil["COMC"] > typical_tech_oil["GTUR"]),
-                                       ["COMC", "STUR", "GTUR"]].sum(axis=1)
-    tmp['GTUR'] = typical_tech_oil.loc[(typical_tech_oil["GTUR"] > typical_tech_oil["STUR"]) &
-                                       (typical_tech_oil["GTUR"] > typical_tech_oil["COMC"]),
-                                       ["COMC", "STUR", "GTUR"]].sum(axis=1)
-    tmp['STUR'] = typical_tech_oil.loc[(typical_tech_oil["STUR"] > typical_tech_oil["COMC"]) &
-                                       (typical_tech_oil["STUR"] > typical_tech_oil["GTUR"]),
-                                       ["COMC", "STUR", "GTUR"]].sum(axis=1)
-    typical_tech_oil = tmp.fillna(0)
+    typical_tech_bio = get_tech_treshold(typical_tech_bio, CLUSTER_TRESHOLD)
+    typical_tech_gas = get_tech_treshold(typical_tech_gas, CLUSTER_TRESHOLD)
+    typical_tech_hrd = get_tech_treshold(typical_tech_hrd, CLUSTER_TRESHOLD)
+    typical_tech_oil = get_tech_treshold(typical_tech_oil, CLUSTER_TRESHOLD)
 
 typical_tech_input.drop(columns=['GAS_Autoproducers', 'OIL_Autoproducers'], inplace=True)
 technology_types = ['HDAM', 'HROR', 'HPHS', 'PHOT', 'WTOF', 'WTON', 'CAES', 'BATS', 'BEVS', 'THMS']
 typical_tech = pd.DataFrame([typical_tech_input['WAT_HDAM'], typical_tech_input['WAT_HPHS'],
-                             typical_tech_input['WAT_HROR'],
-                             typical_tech_input['WIN_WTOF'], typical_tech_input['WIN_WTON']]).T
+                             typical_tech_input['WAT_HROR'], typical_tech_input['WIN_WTOF'],
+                             typical_tech_input['WIN_WTON']]).T
 typical_tech.columns = typical_tech.columns.str[4:]
 typical_tech = typical_tech.assign(CAES=1, BATS=1, BEVS=1, THMS=1)
 
@@ -303,7 +328,6 @@ typical_sun.fillna(0, inplace=True)
 
 
 # %% HYDRO
-# TODO
 # Make a function with three statements, hydro can either HROR only, HDAM+HPHS, or each technology individually
 def get_typical_hydro(typical_hydro, clustering=None):
     """
@@ -312,14 +336,7 @@ def get_typical_hydro(typical_hydro, clustering=None):
         - HROR & HPHS (HPHS + HDAM)
         - HROR, HPHS & HDAM individually
     """
-    # if clustering == 'HPHS':
-    #     typical_wat = typical_hydro.copy()
-    #     typical_wat['cluster'], typical_wat['sum'] = typical_wat['HDAM'] + typical_wat['HPHS'], typical_wat.sum(
-    #         axis=1)
-    #     typical_wat.drop(['HDAM', 'HPHS'], axis=1, inplace=True)
-    #     typical_wat = (typical_wat.loc[:, 'HROR':'cluster'].div(typical_wat['sum'], axis=0))
-    #     typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
-    #     typical_wat.rename(columns={'cluster': 'HPHS'}, inplace=True)
+
     if clustering == 'HROR':
         typical_wat = typical_hydro.copy()
         typical_wat['HROR'] = typical_wat['HDAM'] + typical_wat['HPHS'] + typical_wat['HROR']
@@ -327,10 +344,10 @@ def get_typical_hydro(typical_hydro, clustering=None):
         typical_wat = (typical_wat.loc[:, ['HROR']].div(typical_wat['HROR'], axis=0))
         typical_wat.fillna(0, inplace=True)
     else:
-    # elif clustering == 'OFF':
+        # elif clustering == 'OFF':
         typical_wat = typical_hydro.copy()
         typical_wat['sum'] = typical_wat.sum(axis=1)
-        typical_wat = (typical_wat.loc[:, ['HDAM','HROR','HPHS']].div(typical_wat['sum'], axis=0))
+        typical_wat = (typical_wat.loc[:, ['HDAM', 'HROR', 'HPHS']].div(typical_wat['sum'], axis=0))
         typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
     return typical_wat
 
@@ -546,7 +563,6 @@ for c in cap:
         print('[INFO    ]: ' + 'Country ' + c + ': no CHP units found. Skipping')
 
     # %%
-    # TODO
     # Avoid merging units at this stage, just assign units as they were before
     # Special treatment for the hydro data.
     # HDAM and HPHS are merged into a single unit with the total reservoir capacity
@@ -610,15 +626,16 @@ for c in cap:
         else:
             print('[INFO    ]: ' + 'Country ' + c + ' No HDAM for country ' + c)
 
-        # Special treatment for BEVS
+    # Special treatment for BEVS
     if units[units.Technology == 'BEVS'].empty is True:
         print('[INFO    ]: ' + 'Country ' + c + ' (BEVS) capacity is 0 or BEVS are not present')
     else:
         tmp_bev = units[units.Technology == 'BEVS']
         bevsindex = tmp_bev.index[0]
-        tmp_bev['STOMaxChargingPower'] = tmp_bev['PowerCapacity'] / 8.974294288
-        tmp_bev['STOCapacity'] = tmp_bev['PowerCapacity']
-        tmp_bev['PowerCapacity'] = tmp_bev['STOMaxChargingPower']
+        tmp_bev['PowerCapacity'] = tmp_bev['PowerCapacity'] * V2G_SHARE
+        tmp_bev['STOMaxChargingPower'] = tmp_bev['PowerCapacity']
+        tmp_bev['STOCapacity'] = tmp_bev['PowerCapacity'] * 4.48714910828538
+        # tmp_bev['PowerCapacity'] = tmp_bev['STOMaxChargingPower']
         units.update(tmp_bev)
 
     # Sort columns as they should be and check if Zone is defined
@@ -626,7 +643,7 @@ for c in cap:
             'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu',
             'RampingCost', 'PartLoadMin', 'MinEfficiency', 'StartUpTime', 'CO2Intensity',
             'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor', 'STOCapacity', 'STOSelfDischarge',
-            'STOMaxChargingPower', 'STOChargingEfficiency', 'CHPMaxHeat', 'Nunits']
+            'STOMaxChargingPower', 'STOChargingEfficiency', 'CHPMaxHeat', 'COP','Nunits']
     units['Zone'] = c
     units = units[cols]
 
@@ -685,4 +702,4 @@ def write_csv_files(power_plant_filename, units, write_csv=None):
         print('[WARNING ]: ' + 'WRITE_CSV_FILES = False, unable to write .csv files')
 
 
-write_csv_files('JRC_EU_TIMES_' + SCENARIO + '_' + str(YEAR) + '_' + CASE, allunits, WRITE_CSV_FILES)
+write_csv_files(SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE, allunits, WRITE_CSV_FILES)
