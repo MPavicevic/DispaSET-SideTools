@@ -25,12 +25,15 @@ WRITE_CSV_FILES = False  # Write csv database
 TECHNOLOGY_THRESHOLD = 0  # threshold (%) below which a technology is considered negligible and no unit is created
 TES_CAPACITY = 24  # No of storage hours in TES
 CSP_TES_CAPACITY = 7.5  # No of storage hours in CSP units (usually 7.5 hours)
-CHP_TYPE = 'back-pressure'  # Define CHP type: None, back-pressure or Extraction
+CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
 OCEAN = 'WAT'  # Define what ocean fuel equals to (WAT or OTH)
 CCS = False  # Turn Carbon capture and sotrage on/off
-CSP = False
-HYDRO_CLUSTERING = 'OFF' # Define type of hydro clustering (OFF, HPHS, HROR)
+CSP = True
+HYDRO_CLUSTERING = 'HROR'  # Define type of hydro clustering (OFF, HPHS, HROR)
+SCENARIO = 'ProRes1'
+CASE = 'ALLFLEX'
+TECH_CLUSTERING = True
 
 input_folder = '../../Inputs/'  # Standard input folder
 output_folder = '../../Outputs/'  # Standard output folder
@@ -188,6 +191,61 @@ typical_tech_hrd = pd.DataFrame([typical_tech_input['HRD_COMC'], typical_tech_in
 typical_tech_oil = pd.DataFrame([typical_tech_input['OIL_COMC'], typical_tech_input['BIO_GTUR'],
                                  typical_tech_input['OIL_STUR']], index=['COMC', 'GTUR', 'STUR']).T
 
+if TECH_CLUSTERING is True:
+    tmp = pd.DataFrame(index=countries)
+    tmp['COMC'] = typical_tech_bio.loc[(typical_tech_bio["COMC"] > typical_tech_bio["STUR"]) &
+                                       (typical_tech_bio["COMC"] > typical_tech_bio["GTUR"]) &
+                                       (typical_tech_bio["COMC"] > typical_tech_bio["ICEN"]),
+                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
+    tmp['ICEN'] = typical_tech_bio.loc[(typical_tech_bio["ICEN"] > typical_tech_bio["STUR"]) &
+                                       (typical_tech_bio["ICEN"] > typical_tech_bio["GTUR"]) &
+                                       (typical_tech_bio["ICEN"] > typical_tech_bio["COMC"]),
+                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
+    tmp['GTUR'] = typical_tech_bio.loc[(typical_tech_bio["GTUR"] > typical_tech_bio["STUR"]) &
+                                       (typical_tech_bio["GTUR"] > typical_tech_bio["COMC"]) &
+                                       (typical_tech_bio["GTUR"] > typical_tech_bio["ICEN"]),
+                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
+    tmp['STUR'] = typical_tech_bio.loc[(typical_tech_bio["STUR"] > typical_tech_bio["COMC"]) &
+                                       (typical_tech_bio["STUR"] > typical_tech_bio["GTUR"]) &
+                                       (typical_tech_bio["STUR"] > typical_tech_bio["ICEN"]),
+                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
+    typical_tech_bio = tmp.fillna(0)
+    tmp = pd.DataFrame(index=countries)
+    tmp['COMC'] = typical_tech_gas.loc[(typical_tech_gas["COMC"] > typical_tech_gas["STUR"]) &
+                                       (typical_tech_gas["COMC"] > typical_tech_gas["GTUR"]) &
+                                       (typical_tech_gas["COMC"] > typical_tech_gas["ICEN"]),
+                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
+    tmp['ICEN'] = typical_tech_gas.loc[(typical_tech_gas["ICEN"] > typical_tech_gas["STUR"]) &
+                                       (typical_tech_gas["ICEN"] > typical_tech_gas["GTUR"]) &
+                                       (typical_tech_gas["ICEN"] > typical_tech_gas["COMC"]),
+                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
+    tmp['GTUR'] = typical_tech_gas.loc[(typical_tech_gas["GTUR"] > typical_tech_gas["STUR"]) &
+                                       (typical_tech_gas["GTUR"] > typical_tech_gas["COMC"]) &
+                                       (typical_tech_gas["GTUR"] > typical_tech_gas["ICEN"]),
+                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
+    tmp['STUR'] = typical_tech_gas.loc[(typical_tech_gas["STUR"] > typical_tech_gas["COMC"]) &
+                                       (typical_tech_gas["STUR"] > typical_tech_gas["GTUR"]) &
+                                       (typical_tech_gas["STUR"] > typical_tech_gas["ICEN"]),
+                                       ["COMC", "STUR", "GTUR", "ICEN"]].sum(axis=1)
+    typical_tech_gas = tmp.fillna(0)
+    tmp = pd.DataFrame(index=countries)
+    tmp['COMC'] = typical_tech_hrd.loc[(typical_tech_hrd["COMC"] > typical_tech_hrd["STUR"]),
+                                       ["COMC", "STUR"]].sum(axis=1)
+    tmp['STUR'] = typical_tech_hrd.loc[(typical_tech_hrd["STUR"] > typical_tech_hrd["COMC"]),
+                                       ["COMC", "STUR"]].sum(axis=1)
+    typical_tech_hrd = tmp.fillna(0)
+    tmp = pd.DataFrame(index=countries)
+    tmp['COMC'] = typical_tech_oil.loc[(typical_tech_oil["COMC"] > typical_tech_oil["STUR"]) &
+                                       (typical_tech_oil["COMC"] > typical_tech_oil["GTUR"]),
+                                       ["COMC", "STUR", "GTUR"]].sum(axis=1)
+    tmp['GTUR'] = typical_tech_oil.loc[(typical_tech_oil["GTUR"] > typical_tech_oil["STUR"]) &
+                                       (typical_tech_oil["GTUR"] > typical_tech_oil["COMC"]),
+                                       ["COMC", "STUR", "GTUR"]].sum(axis=1)
+    tmp['STUR'] = typical_tech_oil.loc[(typical_tech_oil["STUR"] > typical_tech_oil["COMC"]) &
+                                       (typical_tech_oil["STUR"] > typical_tech_oil["GTUR"]),
+                                       ["COMC", "STUR", "GTUR"]].sum(axis=1)
+    typical_tech_oil = tmp.fillna(0)
+
 typical_tech_input.drop(columns=['GAS_Autoproducers', 'OIL_Autoproducers'], inplace=True)
 technology_types = ['HDAM', 'HROR', 'HPHS', 'PHOT', 'WTOF', 'WTON', 'CAES', 'BATS', 'BEVS', 'THMS']
 typical_tech = pd.DataFrame([typical_tech_input['WAT_HDAM'], typical_tech_input['WAT_HPHS'],
@@ -254,23 +312,25 @@ def get_typical_hydro(typical_hydro, clustering=None):
         - HROR & HPHS (HPHS + HDAM)
         - HROR, HPHS & HDAM individually
     """
-    if clustering == 'HPHS':
-        typical_wat = typical_hydro.copy()
-        typical_wat['cluster'], typical_wat['sum'] = typical_wat['HDAM'] + typical_wat['HPHS'], typical_wat.sum(
-            axis=1)
-        typical_wat.drop(['HDAM', 'HPHS'], axis=1, inplace=True)
-        typical_wat = (typical_wat.loc[:, 'HROR':'cluster'].div(typical_wat['sum'], axis=0))
-        typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
-        typical_wat.rename(columns={'cluster': 'HPHS'}, inplace=True)
-    elif clustering == 'HROR':
+    # if clustering == 'HPHS':
+    #     typical_wat = typical_hydro.copy()
+    #     typical_wat['cluster'], typical_wat['sum'] = typical_wat['HDAM'] + typical_wat['HPHS'], typical_wat.sum(
+    #         axis=1)
+    #     typical_wat.drop(['HDAM', 'HPHS'], axis=1, inplace=True)
+    #     typical_wat = (typical_wat.loc[:, 'HROR':'cluster'].div(typical_wat['sum'], axis=0))
+    #     typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
+    #     typical_wat.rename(columns={'cluster': 'HPHS'}, inplace=True)
+    if clustering == 'HROR':
         typical_wat = typical_hydro.copy()
         typical_wat['HROR'] = typical_wat['HDAM'] + typical_wat['HPHS'] + typical_wat['HROR']
         typical_wat.drop(['HDAM', 'HPHS'], axis=1, inplace=True)
-        typical_wat.fillna(0,inplace=True)
-    elif clustering == 'OFF':
+        typical_wat = (typical_wat.loc[:, ['HROR']].div(typical_wat['HROR'], axis=0))
+        typical_wat.fillna(0, inplace=True)
+    else:
+    # elif clustering == 'OFF':
         typical_wat = typical_hydro.copy()
         typical_wat['sum'] = typical_wat.sum(axis=1)
-        typical_wat = (typical_wat.loc[:, 'HDAM':'HPHS'].div(typical_wat['sum'], axis=0))
+        typical_wat = (typical_wat.loc[:, ['HDAM','HROR','HPHS']].div(typical_wat['sum'], axis=0))
         typical_wat = typical_wat[typical_wat.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)].fillna(0)
     return typical_wat
 
@@ -397,6 +457,20 @@ for c in cap:
             else:
                 units.loc['Nunits', name] = np.ceil(cap_tot.loc[i, j] / units.loc['PowerCapacity', name])
                 units.loc['PowerCapacity', name] = cap_tot.loc[i, j] / units.loc['Nunits', name]
+
+            if CSP_TES_CAPACITY == 0:
+                print('[INFO    ]: ' + 'Country ' + c + ' (' + name + '): no TES unit')
+            else:
+                if (i == 'STUR') and (j == 'SUN'):
+                    # units_chp.loc['STOCapacity',name] = units_chp[name, 'PowerCapacity'].values * TES_CAPACITY
+                    tmp_tes = pd.DataFrame(units.loc[:, name], columns=[name]).T
+                    tmp_tes['STOCapacity'] = tmp_tes['PowerCapacity'] * CSP_TES_CAPACITY
+                    tmp_tes['STOSelfDischarge'] = str(0.03)
+                    tmp_tes = tmp_tes.T
+                    units.update(tmp_tes)
+                    print('[INFO    ]: ' + 'Country ' + c + ' (' + name + '): Storage of ' + str(
+                        CSP_TES_CAPACITY) + ' h added')
+
     if len(units) > 0:
         units = units.transpose()
         del units['Year']
@@ -477,37 +551,64 @@ for c in cap:
     # Special treatment for the hydro data.
     # HDAM and HPHS are merged into a single unit with the total reservoir capacity
     # Find if there are HPHS units:
-    tmp = units[units.Technology == 'HPHS']
-    if len(tmp) == 1:
-        hphsdata = tmp.iloc[0, :]
-        hphsindex = tmp.index[0]
-        # The pumped hydro power is also the chargin power:
-        hphsdata['STOMaxChargingPower'] = hphsdata['PowerCapacity']
-        tmp = units[units.Technology == 'HDAM']
+    if HYDRO_CLUSTERING == 'HPHS':
+        tmp = units[units.Technology == 'HPHS']
         if len(tmp) == 1:
-            damdata = tmp.iloc[0, :]
-            # adding the dam power to the pumpe hydro:
-            hphsdata['PowerCapacity'] += damdata['PowerCapacity']
-            # delte the hdam row:
-            units = units[units.Technology != 'HDAM']
-        if c in reservoirs.index:
-            hphsdata['STOCapacity'] = reservoirs[c]
-        else:
-            print('[INFO    ]: ' + 'Country ' + c + ' No Reservoir Capacity data for country ' + c +
-                  '. Assuming a conservative 5 hours of storage')
-            hphsdata['STOCapacity'] = hphsdata['PowerCapacity'] * 5
-        units.loc[hphsindex, :] = hphsdata
-    elif len(tmp) == 0:
-        tmp = units[units.Technology == 'HDAM']
-        if len(tmp) == 1:
+            hphsdata = tmp.iloc[0, :]
+            hphsindex = tmp.index[0]
+            # The pumped hydro power is also the chargin power:
+            hphsdata['STOMaxChargingPower'] = hphsdata['PowerCapacity']
+            tmp = units[units.Technology == 'HDAM']
+            if len(tmp) == 1:
+                damdata = tmp.iloc[0, :]
+                # adding the dam power to the pumpe hydro:
+                hphsdata['PowerCapacity'] += damdata['PowerCapacity']
+                # delte the hdam row:
+                units = units[units.Technology != 'HDAM']
             if c in reservoirs.index:
-                units.loc[tmp.index[0], 'STOCapacity'] = reservoirs[c]
+                hphsdata['STOCapacity'] = reservoirs[c]
             else:
                 print('[INFO    ]: ' + 'Country ' + c + ' No Reservoir Capacity data for country ' + c +
                       '. Assuming a conservative 5 hours of storage')
-                units.loc[tmp.index[0], 'STOCapacity'] = units.loc[tmp.index[0], 'PowerCapacity'] * 5
+                hphsdata['STOCapacity'] = hphsdata['PowerCapacity'] * 5
+            units.loc[hphsindex, :] = hphsdata
+        elif len(tmp) == 0:
+            tmp = units[units.Technology == 'HDAM']
+            if len(tmp) == 1:
+                if c in reservoirs.index:
+                    units.loc[tmp.index[0], 'STOCapacity'] = reservoirs[c]
+                else:
+                    print('[INFO    ]: ' + 'Country ' + c + ' No Reservoir Capacity data for country ' + c +
+                          '. Assuming a conservative 5 hours of storage')
+                    units.loc[tmp.index[0], 'STOCapacity'] = units.loc[tmp.index[0], 'PowerCapacity'] * 5
+        else:
+            sys.exit('Various HPHS units!')
     else:
-        sys.exit('Various HPHS units!')
+        tmp = units[units.Technology == 'HPHS']
+        if len(tmp) == 1:
+            hphsdata = tmp.iloc[0, :]
+            hphsindex = tmp.index[0]
+            # The pumped hydro power is also the chargin power:
+            hphsdata['STOMaxChargingPower'] = hphsdata['PowerCapacity']
+            print(
+                '[INFO    ]: ' + 'Country ' + c + ' No Reservoir Capacity data for country ' + c + '. Assuming a conservative 8 hours of storage')
+            hphsdata['STOCapacity'] = hphsdata['PowerCapacity'] * 8
+            units.loc[hphsindex, :] = hphsdata
+        else:
+            print('[INFO    ]: ' + 'Country ' + c + ' No HPHS for country ' + c)
+
+        tmp = units[units.Technology == 'HDAM']
+        if len(tmp) == 1:
+            hphsdata = tmp.iloc[0, :]
+            hphsindex = tmp.index[0]
+            if c in reservoirs.index:
+                units.loc[tmp.index[0], 'STOCapacity'] = reservoirs[c]
+            else:
+                print(
+                    '[INFO    ]: ' + 'Country ' + c + ' No Reservoir Capacity data for country ' + c + '. Assuming a conservative 5 hours of storage')
+                units.loc[tmp.index[0], 'STOCapacity'] = units.loc[tmp.index[0], 'PowerCapacity'] * 8
+        else:
+            print('[INFO    ]: ' + 'Country ' + c + ' No HDAM for country ' + c)
 
         # Special treatment for BEVS
     if units[units.Technology == 'BEVS'].empty is True:
@@ -584,4 +685,4 @@ def write_csv_files(power_plant_filename, units, write_csv=None):
         print('[WARNING ]: ' + 'WRITE_CSV_FILES = False, unable to write .csv files')
 
 
-write_csv_files('clustered_' + str(YEAR) + '_THFLEX', allunits, WRITE_CSV_FILES)
+write_csv_files('JRC_EU_TIMES_' + SCENARIO + '_' + str(YEAR) + '_' + CASE, allunits, WRITE_CSV_FILES)
