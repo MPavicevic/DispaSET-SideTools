@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This script generates the PowerPlant Dispa-SET data for the JRC-EU-TIMES run
+This script generates the PowerPlant Dispa-SET data for the JRC-EU-TIMES runs
 
 @authors: Matija Pavičević, KU Leuven
           Sylvain Quoilin, KU Leuven
@@ -21,6 +21,7 @@ from dispaset_sidetools.common import make_dir
 
 # %% Adjustable inputs that should be modified
 # Scenario definition
+""" output file: SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE """
 YEAR = 2050  # considered year
 WRITE_CSV_FILES = False  # Write csv database
 SCENARIO = 'ProRes1'  # Scenario name, used for naming csv files
@@ -31,10 +32,10 @@ SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 TECHNOLOGY_THRESHOLD = 0  # threshold (%) below which a technology is considered negligible and no unit is created
 CHP_TES_CAPACITY = 24  # No of storage hours in TES
 CSP_TES_CAPACITY = 7.5  # No of storage hours in CSP units (usually 7.5 hours)
-P2G_TES_CAPACITY = 5 # No of storage hours in P2H units (500l tank = 5h of storage)
+P2G_TES_CAPACITY = 5  # No of storage hours in P2H units (500l tank = 5h of storage)
 CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
-V2G_SHARE = 0.25 # Define how many EV's are V2G
-V2G_PE_RATIO = 4.48714910828538 # Define Power to Energy ratio [MWh / MW]
+V2G_SHARE = 0.25  # Define how many EV's are V2G
+V2G_PE_RATIO = 4.48714910828538  # Define Power to Energy ratio [MWh / MW]
 
 # Clustering options (reduce the number of units - healthy number of units should be <300)
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
@@ -54,18 +55,21 @@ output_folder = '../../Outputs/'  # Standard output folder
 
 # Local files
 # Typical units
-typical_units=pd.read_csv(input_folder + 'Typical_Units.csv')
+typical_units = pd.read_csv(input_folder + 'Typical_Units.csv')
+
 # Capacities
 capacities = pd.read_csv(input_folder + 'TIMES_Capacities_fuel_2050.csv', index_col=0)
 chp_capacities = pd.read_csv(input_folder + 'TIMES_CHP_Capacities_2050.csv', index_col=0)
+
 # Hydro reservoirs
 reservoirs = pd.read_csv(input_folder + 'Hydro_Reservoirs.csv', index_col=0, header=None)
+
 # Electric wehicles
 batteries = pd.read_excel(input_folder + 'TIMES_EV_Capacities.xlsx', index_col=0)
+
 # Power to heat
 power2heat_capacities = pd.read_excel(input_folder + 'TIMES_P2H_Capacities_2050.xlsx', index_col=0)
 power2heat_COP = pd.read_excel(input_folder + 'TIMES_P2H_COP_Parameters_2050.xlsx', index_col=0)
-
 
 # %% Load typical units
 '''Get typical units:'''
@@ -94,6 +98,7 @@ def get_typical_units(typical_units, chp_type=None):
     else:
         print('[CRITICAL ]: chp_type is of wrong string (should be set to None, Extraction or back-pressure)')
     return typical_units
+
 
 typical = get_typical_units(typical_units)
 typical_chp = get_typical_units(typical_units, chp_type=CHP_TYPE)
@@ -131,7 +136,7 @@ bevs_cap['BEVS'] = batteries[str(YEAR)] * 1000
 # %% P2H data
 power2heat_capacities = pd.DataFrame(power2heat_capacities)
 p2h_cap = pd.DataFrame()
-p2h_cap['P2HT'] = power2heat_capacities.iloc[:,0] * 1000
+p2h_cap['P2HT'] = power2heat_capacities.iloc[:, 0] * 1000
 p2h_cap.drop(p2h_cap.index[:3], inplace=True)
 
 # %% CHP Data
@@ -408,12 +413,9 @@ for c in countries:
     tmp_OIL.rename(columns={c: 'OIL'}, inplace=True)
     tmp_BEV = pd.DataFrame(bevs_cap.loc[c])
     tmp_BEV.rename(columns={c: 'OTH'}, inplace=True)
-
     tmp_P2H = pd.DataFrame(p2h_cap.loc[c])
     tmp_P2H.rename(columns={c: 'OTH'}, inplace=True)
-
     tmp_OTH = tmp_BEV.combine_first(tmp_P2H)
-
     tmp_other = pd.DataFrame([tmp_cap['GEO'], tmp_cap['LIG'], tmp_cap['NUC'], tmp_cap['PEA'], tmp_cap['WST']]).T
     tmp_other.rename(index={c: 'STUR'}, inplace=True)
     df_merged = tmp_other.merge(tmp_GAS, how='outer', left_index=True, right_index=True)
@@ -444,15 +446,12 @@ for c in countries:
 # %% Typical unit allocation
 allunits = {}
 
-# zones = ['SE']   
 for c in cap:
-    # for c in zones:
     # Non CHP units
     cap_tot = cap[c]
     units = pd.DataFrame()
     for j, i in cap_tot.unstack().index:
         if cap_tot.loc[i, j] > 0:
-            #        if cap_tot.loc[i]>0 & cap_tot.loc[j]>0:
             name = c + '_' + i + '_' + j
             tmp = typical[(typical.Technology == i) & (typical.Fuel == j)]
             if len(tmp) == 0:
@@ -484,7 +483,6 @@ for c in cap:
                 print('Country ' + c + ' (' + i + ',' + j + '): more than one typical unit found, taking average')
                 units[name] = tmp.mean()
                 units.loc['Technology', name], units.loc['Fuel', name] = i, j
-
             # Adapting the resulting power plants definitions:
             units.loc['Unit', name] = name
             if units.loc['PowerCapacity', name] == 0:
@@ -494,19 +492,18 @@ for c in cap:
             else:
                 units.loc['Nunits', name] = np.ceil(cap_tot.loc[i, j] / units.loc['PowerCapacity', name])
                 units.loc['PowerCapacity', name] = cap_tot.loc[i, j] / units.loc['Nunits', name]
-
+            # CSP
             if CSP_TES_CAPACITY == 0:
                 print('[INFO    ]: ' + 'Country ' + c + ' (' + name + '): no TES unit')
             else:
                 if (i == 'STUR') and (j == 'SUN'):
-                    # units_chp.loc['STOCapacity',name] = units_chp[name, 'PowerCapacity'].values * TES_CAPACITY
                     tmp_tes = pd.DataFrame(units.loc[:, name], columns=[name]).T
                     tmp_tes['STOCapacity'] = tmp_tes['PowerCapacity'] * CSP_TES_CAPACITY
                     tmp_tes['STOSelfDischarge'] = str(0.03)
                     tmp_tes = tmp_tes.T
                     units.update(tmp_tes)
-                    print('[INFO    ]: ' + 'Country ' + c + ' (' + name + '): Storage of ' + str(
-                        CSP_TES_CAPACITY) + ' h added')
+                    print('[INFO    ]: ' + 'Country ' + c + ' (' + name + '): Storage of ' + str(CSP_TES_CAPACITY) +
+                          ' h added')
 
     if len(units) > 0:
         units = units.transpose()
@@ -564,7 +561,7 @@ for c in cap:
             else:
                 units_chp.loc['Nunits', name] = np.ceil(cap_tot_chp.loc[i, j] / units_chp.loc['PowerCapacity', name])
                 units_chp.loc['PowerCapacity', name] = cap_tot_chp.loc[i, j] / units_chp.loc['Nunits', name]
-
+            # TES
             if CHP_TES_CAPACITY == 0:
                 print('[INFO    ]: ' + 'Country ' + c + ' (' + name + '): no TES unit')
             else:
@@ -667,13 +664,13 @@ for c in cap:
         tmp_p2h['Tnominal'] = power2heat_COP['Tnominal'].loc[c]
         tmp_p2h['coef_COP_a'] = power2heat_COP['coef_COP_a'].loc[c]
         tmp_p2h['coef_COP_b'] = power2heat_COP['coef_COP_b'].loc[c]
+        # P2H TES
         if P2G_TES_CAPACITY == 0:
             print('[INFO    ]: ' + 'Country ' + c + ' (' + name + '): no P2H_TES unit')
         else:
             tmp_p2h['STOCapacity'] = tmp_p2h['PowerCapacity'] * P2G_TES_CAPACITY
             tmp_p2h['STOSelfDischarge'] = 0.03
         units.update(tmp_p2h)
-
 
     # Sort columns as they should be and check if Zone is defined
     cols = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Technology', 'Fuel', 'Efficiency', 'MinUpTime',
