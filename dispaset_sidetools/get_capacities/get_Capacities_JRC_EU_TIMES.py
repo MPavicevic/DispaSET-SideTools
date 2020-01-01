@@ -51,25 +51,27 @@ CCS = False  # Turn Carbon capture and sotrage on/off  (When false grouped by sa
 # %% Inputs
 # Folder destinations
 input_folder = '../../Inputs/'  # Standard input folder
+source_folder = 'JRC_EU_TIMES/'
 output_folder = '../../Outputs/'  # Standard output folder
 
 # Local files
 # Typical units
 typical_units = pd.read_csv(input_folder + 'Typical_Units.csv')
+typical_tech_input = pd.read_csv(input_folder + source_folder + 'TIMES_Capacities_technology_2050.csv', index_col=0)
 
 # Capacities
-capacities = pd.read_csv(input_folder + 'TIMES_Capacities_fuel_2050.csv', index_col=0)
-chp_capacities = pd.read_csv(input_folder + 'TIMES_CHP_Capacities_2050.csv', index_col=0)
+capacities = pd.read_csv(input_folder + source_folder + 'TIMES_Capacities_fuel_2050.csv', index_col=0)
+chp_capacities = pd.read_csv(input_folder + source_folder + 'TIMES_CHP_Capacities_2050.csv', index_col=0)
 
 # Hydro reservoirs
 reservoirs = pd.read_csv(input_folder + 'Hydro_Reservoirs.csv', index_col=0, header=None)
 
 # Electric wehicles
-batteries = pd.read_excel(input_folder + 'TIMES_EV_Capacities.xlsx', index_col=0)
+batteries = pd.read_excel(input_folder + source_folder + 'TIMES_EV_Capacities.xlsx', index_col=0)
 
 # Power to heat
-power2heat_capacities = pd.read_excel(input_folder + 'TIMES_P2H_Capacities_2050.xlsx', index_col=0)
-power2heat_COP = pd.read_excel(input_folder + 'TIMES_P2H_COP_Parameters_2050.xlsx', index_col=0)
+power2heat_capacities = pd.read_excel(input_folder + source_folder + 'TIMES_P2H_Capacities_2050.xlsx', index_col=0)
+power2heat_COP = pd.read_excel(input_folder + source_folder + 'TIMES_P2H_COP_Parameters_2050.xlsx', index_col=0)
 
 # %% Load typical units
 '''Get typical units:'''
@@ -244,7 +246,6 @@ def get_tech_treshold(typical_tech, treshold):
 
 
 # %% Generate Typical_tech dataframes
-typical_tech_input = pd.read_csv(input_folder + 'TIMES_Capacities_technology_2050.csv', index_col=0)
 if CCS is False:
     typical_tech_input['GAS_COMC'] = typical_tech_input['GAS_COMC'] + typical_tech_input['GAS_COMC_CCS']
     typical_tech_input['BIO_COMC'] = typical_tech_input['BIO_COMC'] + typical_tech_input['BIO_COMC_CCS']
@@ -727,8 +728,9 @@ def write_csv_files(power_plant_filename, units, write_csv=None):
     allunits = units
     if write_csv is True:
         for c in allunits:
-            make_dir(output_folder + 'Database')
-            folder = output_folder + 'Database/PowerPlants/'
+            make_dir((output_folder))
+            make_dir(output_folder + source_folder + 'Database')
+            folder = output_folder + source_folder + 'Database/PowerPlants/'
             make_dir(folder)
             make_dir(folder + c)
             allunits[c].to_csv(folder + c + '/' + filename)
