@@ -23,7 +23,7 @@ from dispaset_sidetools.common import make_dir
 # Scenario definition
 """ output file: SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE """
 YEAR = 2050  # considered year
-WRITE_CSV_FILES = False  # Write csv database
+WRITE_CSV_FILES = True  # Write csv database
 SCENARIO = 'ProRes1'  # Scenario name, used for naming csv files
 CASE = 'ALLFLEX'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
@@ -41,9 +41,9 @@ V2G_PE_RATIO = 4.48714910828538  # Define Power to Energy ratio [MWh / MW]
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
 OCEAN = 'WAT'  # Define what ocean fuel equals to (WAT or OTH)
 CSP = True  # Turn Concentrated solar power on/off (when False grouped with PHOT)
-HYDRO_CLUSTERING = 'OFF'  # Define type of hydro clustering (OFF, HPHS, HROR)
+HYDRO_CLUSTERING = 'HPHS'  # Define type of hydro clustering (OFF, HPHS, HROR)
 TECH_CLUSTERING = True  # Clusters technologies by treshold (efficient way to reduce total number of units)
-CLUSTER_TRESHOLD = 0  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
+CLUSTER_TRESHOLD = 0.3  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
 
 # TODO:
 CCS = False  # Turn Carbon capture and sotrage on/off  (When false grouped by same Fuel type)
@@ -692,13 +692,15 @@ def write_pickle_file(units, file_name):
     :file_name:     name of the pickle file (has to be a string)
     """
     allunits = units
-    pkl_file = open(file_name + '.p', 'wb')
+
+    make_dir((input_folder))
+    make_dir(input_folder + source_folder)
+    folder = input_folder + source_folder
+    make_dir(folder)
+    pkl_file = open(folder + file_name + '.p', 'wb')
     pickle.dump(allunits, pkl_file)
     pkl_file.close()
     print('[INFO    ]: ' + 'Pickle file ' + file_name + ' has been written')
-
-
-# write_pickle_file(allunits, 'Test')
 
 # %% Count total number of units
 def unit_count(units):
@@ -739,3 +741,4 @@ def write_csv_files(power_plant_filename, units, write_csv=None):
 
 
 write_csv_files(SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE, allunits, WRITE_CSV_FILES)
+write_pickle_file(allunits, SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE)
