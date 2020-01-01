@@ -44,3 +44,7 @@ Currently the main developers of the DispaSET-SideTools package are the followin
 
 - Matija Pavičević  (KU Leuven, Belgium)
 - Sylvain Quoilin (KU Leuven, Belgium)
+
+Contributors:
+
+- Andrea Mangipinto
