@@ -112,7 +112,7 @@ for c in demand_heat_ad_2016.columns:
     curve_p2h[c]['Total'] = curve_p2h[c]['Electric boilers'] + curve_p2h[c]['Heat pump - air'] + \
                             curve_p2h[c]['Heat pump - ground']
     curve_p2h[c] = pd.DataFrame(curve_p2h[c]['Total'])
-    curve_p2h[c].rename(columns={"Total": c + '_P2H_OTH'}, inplace=True)
+    curve_p2h[c].rename(columns={"Total": c + '_P2HT_OTH'}, inplace=True)
 
 for c in demand_heat_ad_2016.columns:
     curve_chp[c] = pd.DataFrame(1, index=demand_heat_ad_2016[c].index, columns=chp_units[c].index)
