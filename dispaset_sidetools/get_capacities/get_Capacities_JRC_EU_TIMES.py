@@ -30,7 +30,7 @@ SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 
 # Technology definition
 TECHNOLOGY_THRESHOLD = 0  # threshold (%) below which a technology is considered negligible and no unit is created
-CHP_TES_CAPACITY = 24  # No of storage hours in TES
+CHP_TES_CAPACITY = 12  # No of storage hours in TES
 CSP_TES_CAPACITY = 7.5  # No of storage hours in CSP units (usually 7.5 hours)
 P2G_TES_CAPACITY = 5  # No of storage hours in P2H units (500l tank = 5h of storage)
 CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction

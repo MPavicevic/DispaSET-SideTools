@@ -119,7 +119,6 @@ for c in demand_heat_ad_2016.columns:
     for tech in curve_chp[c].columns:
         curve_chp[c][tech] = demand_heat_ad_2016[c] * times_dh_demand.loc[c, 'District heating'] * 1e6 \
                              * share_chp[c].loc['CHP_Total_Heat_Cap', tech]
-
     print(chp_units[c]['CHP_Total_Heat_Cap'] / curve_chp[c].max())
 
 heat_demand = {}
