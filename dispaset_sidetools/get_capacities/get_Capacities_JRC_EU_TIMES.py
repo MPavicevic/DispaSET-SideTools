@@ -25,23 +25,23 @@ from dispaset_sidetools.common import make_dir
 YEAR = 2050  # considered year
 WRITE_CSV_FILES = True  # Write csv database
 SCENARIO = 'ProRes1'  # Scenario name, used for naming csv files
-CASE = 'ALLFLEX'  # Case name, used for naming csv files
+CASE = 'NOFLEX'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 
 # Technology definition
 TECHNOLOGY_THRESHOLD = 0  # threshold (%) below which a technology is considered negligible and no unit is created
-CHP_TES_CAPACITY = 12  # No of storage hours in TES
-CSP_TES_CAPACITY = 7.5  # No of storage hours in CSP units (usually 7.5 hours)
-P2G_TES_CAPACITY = 5  # No of storage hours in P2H units (500l tank = 5h of storage)
-CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
-V2G_SHARE = 0.25  # Define how many EV's are V2G
-V2G_PE_RATIO = 4.48714910828538  # Define Power to Energy ratio [MWh / MW]
+CHP_TES_CAPACITY = 0  # No of storage hours in TES
+CSP_TES_CAPACITY = 0  # No of storage hours in CSP units (usually 7.5 hours)
+P2G_TES_CAPACITY = 0  # No of storage hours in P2H units (500l tank = 5h of storage)
+CHP_TYPE = 'back-pressure'  # Define CHP type: None, back-pressure or Extraction
+V2G_SHARE = 0  # Define how many EV's are V2G
+V2G_PE_RATIO = 0 # Define Power to Energy ratio [MWh / MW] 
 
 # Clustering options (reduce the number of units - healthy number of units should be <300)
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
 OCEAN = 'WAT'  # Define what ocean fuel equals to (WAT or OTH)
-CSP = True  # Turn Concentrated solar power on/off (when False grouped with PHOT)
-HYDRO_CLUSTERING = 'HPHS'  # Define type of hydro clustering (OFF, HPHS, HROR)
+CSP = False  # Turn Concentrated solar power on/off (when False grouped with PHOT)
+HYDRO_CLUSTERING = 'HROR'  # Define type of hydro clustering (OFF, HPHS, HROR)
 TECH_CLUSTERING = True  # Clusters technologies by treshold (efficient way to reduce total number of units)
 CLUSTER_TRESHOLD = 0.3  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
 
@@ -655,6 +655,8 @@ for c in cap:
         tmp_bev['STOCapacity'] = tmp_bev['PowerCapacity'] * V2G_PE_RATIO
         # tmp_bev['PowerCapacity'] = tmp_bev['STOMaxChargingPower']
         units.update(tmp_bev)
+        if units[units.Technology == 'BEVS'].PowerCapacity.values == 0:
+            units = units[units.Technology != 'BEVS']
 
     # Special treatment for P2H
     if units[units.Technology == 'P2HT'].empty is True:
