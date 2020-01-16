@@ -1,1 +1,8 @@
-TODO
+TODO:
+
+- What is Dispa-SET Sidetools module, and what can it be used for
+- Scripts and features
+- Script dependencies and links
+- Guides and examples
+- References
+- Contributors
