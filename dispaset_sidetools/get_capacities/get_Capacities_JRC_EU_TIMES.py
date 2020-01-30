@@ -56,12 +56,27 @@ output_folder = '../../Outputs/'  # Standard output folder
 
 # Local files
 # Typical units
-typical_units = pd.read_csv(input_folder + 'Typical_Units.csv')
-typical_tech_input = pd.read_csv(input_folder + source_folder + 'TIMES_Capacities_technology_2050.csv', index_col=0)
+typical_units = pd.read_csv(input_folder + 'Typical_Units_JRC_EU_TIMES.csv')
+typical_tech_input_raw_h = pd.read_excel(
+    input_folder + source_folder + 'TIMES_Capacities_technology_2050_times_names.xlsx', 
+    header=None, nrows = 2, index_col = 0, skiprows = 1)
+typical_tech_input_raw = pd.read_excel(
+    input_folder + source_folder + 'TIMES_Capacities_technology_2050_times_names.xlsx',
+    header=None, index_col = 0, skiprows = 3)
 
 # Capacities
-capacities = pd.read_csv(input_folder + source_folder + 'TIMES_Capacities_fuel_2050.csv', index_col=0)
-chp_capacities = pd.read_csv(input_folder + source_folder + 'TIMES_CHP_Capacities_2050.csv', index_col=0)
+capacities_raw_h = pd.read_excel(
+    input_folder + source_folder + 'TIMES_Capacities_fuel_2050_times_names.xlsx', 
+    header=None, nrows = 1, index_col = 0, skiprows = 1)
+capacities_raw = pd.read_excel(
+    input_folder + source_folder + 'TIMES_Capacities_fuel_2050_times_names.xlsx', 
+    header=None, index_col = 0, skiprows = 2)
+chp_capacities_raw_h = pd.read_excel(
+    input_folder + source_folder + 'TIMES_CHP_Capacities_2050_times_names.xlsx', 
+    header=None, nrows = 2, skiprows = 1, index_col = 0)
+chp_capacities_raw = pd.read_excel(
+    input_folder + source_folder + 'TIMES_CHP_Capacities_2050_times_names.xlsx', 
+    header=None, index_col = 0, skiprows = 3)
 
 # Hydro reservoirs
 reservoirs = pd.read_csv(input_folder + 'Hydro_Reservoirs.csv', index_col=0, header=None)
@@ -72,6 +87,186 @@ batteries = pd.read_excel(input_folder + source_folder + 'TIMES_EV_Capacities.xl
 # Power to heat
 power2heat_capacities = pd.read_excel(input_folder + source_folder + 'TIMES_P2H_Capacities_2050.xlsx', index_col=0)
 power2heat_COP = pd.read_excel(input_folder + source_folder + 'TIMES_P2H_COP_Parameters_2050.xlsx', index_col=0)
+
+# %% Preprocessing of inputs 
+
+dispaset_rename_fuels= {'Biogas' : 'Biogas',
+                        'Biomass':'BIO', 
+                        'Coal': 'HRD', 
+                        'Gas (possibly blended)':'GAS', 
+                        'Geothermal': 'GEO',
+                        'Hydro' : 'WAT',
+                        'Hydrogen' : 'HYD',
+                        'Nuclear' : 'NUC',
+                        'Ocean' : 'Ocean',
+                        'Other biomass' : 'BIO', 
+                        'Petroleum (possibly blended)' : 'OIL', 
+                        'Solar' : 'SUN',
+                        'Wind' : 'WIN',
+                        'Lignite': 'LIG'}
+
+dispaset_rename_tech= {'Int Combust' : 'ICEN',
+                       ' PV ':'PHOT',
+                       ' CSP ': 'STUR',
+                       ' onshore ': 'WTON',
+                       ' offshore ': 'WTOF',
+                       'CCGT' : 'COMC',
+                       'Comb CYC': 'COMC',
+                       'Combined Cycle': 'COMC',
+                       'IGCC': 'COMC',   
+                       'thermal' : 'STUR',
+                       'Supercritical': 'STUR',
+                       'Nuclear': 'STUR',
+                       'Steam Turb': 'STUR',
+                       'Ranking': 'STUR',
+                       'Recovery Boiler': 'STUR',
+                       'Autoproducer': 'Autoproducers',
+                       'OCGT':'GTUR',
+                       'Run-of-river': 'HROR',
+                       'Run of River': 'HROR',
+                       'Wave': 'WAVE',
+                       'Tidal':'TIDAL',   
+                       'SOFC': 'SOFC',
+                       'PEM':'PEMFC',
+                       'Dams':'HDAM',
+                       'Lake large scale':'HPHS',
+                       'COMC_CCS': 'COMC_CCS',
+                       'STUR_CCS': 'STUR_CCS'}
+
+# Pre-process the capacities (by fuel) changing the names from TIMES nomenclature to Dispa-SET nomencalture
+
+capacities_raw = capacities_raw.rename(columns=capacities_raw_h.iloc[0], copy=False)  
+capacities_raw.fillna(0, inplace = True)
+capacities_raw = capacities_raw*1000  #Convert to MW
+capacities_raw.rename(columns=dispaset_rename_fuels, inplace = True)
+
+capacities = capacities_raw.groupby(capacities_raw.columns, axis=1).sum()
+
+# Pre-process the technologies 
+
+# Extend the fuels that were as merged cells in excel 
+for c in range(len(typical_tech_input_raw_h.iloc[0,:])):
+    if pd.isna(typical_tech_input_raw_h.iloc[0, c]): 
+        typical_tech_input_raw_h.iloc[0, c] = typical_tech_input_raw_h.iloc[0, c - 1]    
+# Change the fuel for LIG when specified in the technology row
+for c in range(len(typical_tech_input_raw_h.iloc[0,:])):
+    if 'lignite' in typical_tech_input_raw_h.iloc[1, c]:
+            typical_tech_input_raw_h.iloc[0, c] = 'LIG'
+# Rename all the fuels as before
+typical_tech_input_raw_h.iloc[0,:].replace(dispaset_rename_fuels, inplace = True)
+# First specify all the CCS units  
+for c in range(len(typical_tech_input_raw_h.iloc[0,:])):
+    if 'CCS' in typical_tech_input_raw_h.iloc[1, c]:
+       if ' CC ' in typical_tech_input_raw_h.iloc[1, c]: 
+           typical_tech_input_raw_h.iloc[1, c] = 'COMC_CCS'
+       elif ' IGCC ' in typical_tech_input_raw_h.iloc[1, c]: 
+           typical_tech_input_raw_h.iloc[1, c] = 'COMC_CCS'
+       elif ' CCGT ' in typical_tech_input_raw_h.iloc[1, c]: 
+           typical_tech_input_raw_h.iloc[1, c] = 'COMC_CCS'
+       elif 'Comb CYC' in typical_tech_input_raw_h.iloc[1, c]: 
+           typical_tech_input_raw_h.iloc[1, c] = 'COMC_CCS'
+       elif 'Combined' in typical_tech_input_raw_h.iloc[1, c]: 
+           typical_tech_input_raw_h.iloc[1, c] = 'COMC_CCS'
+       elif 'Fluidized' in typical_tech_input_raw_h.iloc[1, c]: 
+           typical_tech_input_raw_h.iloc[1, c] = 'STUR_CCS'
+    if ' IGCC CO2Seq' in typical_tech_input_raw_h.iloc[1, c]: 
+        typical_tech_input_raw_h.iloc[1, c] = 'COMC_CCS'
+# Then use the dictionary to assign the dispaset technology names
+for c in range(len(typical_tech_input_raw_h.iloc[0,:])):
+    for key in dispaset_rename_tech:
+        if key in typical_tech_input_raw_h.iloc[1,c]:
+            typical_tech_input_raw_h.iloc[1,c] = dispaset_rename_tech[key]    
+# Create a row as FUEL_TECH
+typical_tech_input_raw_h.loc['index', :] = typical_tech_input_raw_h.iloc[0, :] + '_' + typical_tech_input_raw_h.iloc[1, :]
+typical_tech_input_raw = typical_tech_input_raw.rename(columns=typical_tech_input_raw_h.loc['index', :], copy=False)  
+typical_tech_input_raw.fillna(0, inplace = True)
+typical_tech_input_raw = typical_tech_input_raw*1000  #Convert to MW
+
+typical_tech_input = typical_tech_input_raw.groupby(typical_tech_input_raw.columns, axis=1).sum()
+
+# Create the LIG column in the fuel dataframe and remove its value from the HRD columns
+capacities.loc[:,'LIG'] = typical_tech_input.loc[:,typical_tech_input.columns.str.contains('LIG')].values
+capacities.loc[:,'HRD'] = capacities.loc[:,'HRD'] - capacities.loc[:,'LIG']
+
+# Pre-process the CHP technologies
+
+# Extend the fuels that were as merged cells in excel 
+for c in range(len(chp_capacities_raw_h.iloc[0,:])):
+    if pd.isna(chp_capacities_raw_h.iloc[0, c]): 
+        chp_capacities_raw_h.iloc[0, c] = chp_capacities_raw_h.iloc[0, c - 1]    
+# Change the fuel for LIG when specified in the technology row
+for c in range(len(chp_capacities_raw_h.iloc[0,:])):
+    if 'lignite' in chp_capacities_raw_h.iloc[1, c]:
+            chp_capacities_raw_h.iloc[0, c] = 'LIG'
+chp_capacities_raw_h.iloc[0,:].replace(dispaset_rename_fuels, inplace = True)
+
+# First specify all the CCS units   
+# -> Commented as is not included in the following parts of the code
+# for c in range(len(chp_capacities_raw_h.iloc[0,:])):
+#     if 'CCS' in chp_capacities_raw_h.iloc[1, c]:
+#        if ' CC ' in chp_capacities_raw_h.iloc[1, c]: chp_capacities_raw_h.iloc[1, c] = 'COMC_CCS'
+#        elif ' IGCC ' in chp_capacities_raw_h.iloc[1, c]: chp_capacities_raw_h.iloc[1, c] = 'COMC_CCS'
+#        elif ' CCGT ' in chp_capacities_raw_h.iloc[1, c]: chp_capacities_raw_h.iloc[1, c] = 'COMC_CCS'
+#        elif 'Comb CYC' in chp_capacities_raw_h.iloc[1, c]: chp_capacities_raw_h.iloc[1, c] = 'COMC_CCS'
+#        elif 'Combined' in chp_capacities_raw_h.iloc[1, c]: chp_capacities_raw_h.iloc[1, c] = 'COMC_CCS'
+#        elif 'Fluidized' in chp_capacities_raw_h.iloc[1, c]: chp_capacities_raw_h.iloc[1, c] = 'STUR_CCS'
+#     if ' IGCC CO2Seq' in chp_capacities_raw_h.iloc[1, c]: chp_capacities_raw_h.iloc[1, c] = 'COMC_CCS'
+# Then use the dictionary to assign the dispaset technology names
+
+for c in range(len(chp_capacities_raw_h.iloc[0,:])):
+    for key in dispaset_rename_tech:
+        if key in chp_capacities_raw_h.iloc[1,c]:
+            chp_capacities_raw_h.iloc[1,c] = dispaset_rename_tech[key]    
+# Create a row as FUEL_TECH
+chp_capacities_raw_h.loc['index', :] = chp_capacities_raw_h.iloc[0, :] + '_' + chp_capacities_raw_h.iloc[1, :]
+chp_capacities_raw = chp_capacities_raw.rename(columns=chp_capacities_raw_h.loc['index', :], copy=False)  
+chp_capacities_raw.fillna(0, inplace = True)
+chp_capacities_raw = chp_capacities_raw*1000  #Convert to MW
+
+chp_capacities = chp_capacities_raw.groupby(chp_capacities_raw.columns, axis=1).sum()
+
+chp_capacities.loc['MT',:] = 0
+chp_capacities.sort_index(axis = 0, inplace = True)
+
+# Check if the technology/fuel names are all considered in the renaming
+
+dispaset_fuels = list(dispaset_rename_fuels.values())
+dispaset_tech = list(dispaset_rename_tech.values())
+
+capacities_columns = list(capacities.columns)
+if len(list(set(capacities_columns) - set(dispaset_fuels))) == 0:
+    print('[INFO    ]: All Fuels have been correctly renamed from TIMES to Dispa-SET nomenclature in capacities')
+else: 
+    print('[CRITICAL ]: There are fuels that were not considered in the capacities renaming, please check.')
+    sys.exit()
+
+typical_tech_input_fuels = list(typical_tech_input_raw_h.iloc[0,:])
+if len(list(set(typical_tech_input_fuels) - set(dispaset_fuels))) == 0:
+    print('[INFO    ]: All Fuels have been correctly renamed from TIMES to Dispa-SET nomenclature in typical_tech_input')
+else: 
+    print('[CRITICAL ]: There are fuels that were not considered in the typical_tech_input renaming, please check.')
+    sys.exit()
+
+typical_tech_input_tech = list(typical_tech_input_raw_h.iloc[1,:])
+if len(list(set(typical_tech_input_tech) - set(dispaset_tech))) == 0:
+    print('[INFO    ]: All Technlogies have been correctly renamed from TIMES to Dispa-SET nomenclature in typical_tech_input')
+else: 
+    print('[CRITICAL ]: There are technologies that were not considered in the typical_tech_input renaming, please check.')
+    sys.exit()
+
+chp_capacities_fuels = list(chp_capacities_raw_h.iloc[0,:])
+if len(list(set(chp_capacities_fuels) - set(dispaset_fuels))) == 0:
+    print('[INFO    ]: All Fuels have been correctly renamed from TIMES to Dispa-SET nomenclature in chp_capacities')
+else: 
+    print('[CRITICAL ]: There are fuels that were not considered in the chp_capacities renaming, please check.')
+    sys.exit()
+
+chp_capacities_tech = list(chp_capacities_raw_h.iloc[1,:])
+if len(list(set(chp_capacities_tech) - set(dispaset_tech))) == 0:
+    print('[INFO    ]: All Technlogies have been correctly renamed from TIMES to Dispa-SET nomenclature in chp_capacities')
+else: 
+    print('[CRITICAL ]: There are technologies that were not considered in the chp_capacities renaming, please check.')
+    sys.exit()
 
 # %% Load typical units
 '''Get typical units:'''
@@ -142,13 +337,20 @@ p2h_cap['P2HT'] = power2heat_capacities.iloc[:, 0] * 1000
 p2h_cap.drop(p2h_cap.index[:3], inplace=True)
 
 # %% CHP Data
+
 chp_fuel_types = ['BIO_COMC', 'BIO_STUR', 'BIO_GTUR', 'BIO_ICEN',
                   'GAS_COMC', 'GAS_STUR', 'GAS_GTUR', 'GAS_ICEN',
                   'Biogas_COMC', 'Biogas_STUR', 'Biogas_GTUR', 'Biogas_ICEN',
                   'HRD_COMC', 'HRD_STUR', 'HRD_GTUR', 'HRD_ICEN',
                   'LIG_COMC', 'LIG_STUR', 'LIG_GTUR', 'LIG_ICEN',
                   'OIL_COMC', 'OIL_STUR', 'OIL_GTUR', 'OIL_ICEN']
-chp_capacities = pd.DataFrame(chp_capacities, columns=chp_fuel_types).fillna(0)
+
+# chp_capacities = pd.DataFrame(chp_capacities, columns=chp_fuel_types).fillna(0)
+
+if len(list(set(chp_fuel_types) - set(chp_capacities.columns))) != 0:
+    for c in list(set(chp_fuel_types) - set(chp_capacities.columns)):
+        chp_capacities.loc[:,c] = 0
+
 chp_bio = pd.DataFrame([chp_capacities['BIO_COMC'], chp_capacities['BIO_STUR'],
                         chp_capacities['BIO_ICEN'], chp_capacities['BIO_GTUR']]).T
 chp_bio.columns = chp_bio.columns.str[4:]
@@ -246,6 +448,11 @@ def get_tech_treshold(typical_tech, treshold):
 
 
 # %% Generate Typical_tech dataframes
+
+if len(list(set(chp_fuel_types) - set(typical_tech_input.columns))) != 0:
+    for c in list(set(chp_fuel_types) - set(typical_tech_input.columns)):
+        typical_tech_input.loc[:,c] = 0
+
 if CCS is False:
     typical_tech_input['GAS_COMC'] = typical_tech_input['GAS_COMC'] + typical_tech_input['GAS_COMC_CCS']
     typical_tech_input['BIO_COMC'] = typical_tech_input['BIO_COMC'] + typical_tech_input['BIO_COMC_CCS']
@@ -297,6 +504,13 @@ typical_tech = pd.DataFrame([typical_tech_input['WAT_HDAM'], typical_tech_input[
                              typical_tech_input['WAT_HROR'], typical_tech_input['WIN_WTOF'],
                              typical_tech_input['WIN_WTON']]).T
 typical_tech.columns = typical_tech.columns.str[4:]
+
+for c in typical_tech.index:
+    if typical_tech.loc[c,['HDAM', 'HROR', 'HPHS']].sum() == 0:
+        typical_tech.loc[c,'HDAM'] = 1
+    if typical_tech.loc[c,['WTOF', 'WTON']].sum() == 0:
+        typical_tech.loc[c,'WTON'] = 1
+        
 typical_tech = typical_tech.assign(CAES=1, BATS=1, BEVS=1, THMS=1)
 
 typical_stur = pd.DataFrame(np.ones(no_countries), index=countries, columns=['STUR'])
