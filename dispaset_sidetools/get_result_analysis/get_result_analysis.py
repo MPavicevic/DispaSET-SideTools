@@ -5,7 +5,6 @@
 
 #%% Imports 
 
-
 # Add the root folder of Dispa-SET to the path so that the library can be loaded:
 import sys,os
 sys.path.append(os.path.abspath(r'C:\Users\Andrea\GitHub\Dispa-SET-2.3'))
@@ -20,9 +19,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 pd.options.display.float_format = '{:.4g}'.format
 
+import matplotlib.ticker as mtick
 import enlopy as el
 
-%matplotlib inline
 import matplotlib.pyplot as plt
 import seaborn as sns
 plt.style.use('default')
@@ -34,43 +33,44 @@ plt.style.use('default')
 
 #inputs_ALL,results_ALL = ds.get_sim_results(path=r"C:\Users\Andrea\GitHub\Dispa-SET-2.3\Simulations\Article PROres1 coupling\TIMES_ProRes_2050_ALLFLEX_new",cache=False)
 #inputs_EV,results_EV = ds.get_sim_results(path=r"C:\Users\Andrea\GitHub\Dispa-SET-2.3\Simulations\Article PROres1 coupling\TIMES_ProRes_2050_EVFLEX_new",cache=False)
-inputs_HY,results_HY = ds.get_sim_results(path=r"C:\Users\Andrea\GitHub\Dispa-SET-2.3\Simulations\Article PROres1 coupling\TIMES_ProRes_2050_HYFLEX_new",cache=False)
-inputs_NO,results_NO = ds.get_sim_results(path=r"C:\Users\Andrea\GitHub\Dispa-SET-2.3\Simulations\Article PROres1 coupling\TIMES_ProRes_2050_NOFLEX_new",cache=False)
-inputs_TH,results_TH = ds.get_sim_results(path=r"C:\Users\Andrea\GitHub\Dispa-SET-2.3\Simulations\Article PROres1 coupling\TIMES_ProRes_2050_THFLEX_new",cache=False)
+#inputs_HY,results_HY = ds.get_sim_results(path=r"C:\Users\Andrea\GitHub\Dispa-SET-2.3\Simulations\Article PROres1 coupling\TIMES_ProRes_2050_HYFLEX_new",cache=False)
+#inputs_NO,results_NO = ds.get_sim_results(path=r"C:\Users\Andrea\GitHub\Dispa-SET-2.3\Simulations\Article PROres1 coupling\TIMES_ProRes_2050_NOFLEX_new",cache=False)
+#inputs_TH,results_TH = ds.get_sim_results(path=r"C:\Users\Andrea\GitHub\Dispa-SET-2.3\Simulations\Article PROres1 coupling\TIMES_ProRes_2050_THFLEX_new",cache=False)
 ##
 # Read ALLFLEX results
-import pickle
-file = open(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\TIMES_ProRes_2050_ALLFLEX_new\ALLFLEX_new.pkl", 'rb')
-inputs_ALL = pickle.load(file)
-results_ALL = pickle.load(file)
-file.close()
+#import pickle
+#file = open(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\TIMES_ProRes_2050_ALLFLEX_new\ALLFLEX_new.pkl", 'rb')
+#inputs_ALL = pickle.load(file)
+#results_ALL = pickle.load(file)
+#file.close()
+###
+### Read EVFLEX results
+#import pickle
+#file = open(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\TIMES_ProRes_2050_EVFLEX_new\EVFLEX_new.pkl", 'rb')
+#inputs_EV = pickle.load(file)
+#results_EV = pickle.load(file)
+#file.close()
 ##
-## Read EVFLEX results
-import pickle
-file = open(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\TIMES_ProRes_2050_EVFLEX_new\EVFLEX_new.pkl", 'rb')
-inputs_EV = pickle.load(file)
-results_EV = pickle.load(file)
-file.close()
 #
-
-#Save Varibales into Pickle        
-#ALLFLEX
-import pickle
-file = open(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\Variables Pickle\ALLFLEX_new_full.pkl",'wb')
-pickle.dump(inputs_ALL, file)
-pickle.dump(results_ALL, file)
-pickle.dump(r_ALL, file)
-pickle.dump(costs_ALL, file)
-file.close()
-
-#EVFLEX
-import pickle
-file = open(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\Variables Pickle\EVFLEX_new_full.pkl",'wb')
-pickle.dump(inputs_EV, file)
-pickle.dump(results_EV, file)
-pickle.dump(r_EV, file)
-pickle.dump(costs_EV, file)
-file.close()
+##Save Variables into Pickle     
+#   
+##ALLFLEX
+#import pickle
+#file = open(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\Variables Pickle\ALLFLEX_new_full.pkl",'wb')
+#pickle.dump(inputs_ALL, file)
+#pickle.dump(results_ALL, file)
+#pickle.dump(r_ALL, file)
+#pickle.dump(costs_ALL, file)
+#file.close()
+##
+##EVFLEX
+#import pickle
+#file = open(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\Variables Pickle\EVFLEX_new_full.pkl",'wb')
+#pickle.dump(inputs_EV, file)
+#pickle.dump(results_EV, file)
+#pickle.dump(r_EV, file)
+#pickle.dump(costs_EV, file)
+#file.close()
 
 ## Analyse the results for each country and provide quantitative indicators:
 #r_EV = ds.get_result_analysis(inputs_EV,results_EV)
@@ -191,11 +191,11 @@ curtail_tot['NOFLEX'] = results_NO['OutputCurtailedPower'].sum().sum()/10**6
 curtail_stat = pd.DataFrame(index = ['Mean Curtailment', 'Median Curtailment', 'Max Curtailment', 'Curtailment hours'],  columns = scenarios)
 curtail_max = pd.DataFrame(index = ['Max Curtailment'],  columns = scenarios)
 
-curtail_max['ALLFLEX'] = r_ALL['MaxCurtailment']*1e3
-curtail_max['EVFLEX'] = r_EV['MaxCurtailment']*1e3
-curtail_max['THFLEX'] = r_TH['MaxCurtailment']*1e3
-curtail_max['HYFLEX'] = r_HY['MaxCurtailment']*1e3
-curtail_max['NOFLEX'] = r_NO['MaxCurtailment']*1e3
+curtail_max['ALLFLEX'] = results_ALL['OutputCurtailedPower'].sum(axis = 1).max()/10**6
+curtail_max['EVFLEX'] =  results_EV['OutputCurtailedPower'].sum(axis = 1).max()/10**6
+curtail_max['THFLEX'] = results_TH['OutputCurtailedPower'].sum(axis = 1).max()/10**6
+curtail_max['HYFLEX'] = results_HY['OutputCurtailedPower'].sum(axis = 1).max()/10**6
+curtail_max['NOFLEX'] =  results_NO['OutputCurtailedPower'].sum(axis = 1).max()/10**6
 
 curtail_num = pd.DataFrame(index = ['Curtailment hours'], columns = scenarios)
 
@@ -226,16 +226,45 @@ curtail_stat.loc['Max Curtailment'] = curtail_max.values
 curtail_stat.loc['Mean Curtailment'] = curtail_mean.values
 curtail_stat.loc['Median Curtailment'] = curtail_median.values
 
+curtail_delta_per = pd.DataFrame(index = ['Curtailment delta %'], columns = scenarios)
+curtail_delta_per['ALLFLEX'] = ((curtail_tot['ALLFLEX'] - curtail_tot['NOFLEX'])/curtail_tot['NOFLEX']).values
+curtail_delta_per['EVFLEX'] = ((curtail_tot['EVFLEX'] - curtail_tot['NOFLEX'])/curtail_tot['NOFLEX']).values
+curtail_delta_per['THFLEX'] = ((curtail_tot['THFLEX'] - curtail_tot['NOFLEX'])/curtail_tot['NOFLEX']).values
+curtail_delta_per['HYFLEX'] = ((curtail_tot['HYFLEX'] - curtail_tot['NOFLEX'])/curtail_tot['NOFLEX']).values
+curtail_delta_per.fillna(0, inplace = True)
+
+# Shed Load % wrt to V-RES generation (Energy section should be run before to make this work)
+
+en_vres = pd.DataFrame(index = results_ALL['OutputPower'].index, columns = scenarios)
+
+en_vres.loc[:,'ALLFLEX'] = results_ALL['OutputPower'].loc[:,results_ALL['OutputPower'].columns.str.contains('HROR|PHOT|WTOF|WTON')].sum(axis = 1)/1e6
+en_vres.loc[:,'EVFLEX'] = results_EV['OutputPower'].loc[:,results_EV['OutputPower'].columns.str.contains('HROR|PHOT|WTOF|WTON')].sum(axis = 1)/1e6
+en_vres.loc[:,'THFLEX'] = results_TH['OutputPower'].loc[:,results_TH['OutputPower'].columns.str.contains('HROR|PHOT|WTOF|WTON')].sum(axis = 1)/1e6
+en_vres.loc[:,'NOFLEX'] = results_NO['OutputPower'].loc[:,results_NO['OutputPower'].columns.str.contains('HROR|PHOT|WTOF|WTON')].sum(axis = 1)/1e6
+en_vres.loc[:,'HYFLEX'] = results_HY['OutputPower'].loc[:,results_HY['OutputPower'].columns.str.contains('HROR|PHOT|WTOF|WTON')].sum(axis = 1)/1e6
+
+curtail_tot.loc['Percentage total V-RES', 'ALLFLEX'] =  curtail_tot.loc['Curtailment', 'ALLFLEX']/(en_vres.sum(axis = 0)['ALLFLEX'] + curtail_tot.loc['Curtailment', 'ALLFLEX'] )*100
+curtail_tot.loc['Percentage total V-RES', 'EVFLEX'] =  curtail_tot.loc['Curtailment', 'EVFLEX']/(en_vres.sum(axis = 0)['EVFLEX'] + curtail_tot.loc['Curtailment', 'EVFLEX'] )*100
+curtail_tot.loc['Percentage total V-RES', 'THFLEX'] =  curtail_tot.loc['Curtailment', 'THFLEX']/(en_vres.sum(axis = 0)['THFLEX'] + curtail_tot.loc['Curtailment', 'THFLEX'] )*100
+curtail_tot.loc['Percentage total V-RES', 'NOFLEX'] =  curtail_tot.loc['Curtailment', 'NOFLEX']/(en_vres.sum(axis = 0)['NOFLEX'] + curtail_tot.loc['Curtailment', 'NOFLEX'] )*100
+curtail_tot.loc['Percentage total V-RES', 'HYFLEX'] =  curtail_tot.loc['Curtailment', 'HYFLEX']/(en_vres.sum(axis = 0)['HYFLEX'] + curtail_tot.loc['Curtailment', 'HYFLEX'] )*100
+
+curtail_max.loc['Percentage peak V-RES', 'ALLFLEX'] =  curtail_max.loc['Max Curtailment', 'ALLFLEX']/(en_vres.max(axis = 0)['ALLFLEX'] + curtail_max.loc['Max Curtailment', 'ALLFLEX'] )*100
+curtail_max.loc['Percentage peak V-RES', 'EVFLEX'] =  curtail_max.loc['Max Curtailment', 'EVFLEX']/(en_vres.max(axis = 0)['EVFLEX'] + curtail_max.loc['Max Curtailment', 'EVFLEX'] )*100
+curtail_max.loc['Percentage peak V-RES', 'THFLEX'] =  curtail_max.loc['Max Curtailment', 'THFLEX']/(en_vres.max(axis = 0)['THFLEX'] + curtail_max.loc['Max Curtailment', 'THFLEX'] )*100
+curtail_max.loc['Percentage peak V-RES', 'NOFLEX'] =  curtail_max.loc['Max Curtailment', 'NOFLEX']/(en_vres.max(axis = 0)['NOFLEX'] + curtail_max.loc['Max Curtailment', 'NOFLEX'] )*100
+curtail_max.loc['Percentage peak V-RES', 'HYFLEX'] =  curtail_max.loc['Max Curtailment', 'HYFLEX']/(en_vres.max(axis = 0)['HYFLEX'] + curtail_max.loc['Max Curtailment', 'HYFLEX'] )*100
+
 #%% Curtailment plot
 
-ax = curtail_tot.T.plot(kind='bar', color='salmon',  width=0.3, rot = 0, position=1, legend  = True, figsize = (7,5),  fontsize=15)
-ax2 = curtail_max.T.plot(kind='bar', color='firebrick', secondary_y=True, rot= 0, ax=ax, width=0.3, position=0, legend  = True, mark_right = False, fontsize=15)
+ax = curtail_tot.loc['Percentage total V-RES', :].T.plot(kind='bar', color='salmon',  width=0.3, rot = 0, position=1, legend  = True, figsize = (7,5),  fontsize=15)
+ax2 = curtail_max.loc['Percentage peak V-RES', :].T.plot(kind='bar', color='firebrick', secondary_y=True, rot= 0, ax=ax, width=0.3, position=0, legend  = True, mark_right = False, fontsize=15)
 
-ax.set_ylabel('Curtailment [TWh]', fontsize=15)
-ax2.set_ylabel('Max Curtailment [GW]', fontsize=15)
+ax.set_ylabel('Percentage Total V-RES', fontsize=15)
+ax2.set_ylabel('Percentage Peak V-RES', fontsize=15)
 ax.set_xlabel('Scenario', fontsize=15)
 ax2.set_title("Curtailment", fontsize=15)
-ax2.set_ylim(0, 1400)
+#ax2.set_ylim(0, 90)
 #handles, labels = ax.get_legend_handles_labels()
 #handles2, labels2 = ax2.get_legend_handles_labels()
 #handles.append(handles2[0])
@@ -243,6 +272,8 @@ ax2.set_ylim(0, 1400)
 ##ax.legend(reversed(handles), reversed(labels))
 
 #ax.legend(bbox_to_anchor=(1.1, 1.05), fontsize=15)
+ax.yaxis.set_major_formatter(mtick.PercentFormatter(decimals = 1))
+ax2.yaxis.set_major_formatter(mtick.PercentFormatter(decimals = 1))
 
 
 fig = ax2.get_figure()
@@ -296,15 +327,75 @@ shload_stat.loc['Max Shed Load'] = shload_max.values
 shload_stat.loc['Mean Load Shedding'] = shload_mean.values
 shload_stat.loc['Median Load Shedding'] = shload_median.values
 
-#%% Load Shedding plot
+#Shed Load % delta wrt NOFLEX
 
-ax = shload_tot.T.plot(kind='bar', color='orangered', width=0.3, rot = 0, figsize = (7,5), position=1, legend  = True, fontsize=15)
-ax2 = shload_max.T.plot(kind='bar', color='firebrick', secondary_y=True, rot= 0, ax=ax, width=0.3, position=0, legend  = True, mark_right = False, fontsize=15)
+shload_per = pd.DataFrame(columns = scenarios)
+shload_per.loc[:,'ALLFLEX'] = (shload_tot['ALLFLEX'] - shload_tot['NOFLEX'])/shload_tot['NOFLEX']
+shload_per.loc[:,'EVFLEX'] = (shload_tot['EVFLEX'] - shload_tot['NOFLEX'])/shload_tot['NOFLEX']
+shload_per.loc[:,'HYFLEX'] = (shload_tot['HYFLEX'] - shload_tot['NOFLEX'])/shload_tot['NOFLEX']
+shload_per.loc[:,'THFLEX'] = (shload_tot['THFLEX'] - shload_tot['NOFLEX'])/shload_tot['NOFLEX']
+shload_per.fillna(0, inplace = True)
 
-ax.set_ylabel('Shed Load [TWh]', fontsize=15)
-ax2.set_ylabel('Max Shed Load [GW]', fontsize=15)
+# Shed Load % wrt to Total Load and Peak load
+
+def get_demand(inputs, results):
+    demand = {}
+    for z in inputs['sets']['n']:
+        if 'OutputPowerConsumption' in results:
+            demand_p2h = ds.filter_by_zone(results['OutputPowerConsumption'], inputs, z)
+            demand_p2h = demand_p2h.sum(axis=1)
+        else:
+            demand_p2h = pd.Series(0, index=results['OutputPower'].index)
+        demand_da = inputs['param_df']['Demand'][('DA', z)]
+        demand[z] = pd.DataFrame(demand_da + demand_p2h, columns = [('DA', z)])
+    demand = pd.concat(demand, axis=1)
+    demand.columns = demand.columns.droplevel(-1)
+    
+    return demand
+
+demand_ALL = get_demand(inputs_ALL, results_ALL)
+demand_EV = get_demand(inputs_EV, results_EV)
+demand_TH = get_demand(inputs_TH, results_TH)
+demand_NO = get_demand(inputs_NO, results_NO)
+demand_HY = get_demand(inputs_HY, results_HY)
+
+demand_stat = pd.DataFrame(index = ['Total Demand', 'Max Demand'], columns = scenarios)
+
+demand_stat.loc['Total Demand','ALLFLEX'] = demand_ALL.sum().sum()/1e6
+demand_stat.loc['Total Demand','EVFLEX'] = demand_EV.sum().sum()/1e6
+demand_stat.loc['Total Demand','THFLEX'] = demand_TH.sum().sum()/1e6
+demand_stat.loc['Total Demand','NOFLEX'] = demand_NO.sum().sum()/1e6
+demand_stat.loc['Total Demand','HYFLEX'] = demand_HY.sum().sum()/1e6
+
+demand_stat.loc['Max Demand','ALLFLEX'] = demand_ALL.sum(axis = 1).max()/1e3
+demand_stat.loc['Max Demand','EVFLEX'] = demand_EV.sum(axis = 1).max()/1e3
+demand_stat.loc['Max Demand','THFLEX'] = demand_TH.sum(axis = 1).max()/1e3
+demand_stat.loc['Max Demand','NOFLEX'] = demand_NO.sum(axis = 1).max()/1e3
+demand_stat.loc['Max Demand','HYFLEX'] = demand_HY.sum(axis = 1).max()/1e3
+
+shload_tot.loc['Percentage total Load', 'ALLFLEX'] =  shload_tot.loc['Shed Load', 'ALLFLEX']/demand_stat.loc['Total Demand','ALLFLEX']*100
+shload_tot.loc['Percentage total Load', 'EVFLEX'] =  shload_tot.loc['Shed Load', 'EVFLEX']/demand_stat.loc['Total Demand','EVFLEX']*100
+shload_tot.loc['Percentage total Load', 'THFLEX'] =  shload_tot.loc['Shed Load', 'THFLEX']/demand_stat.loc['Total Demand','THFLEX']*100
+shload_tot.loc['Percentage total Load', 'NOFLEX'] =  shload_tot.loc['Shed Load', 'NOFLEX']/demand_stat.loc['Total Demand','NOFLEX']*100
+shload_tot.loc['Percentage total Load', 'HYFLEX'] =  shload_tot.loc['Shed Load', 'HYFLEX']/demand_stat.loc['Total Demand','HYFLEX']*100
+
+shload_max.loc['Percentage peak Load', 'ALLFLEX'] =  shload_max.loc['Max Shed Load', 'ALLFLEX']/demand_stat.loc['Max Demand','ALLFLEX']*100
+shload_max.loc['Percentage peak Load', 'EVFLEX'] =  shload_max.loc['Max Shed Load', 'EVFLEX']/demand_stat.loc['Max Demand','EVFLEX']*100
+shload_max.loc['Percentage peak Load', 'THFLEX'] =  shload_max.loc['Max Shed Load', 'THFLEX']/demand_stat.loc['Max Demand','THFLEX']*100
+shload_max.loc['Percentage peak Load', 'NOFLEX'] =  shload_max.loc['Max Shed Load', 'NOFLEX']/demand_stat.loc['Max Demand','NOFLEX']*100
+shload_max.loc['Percentage peak Load', 'HYFLEX'] =  shload_max.loc['Max Shed Load', 'HYFLEX']/demand_stat.loc['Max Demand','HYFLEX']*100
+
+#%% Shed Load plot
+
+ax = shload_tot.loc['Percentage total Load', :].T.plot(kind='bar', color='orangered', width=0.3, rot = 0, figsize = (7,5), position=1, legend  = True, fontsize=15)
+ax2 = shload_max.loc['Percentage peak Load', :].T.plot(kind='bar', color='firebrick', secondary_y=True, rot= 0, ax=ax, width=0.3, position=0, legend  = True, mark_right = False, fontsize=15)
+
+ax.set_ylabel('Percentage Total Load', fontsize=15)
+ax2.set_ylabel('Percentage Peak Load', fontsize=15)
 ax.set_xlabel('Scenario', fontsize=15)
 ax2.set_title("Shed Load", fontsize=15)
+ax.yaxis.set_major_formatter(mtick.PercentFormatter(decimals = 3))
+ax2.yaxis.set_major_formatter(mtick.PercentFormatter(decimals = 1))
 
 fig = ax2.get_figure()
 fig.savefig(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\Charts\Shed Load.png", bbox_inches='tight')
@@ -616,6 +707,15 @@ for t in tech_fuel:
     co2_prod.loc['NOFLEX', t] = co2_prod_raw_NO.loc[:, co2_prod_raw_NO.columns.str.endswith(t)].values.sum()/1e6
     co2_prod.loc['HYFLEX', t] = co2_prod_raw_HY.loc[:, co2_prod_raw_HY.columns.str.endswith(t)].values.sum()/1e6
 
+#CO2 Backup Heater [Mton co2]
+co2_prod.loc['ALLFLEX', "Heat Slack"] = (heat_prod.loc['ALLFLEX', "Backup Heater"] * 0.5 /0.95)
+co2_prod.loc['EVFLEX', "Heat Slack"] = (heat_prod.loc['EVFLEX', "Backup Heater"] * 0.5 /0.95)
+co2_prod.loc['THFLEX', "Heat Slack"] = (heat_prod.loc['THFLEX', "Backup Heater"] * 0.5 /0.95)
+co2_prod.loc['NOFLEX', "Heat Slack"] = (heat_prod.loc['NOFLEX', "Backup Heater"] * 0.5 /0.95)
+co2_prod.loc['HYFLEX', "Heat Slack"] = (heat_prod.loc['HYFLEX', "Backup Heater"] * 0.5 /0.95)
+
+co2_prod.rename(columns={"Heat Slack": "Backup Heater"}, inplace = True)
+
 for c in co2_prod.columns: 
     if co2_prod[c].values.sum() == 0:
         co2_prod.drop(columns = [c], inplace = True)
@@ -628,12 +728,19 @@ delta_co2.loc['HYFLEX'] = co2_prod.sum(axis = 1).loc['NOFLEX'] - co2_prod.sum(ax
 delta_co2.loc['EVFLEX'] = co2_prod.sum(axis = 1).loc['NOFLEX'] - co2_prod.sum(axis = 1).loc['EVFLEX']
 delta_co2.loc['ALLFLEX'] = co2_prod.sum(axis = 1).loc['NOFLEX'] - co2_prod.sum(axis = 1).loc['ALLFLEX']
 
-perc_red = delta_co2.loc['ALLFLEX']/co2_prod.sum(axis = 1)['NOFLEX']
+#co2 % delta wrt NOFLEX
+
+co2_perc_red = pd.DataFrame(columns = scenarios)
+co2_perc_red.loc[:,'ALLFLEX'] = delta_co2.loc['ALLFLEX']/co2_prod.sum(axis = 1)['NOFLEX']
+co2_perc_red.loc[:,'EVFLEX'] = delta_co2.loc['EVFLEX']/co2_prod.sum(axis = 1)['NOFLEX']
+co2_perc_red.loc[:,'HYFLEX'] = delta_co2.loc['HYFLEX']/co2_prod.sum(axis = 1)['NOFLEX']
+co2_perc_red.loc[:,'THFLEX'] = delta_co2.loc['THFLEX']/co2_prod.sum(axis = 1)['NOFLEX']
+co2_perc_red.fillna(0, inplace = True)
 
 #%% co2 emissions plot 
 ax = co2_prod.plot(kind='bar', stacked=True, rot = 0, color=[colors_tech.get(x) for x in co2_prod.columns], legend = False,  figsize = (10,5), fontsize=15)
 
-for container, hatch in zip(ax.containers, ("",'','','','','','', '///','///','///','///','///','///','///')):
+for container, hatch in zip(ax.containers, ("",'','','','','','', '///','///', '///','///','///','///','///','///')):
     for patch in container.patches:
         patch.set_hatch(hatch)
         
@@ -722,22 +829,64 @@ fig = ax.get_figure()
 fig.savefig(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\Charts\Load Shift.png", bbox_inches='tight')
 
 #%% Shadow Prices plots
-#%% Shadow price ALLFLEX
+#%% Shadow price ALLFLEX - NOFLEX
+import matplotlib 
+from matplotlib.colors import LogNorm
 
 shad_price_ALL = results_ALL['ShadowPrice']
+
+for c in shad_price_ALL.columns: 
+    shad_price_ALL.loc[shad_price_ALL[c] >= 1e5, :] = 1e5
+
 shad_price_ALL.sort_index(axis = 1, inplace = True)
+    
+shad_price_NO = results_NO['ShadowPrice']
 
-sns.set(font_scale=1.27)
+for c in shad_price_NO.columns: 
+    shad_price_NO.loc[shad_price_NO[c] >= 1e5, :] = 1e5
+
+shad_price_NO.sort_index(axis = 1, inplace = True)
+
+fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, figsize = (20,14))
+
+#sns.set(font_scale=1.17)
+#fig, ax = plt.subplots(figsize=(10,5))  
 xticks_sh = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-ax = sns.heatmap(shad_price_ALL.T, vmax = 1000, cmap = 'coolwarm')
-#sns.set(rc={'figure.figsize':(8,8)})
-ax.set_title('Shadow price for each zone - ALLFLEX', fontsize = 15)
-ax.set_yticklabels(shad_price_ALL.columns)
-ax.set_xticks(range(1,8784,798))
-ax.set_xticklabels(xticks_sh, rotation = 45)
+ax1 = sns.heatmap(shad_price_NO.T, ax=axes[0], vmax = 400, cmap = 'summer', yticklabels = True, cbar=False)
+sns.heatmap(shad_price_NO.T, ax = axes[0], mask=shad_price_NO.T < 1e5, cbar=False, cmap = 'bwr')
+ax2 = sns.heatmap(shad_price_ALL.T, ax=axes[1], cmap = 'summer', vmax = 400, yticklabels = True, cbar=False)
+sns.heatmap(shad_price_ALL.T,ax = axes[1], mask=shad_price_ALL.T < 1e5, cbar=False, cmap = 'bwr')
 
-fig = ax.get_figure()
+#PuOr
+ax2.set_title('Shadow price for each zone - ALLFLEX', fontsize = 18)
+ax2.set_yticklabels(shad_price_ALL.columns, rotation=0)
+ax2.set_xticks(range(1,8784,798))
+ax2.set_xticklabels(xticks_sh, rotation=0)
+ax2.tick_params(labelsize=15)
+
+ax1.set_title('Shadow price for each zone - NOFLEX', fontsize = 18)
+ax1.set_yticklabels(shad_price_ALL.columns, rotation=0)
+ax1.set_xticks(range(1,8784,798))
+ax1.set_xticklabels(xticks_sh, rotation=0)
+ax1.tick_params(labelsize=15)
+
+mappable = ax1.get_children()[0]
+cbar = plt.colorbar(mappable, ax = [axes[0],axes[1]], orientation = 'vertical')
+cbar.ax.tick_params(labelsize=15)
+
+plt.show()
+
+fig = ax2.get_figure()
 fig.savefig(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\Charts\Shadow price ALLFLEX.png", bbox_inches='tight')
+
+#%% Shadow price duration curve 
+
+shad_price_ALL = results_ALL['ShadowPrice']
+
+el.plot_LDC(shad_price_ALL, stacked = False, x_norm=False, legend = True)
+plt.ylabel('Daily Generation Cost Electricity [M€]')
+plt.xlabel('Hour')
+plt.legend()
 
 #%% Shadow price EVFLEX
 
@@ -809,11 +958,11 @@ fig.savefig(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi 
 
 #%% Shadow price % difference
 
-shad_price_ALL_av = results_ALL['ShadowPrice'].mean().mean()
-shad_price_EV_av = results_EV['ShadowPrice'].mean().mean()
-shad_price_TH_av = results_TH['ShadowPrice'].mean().mean()
-shad_price_NO_av = results_NO['ShadowPrice'].mean().mean()
-shad_price_HY_av = results_HY['ShadowPrice'].mean().mean()
+shad_price_ALL_av = results_ALL['ShadowPrice'].sum(axis = 1).mean()
+shad_price_EV_av = results_EV['ShadowPrice'].sum(axis = 1).mean()
+shad_price_TH_av = results_TH['ShadowPrice'].sum(axis = 1).mean()
+shad_price_NO_av = results_NO['ShadowPrice'].sum(axis = 1).mean()
+shad_price_HY_av = results_HY['ShadowPrice'].sum(axis = 1).mean()
 
 diff_per_HY = (shad_price_HY_av - shad_price_NO_av)/shad_price_NO_av
 diff_per_EV = (shad_price_EV_av - shad_price_NO_av)/shad_price_NO_av
@@ -881,11 +1030,19 @@ costs_breakdown_plot.drop(columns = ['Spillage'], inplace = True)
 costs_breakdown_plot.drop(columns = ['LostLoad'], inplace = True)
 
 costs_chp = costs_breakdown.loc[:,costs_breakdown.columns.str.endswith('CHP')].sum(axis = 1)
+
+tot_syst_cost = pd.DataFrame(index = ['Total system Cost'], columns = scenarios)
+tot_syst_cost.loc[:, 'ALLFLEX'] = costs_raw_ALL.sum(axis = 1).values/1e9
+tot_syst_cost.loc[:, 'EVFLEX'] = costs_raw_EV.sum(axis = 1).values/1e9
+tot_syst_cost.loc[:, 'NOFLEX'] = costs_raw_NO.sum(axis = 1).values/1e9
+tot_syst_cost.loc[:, 'THFLEX'] = costs_raw_TH.sum(axis = 1).values/1e9
+tot_syst_cost.loc[:, 'HYFLEX'] = costs_raw_HY.sum(axis = 1).values/1e9
+
 #%% Costs breakdown plot 
 plt.style.use('default')
 ax = costs_breakdown_plot.plot(kind='bar', stacked=True, rot = 0, color=[colors_tech.get(x) for x in costs_breakdown_plot.columns], legend = False,  figsize = (10,5), fontsize=15)
 
-for container, hatch in zip(ax.containers, ( '', '///','///','///','///','///','///','///')):
+for container, hatch in zip(ax.containers, ( '///', '///','///','///','///','///','///','///',)):
     for patch in container.patches:
         patch.set_hatch(hatch)
         
@@ -1006,28 +1163,29 @@ for l in ll_hours.columns:
 #ax2 = shload_max.T.plot(kind='bar', color='firebrick', secondary_y=True, rot= 0, ax=ax, width=0.3, position=0, legend  = True, mark_right = False, fontsize=15)
 fig = plt.figure() # Create matplotlib figure
 
-ax = fig.add_subplot(111)
-width = 0.1
+#ax = fig.add_subplot(111)
+#width = 0.1
+#
+#pos = np.linspace(0,2.5, 4)
+ax = ll_hours.plot(kind='bar', rot = 0, width = 1.2, legend = True,figsize = (10,5), fontsize=15)
 
-pos = np.linspace(0,2.5, 4)
-
-ax1 = ll_hours.iloc[:,0].plot(kind='bar', rot = 0, width = width, color = 'navy', legend = True,  position=pos[3], figsize = (10,5), fontsize=15)
-ax2 = ll_hours.iloc[:,1].plot(kind='bar', rot = 0,  width = width,color = 'dodgerblue', legend = True,  position=pos[2], figsize = (10,5), fontsize=15)
-ax3 = ll_hours.iloc[:,2].plot(kind='bar', rot = 0,  width = width,color = 'aqua', legend = True,  position=pos[1], figsize = (10,5), fontsize=15)
-ax4 = ll_hours.iloc[:,3].plot(kind='bar', rot = 0, width = width,color = 'springgreen', legend = True,  position=pos[0], figsize = (10,5), fontsize=15)
+#ax1 = ll_hours.iloc[:,0].plot(kind='bar', rot = 0, width = width, color = 'navy', legend = True,  position=pos[3], figsize = (10,5), fontsize=15)
+#ax2 = ll_hours.iloc[:,1].plot(kind='bar', rot = 0,  width = width,color = 'dodgerblue', legend = True,  position=pos[2], figsize = (10,5), fontsize=15)
+#ax3 = ll_hours.iloc[:,2].plot(kind='bar', rot = 0,  width = width,color = 'aqua', legend = True,  position=pos[1], figsize = (10,5), fontsize=15)
+#ax4 = ll_hours.iloc[:,3].plot(kind='bar', rot = 0, width = width,color = 'springgreen', legend = True,  position=pos[0], figsize = (10,5), fontsize=15)
 
 #for container, hatch in zip(ax.containers, ( '///','///','///','///','///','///','///','///')):
 #    for patch in container.patches:
 #        patch.set_hatch(hatch)
         
-ax1.set_ylabel('Lost Load [h]', fontsize=15)
-ax1.set_xlabel('Scenario', fontsize=15)
-ax1.set_title("Lost Load hours", fontsize=15)
-handles, labels = ax.get_legend_handles_labels()
-ax1.legend(reversed(handles), reversed(labels))
+ax.set_ylabel('Lost Load [h]', fontsize=15)
+ax.set_xlabel('Scenario', fontsize=15)
+ax.set_title("Lost Load hours", fontsize=15)
+#handles, labels = ax.get_legend_handles_labels()
+#ax1.legend(reversed(handles), reversed(labels))
 #, loc='center left', bbox_to_anchor=(1, 0.5), ncol=2, fontsize=15)
 
-fig = ax1.get_figure()
+fig = ax.get_figure()
 fig.savefig(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\Charts\Lost Load hours.png", bbox_inches='tight')
 
 #%% Average cost of el without lost load
@@ -1251,7 +1409,7 @@ levels_comparison['MTS'] = mts_wat_extensive/1e6
 xticks_sh = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 xticks_day = ['15\nFeb','16','17','18','19','20','21']
 
-levels_comparison_plot = pd.DataFrame(levels_comparison.values, columns = ['Old Level', 'MTS Level'])
+levels_comparison_plot = pd.DataFrame(levels_comparison.values, columns = ['Historical Level', 'MTS Level'])
 p_curve_scaled_ev_f_plot = pd.DataFrame(p_curve_scaled_ev_f.values, columns = p_curve_scaled_ev_f.columns)
 plotdata_plot = pd.DataFrame(plotdata.values, columns = plotdata.columns)
 heat_demand_f_plot = pd.DataFrame(heat_demand_f.values, columns = heat_demand_f.columns)
@@ -1308,7 +1466,6 @@ fig.tight_layout()
 
 ax2.legend(handles, labels,loc='upper center', bbox_to_anchor=(1.02, -0.35), ncol=4, fontsize=15)
 
-
 fig.savefig(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\Charts\Demand Breakdown.png", bbox_inches='tight')
 
 #%% Plot of EV demand 
@@ -1334,6 +1491,11 @@ fig.savefig(r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi 
 #%% Heating curves 
 
 heat_demand_raw = inputs_ALL['param_df']['HeatDemand'] 
+
+heat_demand = pd.DataFrame(index = heat_demand_raw.index, columns = inputs_ALL['param_df']['sets']['n'])
+
+for c in inputs_ALL['param_df']['sets']['n']:
+    heat_demand.loc[:,c] = heat_demand_raw.loc[:, heat_demand_raw.columns.str.contains(' ' + c + '_')].sum(axis = 1)
 
 heat_demand_dh = pd.DataFrame(index = heat_demand_raw.index, columns = heat_demand_raw.columns)
 heat_demand_p2h = pd.DataFrame(index = heat_demand_raw.index, columns = heat_demand_raw.columns)
@@ -1367,7 +1529,7 @@ ax = cop.T.plot(kind='line', rot = 0, figsize = (10,5), fontsize=15, legend = Tr
 ax.grid('on', alpha = 0.5)
 ax.set_ylabel('COP', fontsize=15)
 ax.set_xlabel('Temperature [°C]', fontsize=15)
-ax.set_title("COP curves" , fontsize=15)
+ax.set_title("Overall combined COP for heat pumps and electrical heaters" , fontsize=15)
 ax.legend(loc='center left', bbox_to_anchor=(1.02, 0.45), ncol=2, fontsize=15)
 
 fig = ax.get_figure()
@@ -1407,77 +1569,108 @@ cong_TH = build_cong_df(r_TH)
 cong_NO = build_cong_df(r_NO)
 cong_HY = build_cong_df(r_HY)
 
-#%% Draw map ALLFLEX
+# Delta % in congestion 
+
+cong_delta_per = pd.DataFrame(index = ['Cong Delta %'], columns = scenarios)
+cong_delta_per.loc[:,'ALLFLEX'] = (cong_ALL['value'].sum() - cong_NO['value'].sum())/(cong_NO['value'].sum())
+cong_delta_per.loc[:,'EVFLEX'] = (cong_EV['value'].sum() - cong_NO['value'].sum())/(cong_NO['value'].sum())
+cong_delta_per.loc[:,'THFLEX'] = (cong_TH['value'].sum() - cong_NO['value'].sum())/(cong_NO['value'].sum())
+cong_delta_per.loc[:,'HYFLEX'] = (cong_HY['value'].sum() - cong_NO['value'].sum())/(cong_NO['value'].sum())
+cong_delta_per.fillna(0, inplace = True)
+cong_delta_per = cong_delta_per *100
+
+#%% Draw map function 
 
 def draw_map_cong(cong_scenario, scenario, path = False, namefile = None):
         
-    fig = plt.figure(figsize=(10,10))
-    #Custom adjust of the subplots
-    plt.subplots_adjust(left=0.05,right=0.95,top=0.90,bottom=0.05,wspace=0.15,hspace=0.05)
-    ax = plt.subplot(111)
+    plt.figure(figsize=(20,10))    
+#    plt.subplot(111)
+
+#    #Custom adjust of the subplots
+#    plt.subplots_adjust(left=0.05,right=0.9,top=0.90,bottom=0.1,wspace=0.15,hspace=0.15)
+#    plt.subplots_adjust(left=0.05,right=0.95,top=0.90,bottom=0.05,wspace=0.15,hspace=0.05)
+
+#    fig = plt.figure(figsize=(7,10))
+    y1_shift = 4.5
+    x1_shift = 6.5
     
-    x1 = -18.
-    x2 = 38.
-    y1 = 32.
-    y2 = 72.
-    
-    m = Basemap(projection='merc',resolution='l',  llcrnrlat=y1,urcrnrlat=y2,llcrnrlon=x1,urcrnrlon=x2,lat_ts=(x1+x2)/2)
+    x1 = -12 
+    x2 = 28 
+    y1 = 36 
+    y2 = 65
+#    y1 = 32.
+#    x1 = -18.
+#    x2 = 32.
+
+
+#    lat_ts=(x1+x2)/2
+    m = Basemap(projection='merc',resolution='l', lat_0= (y1+y2)/2,  llcrnrlat=y1,urcrnrlat=y2,llcrnrlon=x1,urcrnrlon=x2)
     m.drawcountries(linewidth = 0.2)
     m.fillcontinents(color='white',lake_color='white')
     m.drawcoastlines(linewidth=0.2)
     
-    position = {'AT': (3431171.010925041, 2196945.658932812),
-     'BE': (2409122.63439698, 2782458.279736769),
-     'BG': (4708739.694503188, 1523426.2665741867),
-     'CH': (2847144.9315600675, 2143261.1721419306),
-     'CZ': (3668436.7387408563, 2596767.239598376),
-     'DE': (2956650.5058508394, 2811413.149362125),
-     'DK': (3066156.080141611, 3733264.972073233),
-     'EE': (4818245.26879396, 4345101.374055384),
-     'EL': (4380222.971630873, 942744.7517043282),
-     'ES': (1533078.0400708055, 1084664.6122998544),
-     'FI': (4818245.26879396, 5495424.022817817),
-     'FR': (2190111.4858154366, 1984171.5761665502),
-     'HR': (3768436.7387408563, 1623426.2665741867),
-     'HU': (4161211.823049329, 2143261.1721419306),
-     'IE': (1095055.7429077183, 3167223.489534808),
-     'IT': (3176418.223779655, 1498500.042589245),
-     'LT': (4599234.120212416, 3533264.972073233),
-     'LU': (2646388.3622127953, 2596767.239598376),
-     'LV': (4708739.694503188, 3931681.3009275147),
-     'NL': (2600757.3894058308, 3076765.6906770044),
-     'NO': (3066156.080141611, 5012797.17202571),
-     'PL': (4161211.823049329, 2987330.8735358263),
-     'PT': (1095055.7429077183, 1013449.4429983455),
-     'RO': (4708739.694503188, 1984171.5761665502),
-     'SE': (3613683.9515954703, 5012797.17202571),
-     'SI': (3613683.9515954703, 1984171.5761665502),
-     'SK': (4106459.0359039432, 2415178.327890961),
-     'UK': (1752089.1886523492, 3351332.1756189675)}
+    position = {'AT': (3431171.010925041 - x1_shift*1e5, 2196945.658932812 - y1_shift*1e5),
+     'BE': (2409122.63439698 - x1_shift*1e5, 2782458.279736769 - y1_shift*1e5),
+     'BG': (4708739.694503188 - x1_shift*1e5, 1523426.2665741867 - y1_shift*1e5),
+     'CH': (2847144.9315600675 - x1_shift*1e5, 2143261.1721419306 - y1_shift*1e5),
+     'CZ': (3668436.7387408563 - x1_shift*1e5, 2596767.239598376 - y1_shift*1e5),
+     'DE': (2956650.5058508394 - x1_shift*1e5, 2811413.149362125 - y1_shift*1e5),
+     'DK': (3066156.080141611 - x1_shift*1e5, 3733264.972073233 - y1_shift*1e5),
+     'EE': (4818245.26879396 - x1_shift*1e5, 4345101.374055384 - y1_shift*1e5),
+     'EL': (4380222.971630873 - x1_shift*1e5, 942744.7517043282 - y1_shift*1e5),
+     'ES': (1533078.0400708055 - x1_shift*1e5, 1084664.6122998544 - y1_shift*1e5),
+     'FI': (4818245.26879396 - x1_shift*1e5, 5495424.022817817 - y1_shift*1e5),
+     'FR': (2190111.4858154366 - x1_shift*1e5, 1984171.5761665502 - y1_shift*1e5),
+     'HR': (3768436.7387408563 - x1_shift*1e5, 1623426.2665741867 - y1_shift*1e5),
+     'HU': (4161211.823049329 - x1_shift*1e5, 2143261.1721419306 - y1_shift*1e5),
+     'IE': (1095055.7429077183 - x1_shift*1e5, 3167223.489534808 - y1_shift*1e5),
+     'IT': (3176418.223779655 - x1_shift*1e5, 1498500.042589245 - y1_shift*1e5),
+     'LT': (4599234.120212416 - x1_shift*1e5, 3533264.972073233 - y1_shift*1e5),
+     'LU': (2646388.3622127953 - x1_shift*1e5, 2596767.239598376 - y1_shift*1e5),
+     'LV': (4708739.694503188 - x1_shift*1e5, 3931681.3009275147 - y1_shift*1e5),
+     'NL': (2600757.3894058308 - x1_shift*1e5, 3076765.6906770044 - y1_shift*1e5),
+     'NO': (3066156.080141611 - x1_shift*1e5, 5012797.17202571 - y1_shift*1e5),
+     'PL': (4161211.823049329 - x1_shift*1e5, 2987330.8735358263 - y1_shift*1e5),
+     'PT': (1095055.7429077183 - x1_shift*1e5, 1013449.4429983455 - y1_shift*1e5),
+     'RO': (4708739.694503188 - x1_shift*1e5, 1984171.5761665502 - y1_shift*1e5),
+     'SE': (3613683.9515954703 - x1_shift*1e5, 5012797.17202571 - y1_shift*1e5),
+     'SI': (3613683.9515954703 - x1_shift*1e5, 1984171.5761665502 - y1_shift*1e5),
+     'SK': (4106459.0359039432 - x1_shift*1e5, 2415178.327890961 - y1_shift*1e5),
+     'UK': (1752089.1886523492 - x1_shift*1e5, 3351332.1756189675 - y1_shift*1e5)}
     
+       
     # Add color bar to the right 
     colors = range(8784)
-    cmap = plt.cm.RdYlGn_r
+#    cmap = plt.cm.hot_r
+    cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", ["green","orange","red"]) 
     vmin = min(colors)
     vmax = max(colors)
     
     G=nx.from_pandas_edgelist(cong_scenario, 'from', 'to', edge_attr = 'value', create_using=nx.DiGraph(directed=True) )
     colors = [i['value'] for i in dict(G.edges).values()]
     
-    nx.draw(G, position, with_labels=True, arrows = True, connectionstyle='arc3, rad = 0.1',  edge_color=colors, node_color='skyblue',node_size=250, edge_cmap=plt.cm.RdYlGn_r)
+    nx.draw(G, position, with_labels=True, arrows = True, connectionstyle='arc3, rad = 0.1',  edge_color=colors, node_color='lightblue',node_size=600, font_size = 15, edge_cmap=cmap)
         
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin = vmin, vmax=vmax))
     sm._A = []
-    plt.colorbar(sm)    
-    plt.title("Map of Congestion - " + scenario + " Scenario")
+    cbar = plt.colorbar(sm)    
+    cbar.ax.tick_params(labelsize=15)
+    plt.title("Map of Congestion - " + scenario + " Scenario", fontsize = 15)
     
     if path is not False:
         fig.savefig(path + '/' + namefile, bbox_inches='tight')
         plt.show()
     else: 
         plt.show()
-    
-  
+
+#Example 
+        
+path = r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\Charts"
+
+draw_map_cong(cong_ALL, scenario = 'ALLFLEX', path = path, namefile = 'NTC ALLFLEX')
+
+#%% Draw the NTC map
+
 path = r"C:\Users\Andrea\OneDrive - Politecnico di Milano\Università\Tesi (OneDrive)\Article PROres1 coupling\Simulations and results\Charts"
 
 draw_map_cong(cong_ALL, scenario = 'ALLFLEX', path = path, namefile = 'NTC ALLFLEX')
@@ -1489,35 +1682,35 @@ draw_map_cong(cong_HY, scenario = 'HYFLEX', path = path, namefile = 'NTC HYFLEX'
 #%% Dispatch plot 
 
 #%% ALLFLEX
-z = 'DE'
+z = 'AT'
 
-rng = pd.date_range(start='2016-02-15',end='2016-02-22',freq='h')
+rng = pd.date_range(start='2016-02-20',end='2016-02-27',freq='h')
 
 ds.plot_zone(inputs_ALL,results_ALL,rng=rng, z = z)
 
 #%% EVFLEX
-z = 'DE'
+z = 'AT'
 
-rng = pd.date_range(start='2016-01-18',end='2016-01-25',freq='h')
+rng = pd.date_range(start='2016-02-20',end='2016-02-27',freq='h')
 
 ds.plot_zone(inputs_EV, results_EV, rng=rng, z = z)
 
 #%% THFLEX
-z = 'DE'
+z = 'AT'
 
-rng = pd.date_range(start='2016-01-18',end='2016-01-25',freq='h')
+rng = pd.date_range(start='2016-02-20',end='2016-02-27',freq='h')
 ds.plot_zone(inputs_TH, results_TH, rng=rng, z = z)
 
 #%% HYFLEX
-z = 'DE'
+z = 'AT'
 
-rng = pd.date_range(start='2016-01-18',end='2016-01-25',freq='h')
+rng = pd.date_range(start='2016-02-20',end='2016-02-27',freq='h')
 ds.plot_zone(inputs_HY, results_HY, rng=rng, z = z)
 
 #%% NOFLEX
-z = 'DE'
+z = 'AT'
 
-rng = pd.date_range(start='2016-01-18',end='2016-01-25',freq='h')
+rng = pd.date_range(start='2016-02-20',end='2016-02-27',freq='h')
 ds.plot_zone(inputs_NO, results_NO, rng=rng, z = z)
 
 #%% Levels comparison plot 
@@ -1542,8 +1735,7 @@ ds.plot_zone(inputs_NO, results_NO, rng=rng, z = z)
 
 #%% Cost load curves plots
 
-#TODO Not working right (probably not useful measure)
-cost_el_plot = pd.DataFrame(index = costs_ALL[0]['CostHeat'].index, columns = ('ALL', 'EV', 'HY', 'NO', 'TH'))
+shad_price_country = pd.DataFrame(index = costs_ALL[0]['CostHeat'].index, columns = ('ALL', 'EV', 'HY', 'NO', 'TH'))
 cost_el_plot['ALL'] = (costs_ALL[1]['Spillage'] - (costs_ALL[0]['CostHeat'] + costs_ALL[0]['CostHeatSlack']))/10**6
 cost_el_plot['EV'] = (costs_EV[1]['Spillage'] - (costs_EV[0]['CostHeat'] + costs_EV[0]['CostHeatSlack']))/10**6
 cost_el_plot['TH'] = (costs_TH[1]['Spillage'] - (costs_TH[0]['CostHeat'] + costs_TH[0]['CostHeatSlack']))/10**6
