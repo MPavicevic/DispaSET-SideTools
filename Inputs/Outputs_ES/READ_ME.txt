@@ -1,0 +1,1 @@
+Cas (de base) de la suisse résolu avec AMPL
