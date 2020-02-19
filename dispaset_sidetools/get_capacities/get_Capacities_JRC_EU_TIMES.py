@@ -56,7 +56,7 @@ output_folder = '../../Outputs/'  # Standard output folder
 
 # Local files
 # Typical units
-typical_units = pd.read_csv(input_folder + 'Default/' + 'Typical_Units_JRC_EU_TIMES.csv')
+typical_units = pd.read_csv(input_folder + source_folder + 'Typical_Units_JRC_EU_TIMES.csv')
 typical_tech_input_raw_h = pd.read_excel(
     input_folder + source_folder + 'TIMES_Capacities_technology_2050_times_names.xlsx', 
     header=None, nrows = 2, index_col = 0, skiprows = 1)
@@ -79,7 +79,7 @@ chp_capacities_raw = pd.read_excel(
     header=None, index_col = 0, skiprows = 3)
 
 # Hydro reservoirs
-reservoirs = pd.read_csv(input_folder + 'Hydro_Reservoirs.csv', index_col=0, header=None)
+reservoirs = pd.read_csv(input_folder + 'Default/' + 'Hydro_Reservoirs.csv', index_col=0, header=None)
 
 # Electric wehicles
 batteries = pd.read_excel(input_folder + source_folder + 'TIMES_EV_Capacities.xlsx', index_col=0)
