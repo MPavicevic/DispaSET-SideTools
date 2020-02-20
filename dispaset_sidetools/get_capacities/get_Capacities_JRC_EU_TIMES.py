@@ -50,9 +50,9 @@ CCS = False  # Turn Carbon capture and sotrage on/off  (When false grouped by sa
 
 # %% Inputs
 # Folder destinations
-input_folder = '../Inputs/'  # Standard input folder
+input_folder = '../../Inputs/'  # Standard input folder
 source_folder = 'JRC_EU_TIMES/'
-output_folder = '../Outputs/'  # Standard output folder
+output_folder = '../../Outputs/'  # Standard output folder
 
 # Local files
 # Typical units
