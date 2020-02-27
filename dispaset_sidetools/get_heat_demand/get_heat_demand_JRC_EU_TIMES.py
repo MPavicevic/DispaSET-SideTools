@@ -24,10 +24,11 @@ YEAR = 2016
 input_folder = '../../Inputs/'  # Standard input folder
 source_folder = 'JRC_EU_TIMES/'
 output_folder = '../../Outputs/'  # Standard output folder
+scenario = SCENARIO + '/'
 
 # %% Load data
 # Input files
-pickle_off = open(input_folder + source_folder + SOURCE + SCENARIO + '_' + str(2050) + '_' + CASE + '.p', 'rb')
+pickle_off = open(input_folder + source_folder+ scenario + SOURCE + SCENARIO + '_' + str(2050) + '_' + CASE + '.p', 'rb')
 inputfile_p2h = 'TIMES_P2H_Demand_tech_2050.xlsx'
 inputfile_dh = 'TIMES_DH_Demand_2050.xlsx'
 inputfile_chp = 'TIMES_CHP_Capacities_2050.csv'
@@ -49,11 +50,11 @@ for c in allunits:
         share_chp[c] = pd.DataFrame(
             chp_units[c]['CHP_Total_Heat_Cap'] / chp_units[c]['CHP_Total_Heat_Cap'].sum(axis=0)).T
 
-times_p2h_demand = pd.read_excel(input_folder + source_folder + inputfile_p2h, index_col=0, header=0, skiprows=1)
+times_p2h_demand = pd.read_excel(input_folder + source_folder + scenario + inputfile_p2h, index_col=0, header=0, skiprows=1)
 times_p2h_demand.fillna(0, inplace=True)
 times_p2h_demand = times_p2h_demand / 3.6  # TWh
 
-times_dh_demand = pd.read_excel(input_folder + source_folder + inputfile_dh, index_col=0, header=0, skiprows=1)
+times_dh_demand = pd.read_excel(input_folder + source_folder + scenario + inputfile_dh, index_col=0, header=0, skiprows=1)
 times_dh_demand.fillna(0, inplace=True)
 times_dh_demand = times_dh_demand / 3.6  # TWh
 
@@ -140,7 +141,7 @@ def write_csv_files(dem_filename, heat_demand):
         for c in allunits:
             make_dir((output_folder))
             make_dir(output_folder + source_folder + 'Database')
-            folder = output_folder + source_folder + 'Database/Heat_demand/'
+            folder = output_folder + source_folder + 'Database/' + scenario + 'Heat_demand/'
             make_dir(folder)
             make_dir(folder + c)
             allunits[c].to_csv(folder + c + '/' + filename)
