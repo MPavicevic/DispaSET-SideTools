@@ -33,8 +33,8 @@ countries = list(['BE'])
 
 #Create AvailibilityFactors
 AvailFactors = ['WTON','WTOF','PHOT','HROR']
-Inflows = ['HDAM','HPHS','BATS']
-ReservoirLevels = ['BATS','HPHS']
+Inflows = ['HDAM','HPHS']
+ReservoirLevels = ['HPHS']
 
 #Create data structures
 res_timeseries = {}
@@ -57,33 +57,44 @@ for x in countries:
     tmp_WTOF[x]= AvailFactors_ES[AF_countr[2]]
     tmp_PV[x]= AvailFactors_ES[AF_countr[0]]
     tmp_HROR[x]= AvailFactors_ES[AF_countr[3]]
+
     # Combine it all together
     tmp_res_timeseries = [tmp_PV[x],tmp_WTON[x],tmp_WTOF[x],tmp_HROR[x]]
     res_timeseries[x] = pd.concat(tmp_res_timeseries,axis=1)
     res_timeseries[x].columns = AF
 
+    res_timeseries[x].loc[res_timeseries[x]['PHOT'] < 0,'PHOT'] = 0
+    res_timeseries[x].loc[res_timeseries[x]['PHOT'] > 1,'PHOT'] = 1
+    res_timeseries[x].loc[res_timeseries[x]['WTON'] < 0,'WTON'] = 0
+    res_timeseries[x].loc[res_timeseries[x]['WTON'] > 1,'WTON'] = 1
+    res_timeseries[x].loc[res_timeseries[x]['WTOF'] < 0,'WTOF'] = 0
+    res_timeseries[x].loc[res_timeseries[x]['WTOF'] > 1,'WTOF'] = 1
+    res_timeseries[x].loc[res_timeseries[x]['HROR'] < 0,'HROR'] = 0
+    res_timeseries[x].loc[res_timeseries[x]['HROR'] > 1,'HROR'] = 1
 
     tmp_HDAM = pd.DataFrame(index=drange)
     tmp_HPHS = pd.DataFrame(index=drange)
-    tmp_BATS = pd.DataFrame(index=drange)
+#    tmp_BATS = pd.DataFrame(index=drange)
     #Scaled Inflows
     tmp_HDAM[x] = AvailFactors_ES[AF_countr[3]]
     tmp_HPHS[x] = AvailFactors_ES[AF_countr[3]]
-    inst_capa_bats = float(search_assets('BATT_LI', 'f'))
-    tmp_BATS[x] = Storage['BATT_LI_in']
-    tmp_inflow_timeseries = [tmp_HDAM[x], tmp_HPHS[x],abs(tmp_BATS[x]).div(inst_capa_bats)]
+#    inst_capa_bats = float(search_assets('BATT_LI', 'f'))
+#    tmp_BATS[x] = Storage['BATT_LI_in']
+#    tmp_inflow_timeseries = [tmp_HDAM[x], tmp_HPHS[x],abs(tmp_BATS[x]).div(inst_capa_bats)]
+    tmp_inflow_timeseries = [tmp_HDAM[x], tmp_HPHS[x]]
     inflow_timeseries[x] = pd.concat(tmp_inflow_timeseries, axis=1)
     inflow_timeseries[x].columns = Inflows
 
 
-    tmp_BATT_LI = pd.DataFrame(index=drange)
+#    tmp_BATT_LI = pd.DataFrame(index=drange)
     tmp_scaledlevels_timeseries = pd.DataFrame(index=drange)
     #ScaledLevels
-    tmp_BATT_LI[x] = Storage['BATT_LI']
-    inst_capa_1 = float(search_assets('BATT_LI', 'f'))
+#    tmp_BATT_LI[x] = Storage['BATT_LI']
+#    inst_capa_1 = float(search_assets('BATT_LI', 'f'))
     tmp_HPHS[x] = Storage['PHS']
     inst_capa_2 = float(search_assets('PHS','f'))
-    tmp_scaledlevels_timeseries = [tmp_BATT_LI[x].div(inst_capa_1), tmp_HPHS[x].div(inst_capa_2)]
+#    tmp_scaledlevels_timeseries = [tmp_BATT_LI[x].div(inst_capa_1), tmp_HPHS[x].div(inst_capa_2)]
+    tmp_scaledlevels_timeseries = [tmp_HPHS[x].div(inst_capa_2)]
     scaledlevels_timeseries[x] = pd.concat(tmp_scaledlevels_timeseries, axis = 1)
     Levels_countr = [x + '_BATT_LI' , x + '_PHS']
     scaledlevels_timeseries[x].columns = ReservoirLevels

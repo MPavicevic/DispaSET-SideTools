@@ -230,7 +230,6 @@ def distri_TD(numbTD):
     TD_final.at[0, 'TD'] = int(cols[4])
     for index in range(1, 8760):
         TD_final.at[index, '#'] = int(df.iloc[index - 1, 0])
-        print(int(df.iloc[index - 1, 0]))  # s'arrete à 8612
         TD_final.at[index, 'hour'] = int(df.iloc[index - 1, 2])
         TD_final.at[index, 'TD'] = int(df.iloc[index - 1, 4])
 
@@ -434,7 +433,6 @@ def write_TypicalUnits_CHP(missing_tech_CHP):
     Typical_Units.to_csv(input_folder + 'Typical_Units_modif.csv', index=False)
 
 
-print(distri_TD(12))
 ##List of TECH_FUEL to get : HROR WAT, COMC HRD, STUR BIO/WST/OIL/HYD
 # missing_tech = [['HROR','WAT'],['COMC','HRD'],['STUR','BIO'],['STUR','WST'],['STUR','OIL'],['STUR','HYD']]
 # missing_chp = [['STUR','BIO','back-pressure'],['STUR','WST','back-pressure'],['STUR','OIL','back-pressure']]

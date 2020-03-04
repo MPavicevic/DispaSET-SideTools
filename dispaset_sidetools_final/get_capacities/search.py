@@ -230,7 +230,6 @@ def distri_TD(numbTD):
     TD_final.at[0, 'TD'] = int(cols[4])
     for index in range(1, 8760):
         TD_final.at[index, '#'] = int(df.iloc[index - 1, 0])
-        print(int(df.iloc[index - 1, 0]))  # s'arrete à 8612
         TD_final.at[index, 'hour'] = int(df.iloc[index - 1, 2])
         TD_final.at[index, 'TD'] = int(df.iloc[index - 1, 4])
 
