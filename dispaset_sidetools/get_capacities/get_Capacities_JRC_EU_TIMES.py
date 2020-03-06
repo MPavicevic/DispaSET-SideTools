@@ -999,7 +999,9 @@ for c in cap:
         h2data['STOMaxChargingPower'] = h2data['PowerCapacity']
         h2data['PowerCapacity']=typical_tech_input.loc[c,'HYD_PEMFC']
         h2data['STOCapacity'] = h2_storage_capacities.loc[c,1]/(3.6e-6) #convert from PJ to MWh
-        units.loc[h2index,:] = h2data     
+        units.loc[h2index,:] = h2data    
+        if h2data['PowerCapacity'].item() ==0:
+            units.drop(c+'_P2GS_HYD', inplace=True)
     else:
         sys.exit('Too many P2G units!')
         

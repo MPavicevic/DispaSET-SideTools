@@ -17,7 +17,7 @@ import pandas as pd
 import sys,os
 
 # Insert the path where DispaSET---Side-Tools is located
-dispaset_sidetools_path = r'C:\Users\Andrea\GitHub\DispaSET---Side-Tools'
+dispaset_sidetools_path = r'../..'
 
 sys.path.append(os.path.abspath(dispaset_sidetools_path))
 os.chdir(dispaset_sidetools_path)
@@ -27,7 +27,7 @@ from dispaset_sidetools.common import make_dir
 WRITE_CSV_FILES = True  # Write csv database
 
 #Output File name
-scenario = 'ProRes1'
+scenario = 'NearZeroCarbon'
 year = '2050'
 filename = 'AF_%s_%s' %(scenario, year)
 
@@ -41,13 +41,13 @@ output_folder = 'Outputs/'  # Standard output folder
 inputfolder_af = input_folder + source_folder + "AvailabilityFactors"
 
 #Provide the path for the TIMES Capacities divided by technology
-inputfile_cap = input_folder + "/JRC_EU_TIMES/TIMES_Capacities_technology_2050.csv"
+inputfile_cap = input_folder + "/JRC_EU_TIMES/" + scenario + "/TIMES_Capacities_technology_2050.csv"
 
 #Provide the path for the TIMES Energy production for the HROR units
-inputfile_en_hror = input_folder + "/JRC_EU_TIMES/TIMES_Energy_HROR.xlsx"
+inputfile_en_hror = input_folder + "/JRC_EU_TIMES/" + scenario + "/TIMES_Energy_HROR.xlsx"
 
 #Provide the path for the TIMES Energy production for the SUN units
-inputfile_en_sun = input_folder + "/JRC_EU_TIMES/TIMES_Energy_SUN.xlsx"
+inputfile_en_sun = input_folder + "/JRC_EU_TIMES/" + scenario + "/TIMES_Energy_SUN.xlsx"
 
 #%% ################### AF #######################
 
@@ -158,8 +158,8 @@ def write_csv_files(filename, variable, write_csv=None):
     if write_csv is True:
         for c in countries: 
             make_dir((output_folder))
-            make_dir(output_folder +  'Database')
-            folder = output_folder +  'Database/AvailabilityFactors/'
+            make_dir(output_folder + 'JRC_EU_TIMES/' + 'Database')
+            folder = output_folder + 'JRC_EU_TIMES/' + 'Database/' + scenario + '/AvailabilityFactors/'
             make_dir(folder)
             folder = folder + c
             make_dir(folder)

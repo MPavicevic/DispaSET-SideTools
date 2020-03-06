@@ -18,7 +18,7 @@ import pandas as pd
 import sys,os
 
 # Insert the path where DispaSET---Side-Tools is located
-dispaset_sidetools_path = r'C:\Users\Andrea\GitHub\DispaSET---Side-Tools'
+dispaset_sidetools_path = r'../..'
 
 sys.path.append(os.path.abspath(dispaset_sidetools_path))
 os.chdir(dispaset_sidetools_path)
@@ -28,7 +28,7 @@ from dispaset_sidetools.common import make_dir
 WRITE_CSV_FILES = True  # Write csv database
 
 #Output File name
-scenario = 'ProRes1'
+scenario = 'NearZeroCarbon'
 year = '2050'
 filename = 'AF_%s_%s' %(scenario, year)
 
@@ -37,11 +37,12 @@ filename = 'AF_%s_%s' %(scenario, year)
 input_folder = 'Inputs/'  # Standard input folder
 source_folder = 'Default/'
 output_folder = 'Outputs/'  # Standard output folder
+source_folder = 'JRC_EU_TIMES'
 
 #File with NTC raw data
 inputfile_ntc = input_folder + source_folder + "NTC Forecasts.xlsx"
 
-sys.path.append(os.path.abspath(r'C:\Users\Andrea\GitHub\DispaSET---Side-Tools'))
+sys.path.append(os.path.abspath(r'../..'))
 
 ntc = {}
 
@@ -149,8 +150,8 @@ def write_csv_files(filename, variable, write_csv=None):
     variable = variable
     if write_csv is True:
         make_dir((output_folder))
-        make_dir(output_folder +  'Database')
-        folder = output_folder +  'Database/DayAheadNTC/'
+        make_dir(output_folder + '/'+ source_folder + '/Database')
+        folder = output_folder + source_folder + '/Database/' + scenario + '/DayAheadNTC/'
         make_dir(folder)
         folder = folder + '/1h'
         make_dir(folder)

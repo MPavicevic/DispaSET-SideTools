@@ -19,7 +19,7 @@ import sys,os
 import numpy as np 
 
 # Insert the path where DispaSET---Side-Tools is located
-dispaset_sidetools_path = r'C:\Users\Andrea\GitHub\DispaSET---Side-Tools'
+dispaset_sidetools_path = r'../..'
 
 sys.path.append(os.path.abspath(dispaset_sidetools_path))
 os.chdir(dispaset_sidetools_path)
@@ -42,13 +42,13 @@ output_folder = 'Outputs/'  # Standard output folder
 
 #Input files for the Scaled Inflows from Dispa-SET
 inputfile_inflows = input_folder + source_folder + "HydroData/ScaledInflows/%s/1h/2016_profile_from_2012.csv"
-inputfolder_inflows = input_folder + source_folder + "HydroData\ScaledInflows"
+inputfolder_inflows = input_folder + source_folder + "HydroData/ScaledInflows"
 
 #Provide the path for the TIMES Capacities divided by technology
-inputfile_cap = input_folder + "/JRC_EU_TIMES/TIMES_Capacities_technology_2050.csv"
+inputfile_cap = input_folder + "/JRC_EU_TIMES/" + scenario + "/TIMES_Capacities_technology_2050.csv"
 
 #Provide the path for the TIMES Energy production for the HROR units
-inputfile_en_hdam = input_folder + "/JRC_EU_TIMES/TIMES_Energy_HDAM.xlsx"
+inputfile_en_hdam = input_folder + "/JRC_EU_TIMES/" + scenario +"/TIMES_Energy_HDAM.xlsx"
 
 #%% Scaled Inflows
 
@@ -108,10 +108,10 @@ def write_csv_files(filename, variable, write_csv=None):
     if write_csv is True:
         for c in available_countries: 
             make_dir((output_folder))
-            make_dir(output_folder +  'Database')
-            folder = output_folder +  'Database/HydroData/'
+            make_dir(output_folder + 'JRC_EU_TIMES/' + 'Database')
+            folder =  output_folder + 'JRC_EU_TIMES/' + 'Database/' + scenario + '/HydroData/'
             make_dir(folder)
-            folder = output_folder +  'Database/HydroData/ScaledInflows/'
+            folder = output_folder +  'JRC_EU_TIMES/Database/' + scenario + '/HydroData/ScaledInflows/'
             make_dir(folder)
             folder = folder + c
             make_dir(folder)
