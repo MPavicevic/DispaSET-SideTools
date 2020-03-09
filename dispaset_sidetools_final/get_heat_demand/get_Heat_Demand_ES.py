@@ -138,6 +138,9 @@ for Country in countries:
 
 #heat_demand_ts.to_csv(output_folder + 'heat_dem_test.csv')
 
+#Computing the total LT and HT heat produced by the heat slack tech of ES :
+
+
 
 #keep only the percentage Tech_LT_heat_prod / CHP_LT_heat_prod + P2H_LT_heat_prod of this time series. put it back in heat_demand_ts for each country.
 tech_country = list()
@@ -190,6 +193,17 @@ for x in range(0,len(tech_country)):
         factor = ratio_chpp2h_LT.loc[countr, (tech_country[x])[3:]]
         heat_demand_ESinput[(tech_country[x])] = heat_demand_ts_LT[countr].multiply(factor)
 
+
+print(p2h_demand)
+print(chp_demand)
+
+#print(chp_demand.loc['BE', 'TOTAL_HT'])
+#print(p2h_demand.loc['BE', 'TOTAL_HT'])
+#print(search_YearBalance('IND_DIRECT_ELEC','HEAT_HIGH_T'))
+#print(search_YearBalance('IND_COGEN_GAS','HEAT_HIGH_T'))
+
+p2h_demand.to_csv('p2hdemand.csv')
+chp_demand.to_csv('chpdemand.csv')
 
 '''
 # Put the right nomenclature
