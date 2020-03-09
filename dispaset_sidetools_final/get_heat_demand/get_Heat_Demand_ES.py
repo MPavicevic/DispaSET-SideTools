@@ -44,10 +44,11 @@ for x in range(0,len(countries)):
             if value_LT_DHN > 0:
                 total_LT_dhn = total_LT_dhn + value_LT_DHN
 
+
     p2h_demand.at[Country,'TOTAL_HT'] = total_HT
     p2h_demand.at[Country,'TOTAL_LT_DEC'] = total_LT_dec
     p2h_demand.at[Country,'TOTAL_LT_DHN'] = total_LT_dhn
-    p2h_demand.at[Country,'TOTAL_LT'] = total_LT_dhn + total_LT_dhn
+    p2h_demand.at[Country,'TOTAL_LT'] = total_LT_dhn + total_LT_dec
     p2h_demand.at[Country,'TOTAL'] = total_HT + total_LT_dec + total_LT_dhn
 
 #print(p2h_demand)
@@ -85,7 +86,7 @@ for x in range(0,len(countries)):
     chp_demand.at[Country,'TOTAL_HT'] = total_HT
     chp_demand.at[Country,'TOTAL_LT_DEC'] = total_LT_dec
     chp_demand.at[Country,'TOTAL_LT_DHN'] = total_LT_dhn
-    chp_demand.at[Country,'TOTAL_LT'] = total_LT_dhn + total_LT_dhn
+    chp_demand.at[Country,'TOTAL_LT'] = total_LT_dhn + total_LT_dec
     chp_demand.at[Country,'TOTAL'] = total_HT + total_LT_dec + total_LT_dhn
 
 #print(chp_demand)
@@ -181,7 +182,7 @@ for x in range(0,len(countries)):
 #fill heat_demand_ESinput with ts * chp_type/chp+p2h for each chp tech
 heat_demand_ESinput = pd.DataFrame(index=drange, columns=tech_country)
 
-
+i = 0
 for x in range(0,len(tech_country)):
     if (tech_country[x])[3:6] == 'IND':
         countr = (tech_country[x])[:2]
@@ -192,10 +193,6 @@ for x in range(0,len(tech_country)):
         countr = (tech_country[x])[:2]
         factor = ratio_chpp2h_LT.loc[countr, (tech_country[x])[3:]]
         heat_demand_ESinput[(tech_country[x])] = heat_demand_ts_LT[countr].multiply(factor)
-
-
-print(p2h_demand)
-print(chp_demand)
 
 #print(chp_demand.loc['BE', 'TOTAL_HT'])
 #print(p2h_demand.loc['BE', 'TOTAL_HT'])
