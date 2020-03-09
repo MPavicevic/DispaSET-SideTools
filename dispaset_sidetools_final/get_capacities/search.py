@@ -1,11 +1,13 @@
 import pandas as pd
 import glob
 
-input_folder = '../Inputs/'  # to access DATA - DATA_brut & Typical_Units(to find installed power f [GW or GWh for storage])
+input_folder = '../../Inputs/'  # to access DATA - DATA_brut & Typical_Units(to find installed power f [GW or GWh for storage])
 output_folder = '../../Outputs/'
 
 input_PP_folder = '../../Dispa-SET.git/Database/PowerPlants/'  # input file = PowerPlants.csv
 
+
+########################################################################################################################
 
 # function that provides the value contained in the Assets.txt file (output from EnergyScope)
 #
@@ -32,8 +34,8 @@ def search_assets(tech, feat):
 
     return output
 
+########################################################################################################################
 
-#
 #
 #
 # Input :    tech = technology studied
@@ -53,7 +55,7 @@ def search_YearBalance(tech, feat):
 
     return output
 
-print(search_YearBalance('DHN_HP_ELEC','HEAT_LOW_T_DHN'))
+########################################################################################################################
 
 # Mapping for matching ES and DS nomenclature
 
@@ -178,6 +180,8 @@ FUEL = {u'CCGT': u'GAS',
         u'TS_DEC_BOILER_OIL': u''}
 
 
+########################################################################################################################
+
 # u'TS_DHN_DAILY': u'', #TO DO
 # u'TS_DHN_SEASONAL': u'', #TO DO
 # u'SEASONAL_NG': u'', #TO DO
@@ -194,6 +198,22 @@ def search_Dict_ES2DS(tech_ES):
     tech_DS = str(TECH[tech_ES] + '_' + FUEL[tech_ES])
     return tech_DS
 
+########################################################################################################################
+
+#
+#
+# returns list containing all the tech of type 'type' from ES
+# Input = 'type'
+# Output = list of tech of type 'tyoe'
+#
+def search_Dict_list(old_list,type):
+    mylist = old_list
+    for i in TECH:
+        if TECH[i] == type:
+            mylist.append(i)
+    return mylist
+
+########################################################################################################################
 
 #
 #
@@ -243,6 +263,7 @@ def distri_TD(numbTD):
 
     return distri
 
+########################################################################################################################
 
 #
 # inputs :   -TD = Typical number
@@ -264,6 +285,7 @@ def search_LTlayers(TD, hour, tech):
     output = float(LT_layers.at[index, tech])
     return output
 
+########################################################################################################################
 
 #
 #
@@ -327,6 +349,8 @@ def sto_dhn(tech_names, LTlayers, TYPE, numTD):
         dhn_sto.at[0, i] = f_ts_dhn * dhn_interm2.loc[0, i] / (integ_dhn_sto[0])
     return dhn_sto
 
+########################################################################################################################
+
 
 # distri_TD(12)
 #
@@ -337,6 +361,8 @@ def sto_dhn(tech_names, LTlayers, TYPE, numTD):
 # print(sto_dhn(heat_tech, LTlayers,'DAILY',12))
 
 
+########################################################################################################################
+
 # SEARCH TYPICAL UNITS : for the moment, these functions have to be called before running our scripts, but eventually, it could be useful to integrate it in the run of PowerPlants.py
 
 # Create Dataframe with the DS column names, and as index, all the TECH in DS terminology
@@ -346,6 +372,8 @@ column_names = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Technology', 'Fuel',
                 'RampingCost', 'PartLoadMin', 'MinEfficiency', 'StartUpTime', 'CO2Intensity',
                 'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor', 'COP', 'Tnominal', 'coef_COP_a', 'coef_COP_b',
                 'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency', 'CHPMaxHeat']
+
+########################################################################################################################
 
 
 # Input :    tech = technology studied
@@ -369,6 +397,8 @@ def search_TypicalUnits(tech, fuel):
             return PowerPlants.loc[(PowerPlants['Technology'] == tech) & (PowerPlants['Fuel'] == fuel)]
 
     return pd.DataFrame(columns=column_names)  # 'NOTHING for' + tech + fuel
+
+########################################################################################################################
 
 
 def search_TypicalUnits_CHP(tech, fuel, CHPType):
@@ -406,6 +436,8 @@ def search_TypicalUnits_CHP(tech, fuel, CHPType):
     return pd.DataFrame(columns=column_names)  # 'NOTHING for' + tech + fuel
 
 
+########################################################################################################################
+
 def write_TypicalUnits(missing_tech):
     Typical_Units = pd.read_csv(input_folder + 'Typical_Units.csv')
     powerplants = pd.DataFrame(columns=column_names)
@@ -419,6 +451,7 @@ def write_TypicalUnits(missing_tech):
     Typical_Units = pd.concat([Typical_Units, powerplants])
     Typical_Units.to_csv(input_folder + 'Typical_Units_modif.csv', index=False)
 
+########################################################################################################################
 
 def write_TypicalUnits_CHP(missing_tech_CHP):
     Typical_Units = pd.read_csv(input_folder + 'Typical_Units.csv')
@@ -433,6 +466,8 @@ def write_TypicalUnits_CHP(missing_tech_CHP):
     Typical_Units = pd.concat([Typical_Units, powerplants])
     Typical_Units.to_csv(input_folder + 'Typical_Units_modif.csv', index=False)
 
+
+########################################################################################################################
 
 ##List of TECH_FUEL to get : HROR WAT, COMC HRD, STUR BIO/WST/OIL/HYD
 # missing_tech = [['HROR','WAT'],['COMC','HRD'],['STUR','BIO'],['STUR','WST'],['STUR','OIL'],['STUR','HYD']]

@@ -53,7 +53,7 @@ for x in range(0,len(countries)):
 #print(p2h_demand)
 
 
-#DHN heat demand (=CHP heat production), from YearBalance:
+#Cogen heat demand (=CHP heat production), from YearBalance:
 #Enter CHP technology names
 chp_tech = ['TOTAL','TOTAL_HT','TOTAL_LT','TOTAL_LT_DEC','TOTAL_LT_DHN','IND_COGEN_GAS','IND_COGEN_WOOD','IND_COGEN_WASTE','DHN_COGEN_GAS','DHN_COGEN_WOOD','DHN_COGEN_WASTE','DEC_COGEN_GAS','DEC_COGEN_OIL']
 
