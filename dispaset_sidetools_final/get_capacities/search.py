@@ -53,6 +53,7 @@ def search_YearBalance(tech, feat):
 
     return output
 
+print(search_YearBalance('DHN_HP_ELEC','HEAT_LOW_T_DHN'))
 
 # Mapping for matching ES and DS nomenclature
 
