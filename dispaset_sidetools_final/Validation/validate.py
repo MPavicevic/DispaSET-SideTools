@@ -42,18 +42,18 @@ for x in range(0,len(countries)):
 
             if value_HT > 0:
                 total_HT = total_HT + value_HT
-                print('HT :' + y + ' : ' + str(value_HT))
-                print(total_HT)
             if value_LT_DEC > 0:
                 total_LT_dec = total_LT_dec + value_LT_DEC
             if value_LT_DHN > 0:
                 total_LT_dhn = total_LT_dhn + value_LT_DHN
+
+            print(y + ' : ' + ' HT :' + str(value_HT) + ' LT_DEC : ' + str(value_LT_DEC) + ' LT : ' + str(value_LT_DHN)  )
+
     HeatSlack_demand.at[Country,'TOTAL_HT'] = total_HT
     HeatSlack_demand.at[Country,'TOTAL_LT_DEC'] = total_LT_dec
     HeatSlack_demand.at[Country,'TOTAL_LT_DHN'] = total_LT_dhn
     HeatSlack_demand.at[Country,'TOTAL_LT'] = total_LT_dhn + total_LT_dhn
     HeatSlack_demand.at[Country,'TOTAL'] = total_HT + total_LT_dec + total_LT_dhn
-
 
 #print(HeatSlack_demand)
 
