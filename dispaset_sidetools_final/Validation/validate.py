@@ -112,5 +112,158 @@ def get_ES_heatprod(list_tech):
     return Heat_prod
 
 
-list = ['IND_COGEN_GAS','IND_DIRECT_ELEC','DEC_HP_ELEC','DHN_HP_ELEC','IND_BOILER_WOOD','IND_BOILER_WASTE','TS_DEC_HP_ELEC','TS_DHN_SEASONAL']
-print(get_ES_heatprod(list))
+#list = ['IND_COGEN_GAS','IND_DIRECT_ELEC','DEC_HP_ELEC','DHN_HP_ELEC','IND_BOILER_WOOD','IND_BOILER_WASTE','TS_DEC_HP_ELEC','TS_DHN_SEASONAL']
+#print(get_ES_heatprod(list))
+
+
+def get_Sankey():
+    import plotly.graph_objects as go
+
+    Countries = ['BE']
+
+    Power = pd.read_csv(input_folder + 'OutputPower_DS.csv')
+    Heat = pd.read_csv(input_folder + 'OutputHeat_DS.csv')
+    HeatSlack = pd.read_csv(input_folder + 'OutputHeatSlack_DS.csv')
+    StorageInput = pd.read_csv(input_folder + 'OutputStorageInput_DS.csv')
+
+    TotalLoadValue = pd.read_csv(input_folder + 'EUD_ELEC.txt', delimiter='\t', index_col=0)
+    EUD_ELEC = TotalLoadValue.sum(axis=0) / 1000
+    HeatDemand = pd.read_csv(input_folder + 'EUD_HEAT.txt', delimiter='\t', index_col=0)
+    EUD_HEAT_LT = HeatDemand[Countries[0] + '_LT'].sum(axis=0) / 1000
+    EUD_HEAT_HT = HeatDemand[Countries[0] + '_HT'].sum(axis=0) / 1000
+
+
+    PowColumn = Power.columns[1:]
+    PowerTot = pd.DataFrame(columns=PowColumn)
+    for i in PowerTot:
+        PowerTot.at[0,i] = Power[i].sum(axis=0) / 1000
+    HeatColumn = Heat.columns[1:]
+    HeatTot = pd.DataFrame(columns=HeatColumn)
+    for i in HeatTot:
+        HeatTot.at[0,i] = Heat[i].sum(axis=0) / 1000
+    HeatSlackColumn = HeatSlack.columns[1:]
+    HeatSlackTot = pd.DataFrame(columns=HeatSlackColumn)
+    for i in HeatSlackTot:
+        HeatSlackTot.at[0, i] = HeatSlack[i].sum(axis=0) / 1000
+    StorageColumn = StorageInput.columns[1:3] # Keep only BATT_LI and PHS
+    StorageTot = pd.DataFrame(columns=StorageColumn)
+    for i in StorageTot:
+        StorageTot.at[0, i] = StorageInput[i].sum(axis=0) / 1000
+
+
+
+    #build labels
+    mylabels = ['GAS','HEAT_HT','HEAT_LT_DHN','HEAT_LT_DEC', 'EUD_ELEC', 'EUD_LT_DHN', 'EUD_LT_DEC','EUD_HT','P2H','ELECTRICITY','HEATSLACK']
+    mylabels.extend(PowColumn)
+    mylabels.extend(HeatColumn)
+    mylabels.extend(HeatSlackColumn)
+    mylabels.extend(StorageColumn)
+
+    #['GAS', 'WTOF', 'WTON', 'PHOT', 'ELECTRICITY', 'HEAT_HT', 'HEAT_LT', 'EUD_ELEC', 'EUD_H_LT', 'EUD_H_HT', 'P2H']
+
+
+    #build links
+    mysource = list()
+    mytarget = list()
+    myvalue = list()
+
+
+################# ATTENTION PRERNDRE EN COMPTE LEFFICACITE !!!!!!!!!! ###############################
+
+    for i in PowerTot:
+
+        if 'COGEN' in i:
+            if "GAS" in i or "CCGT" in i:
+                ThisSource = 'GAS'
+            else:
+                ThisSource = i
+            mysource.append(mylabels.index(ThisSource))
+            ThisTarget = i
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = PowerTot.loc[0,i]
+            myvalue.append(ThisValue)
+
+            ThisSource = i
+            mysource.append(mylabels.index(ThisSource))
+            ThisTarget = 'ELECTRICITY'
+            mytarget.append(mylabels.index(ThisTarget))
+            myvalue.append(ThisValue)
+
+
+
+        else:
+            if "GAS" in i or "CCGT" in i:
+                ThisSource = 'GAS'
+            else:
+                ThisSource = i
+            mysource.append(mylabels.index(ThisSource))
+
+            ThisTarget = 'ELECTRICITY'
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = PowerTot.loc[0,i]
+            myvalue.append(ThisValue)
+
+    for i in HeatTot:
+        if 'COGEN' in i:
+
+
+        else:
+            if "GAS" in i or "CCGT" in i:
+                ThisSource = 'GAS'
+            else:
+                ThisSource = 'ELECTRICITY'
+
+            mysource.append(mylabels.index(ThisSource))
+            if 'DHN' in i:
+                ThisTarget = 'HEAT_LT_DHN'
+            elif 'DEC' in i:
+                ThisTarget = 'HEAT_LT_DEC'
+            else:
+                ThisTarget = 'HEAT_HT'
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = HeatTot.loc[0,i]
+            myvalue.append(ThisValue)
+
+    for i in HeatSlackTot:
+        ThisSource = 'HEATSLACK'
+        mysource.append(mylabels.index(ThisSource))
+        if 'DHN' in i:
+            ThisTarget = 'HEAT_LT_DHN'
+        elif 'DEC' in i:
+            ThisTarget = 'HEAT_LT_DEC'
+        else:
+            ThisTarget = 'HEAT_HT'
+        mytarget.append(mylabels.index(ThisTarget))
+        ThisValue = HeatSlackTot.loc[0,i]
+        myvalue.append(ThisValue)
+
+        mysource.append(mylabels.index('ELECTRICITY'))
+        mytarget.append(mylabels.index('EUD_ELEC'))
+        myvalue.append(EUD_ELEC)
+
+    fig = go.Figure(data=[go.Sankey(
+        node = dict(
+        pad = 15,
+        thickness = 20,
+        line = dict(color = "black", width = 0.5),
+        label = mylabels,
+        color = "blue"
+        ),
+        link = dict(
+        source = mysource,
+        target = mytarget,
+        value = myvalue
+    ))])
+
+    fig.update_layout(title_text="Sankey Diagram : figures in GWh", font_size=10)
+    fig.show()
+
+get_Sankey()
+
+
+
+
+
+
+
+
