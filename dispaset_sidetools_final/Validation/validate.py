@@ -154,7 +154,9 @@ def get_Sankey():
 
 
     #build labels
-    mylabels = ['GAS','HEAT_HT','HEAT_LT_DHN','HEAT_LT_DEC', 'EUD_ELEC', 'EUD_LT_DHN', 'EUD_LT_DEC','EUD_HT','P2H','ELECTRICITY','HEATSLACK','OtherFuels']
+    mylabels = ['HEAT_HT','HEAT_LT_DHN','HEAT_LT_DEC', 'EUD_ELEC', 'EUD_LT_DHN', 'EUD_LT_DEC','EUD_HT','P2H','ELECTRICITY','HEATSLACK','OtherFuels']
+    FuelLabels = ['BIO','GAS','GEO','HRD','HYD','LIG','NUC','OIL','PEA','SUN','WAT','WIN','WST']
+    mylabels.extend(FuelLabels)
     mylabels.extend(PowColumn)
     mylabels.extend(HeatColumn)
     mylabels.extend(HeatSlackColumn)
@@ -174,8 +176,28 @@ def get_Sankey():
     for i in PowerTot:
 
         if 'COGEN' in i:
-            if "GAS" in i or "CCGT" in i:
-                ThisSource = 'GAS'
+            ThisFuel = search_PowerPlant(i, 'Fuel')
+            if ThisFuel in mylabels:
+                ThisSource = ThisFuel
+            else:
+                ThisSource = 'OtherFuels'
+            mysource.append(mylabels.index(ThisSource))
+            ThisTarget = i
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = PowerTot.loc[0,i] / search_PowerPlant(i,'Efficiency')
+            myvalue.append(ThisValue)
+
+            ThisSource = i
+            mysource.append(mylabels.index(ThisSource))
+            ThisTarget = 'ELECTRICITY'
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = PowerTot.loc[0, i]
+            myvalue.append(ThisValue)
+
+        elif 'CCGT' in i:
+            ThisFuel = search_PowerPlant(i,'Fuel')
+            if ThisFuel in mylabels:
+                ThisSource = ThisFuel
             else:
                 ThisSource = 'OtherFuels'
             mysource.append(mylabels.index(ThisSource))
@@ -192,12 +214,19 @@ def get_Sankey():
             myvalue.append(ThisValue)
 
         else:
-            if "GAS" in i or "CCGT" in i:
-                ThisSource = 'GAS'
+            ThisFuel = search_PowerPlant(i, 'Fuel')
+            if ThisFuel in mylabels:
+                ThisSource = ThisFuel
             else:
-                ThisSource = i
+                ThisSource = 'OtherFuels'
             mysource.append(mylabels.index(ThisSource))
+            ThisTarget = i
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = PowerTot.loc[0, i] / search_PowerPlant(i,'Efficiency')
+            myvalue.append(ThisValue)
 
+            ThisSource = i
+            mysource.append(mylabels.index(ThisSource))
             ThisTarget = 'ELECTRICITY'
             mytarget.append(mylabels.index(ThisTarget))
             ThisValue = PowerTot.loc[0,i]
@@ -286,6 +315,18 @@ def get_Sankey():
             myvalue.append(ThisValue)
 
     for i in HeatSlackTot:
+
+        ThisFuel = search_PowerPlant(i, 'Fuel')
+        if ThisFuel in mylabels:
+            ThisSource = ThisFuel
+        else:
+            ThisSource = 'OtherFuels'
+        mysource.append(mylabels.index(ThisSource))
+        ThisTarget = 'HEATSLACK'
+        mytarget.append(mylabels.index(ThisTarget))
+        ThisValue = HeatSlackTot.loc[0, i] / search_PowerPlant(i, 'Efficiency')
+        myvalue.append(ThisValue)
+
         ThisSource = 'HEATSLACK'
         mysource.append(mylabels.index(ThisSource))
         if 'DHN' in i:
