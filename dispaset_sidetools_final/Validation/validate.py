@@ -11,7 +11,7 @@ from search import search_PowerPlant
 
 ########################################################################################################################
 
-# Get total heat produced by HeatSLack in EnergyScope
+# Get total heat produced by "HeatSLack" in EnergyScope
 
 def get_HeatSlack():
 
@@ -117,6 +117,16 @@ def get_ES_heatprod(list_tech):
 #print(get_ES_heatprod(list))
 
 
+########################################################################################################################
+
+#
+#
+#Function that builds the Sankey Diagram of Dispa-SET.
+#
+#
+#
+#
+
 def get_Sankey():
     import plotly.graph_objects as go
 
@@ -162,16 +172,11 @@ def get_Sankey():
     mylabels.extend(HeatSlackColumn)
     mylabels.extend(StorageColumn)
 
-    #['GAS', 'WTOF', 'WTON', 'PHOT', 'ELECTRICITY', 'HEAT_HT', 'HEAT_LT', 'EUD_ELEC', 'EUD_H_LT', 'EUD_H_HT', 'P2H']
-
 
     #build links
     mysource = list()
     mytarget = list()
     myvalue = list()
-
-
-################# ATTENTION PRERNDRE EN COMPTE LEFFICACITE !!!!!!!!!! ###############################
 
     for i in PowerTot:
 
