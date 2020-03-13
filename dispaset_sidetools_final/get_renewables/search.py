@@ -57,6 +57,26 @@ def search_YearBalance(tech, feat):
 
 ########################################################################################################################
 
+#
+#
+# Input :    tech = technology studied
+#           feat = feature needed regarding to the technology studied
+# Output :   Value of the feature asked
+#
+#
+def search_PowerPlant(tech, feat):
+    input_folder = '../../Outputs/'  # input file = PowerPlant.csv (to find installed power f [GW or GWh for storage])
+    output_folder = '../../Outputs/'
+    PowPlant = pd.read_csv(input_folder + 'PowerPlants.csv')
+    PowPlant.index = PowPlant['Unit']
+    tech = ''.join(c for c in tech if c not in '-(){}<>[], ')
+    tech = ''.join([i for i in tech if not i.isdigit()])
+    output = PowPlant.at[tech, feat]
+
+    return output
+
+########################################################################################################################
+
 # Mapping for matching ES and DS nomenclature
 
 TECH = {u'CCGT': u'COMC',

@@ -6,6 +6,7 @@ output_folder = '../../Outputs/'
 
 from search import search_YearBalance
 from search import search_Dict_list
+from search import search_PowerPlant
 
 
 ########################################################################################################################
@@ -153,7 +154,7 @@ def get_Sankey():
 
 
     #build labels
-    mylabels = ['GAS','HEAT_HT','HEAT_LT_DHN','HEAT_LT_DEC', 'EUD_ELEC', 'EUD_LT_DHN', 'EUD_LT_DEC','EUD_HT','P2H','ELECTRICITY','HEATSLACK']
+    mylabels = ['GAS','HEAT_HT','HEAT_LT_DHN','HEAT_LT_DEC', 'EUD_ELEC', 'EUD_LT_DHN', 'EUD_LT_DEC','EUD_HT','P2H','ELECTRICITY','HEATSLACK','OtherFuels']
     mylabels.extend(PowColumn)
     mylabels.extend(HeatColumn)
     mylabels.extend(HeatSlackColumn)
@@ -176,20 +177,19 @@ def get_Sankey():
             if "GAS" in i or "CCGT" in i:
                 ThisSource = 'GAS'
             else:
-                ThisSource = i
+                ThisSource = 'OtherFuels'
             mysource.append(mylabels.index(ThisSource))
             ThisTarget = i
             mytarget.append(mylabels.index(ThisTarget))
-            ThisValue = PowerTot.loc[0,i]
+            ThisValue = PowerTot.loc[0,i] / search_PowerPlant(i,'Efficiency')
             myvalue.append(ThisValue)
 
             ThisSource = i
             mysource.append(mylabels.index(ThisSource))
             ThisTarget = 'ELECTRICITY'
             mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = PowerTot.loc[0, i]
             myvalue.append(ThisValue)
-
-
 
         else:
             if "GAS" in i or "CCGT" in i:
@@ -205,6 +205,67 @@ def get_Sankey():
 
     for i in HeatTot:
         if 'COGEN' in i:
+            if "GAS" in i or "CCGT" in i:
+                ThisSource = 'GAS'
+            else:
+                ThisSource = 'OtherFuels'
+            mysource.append(mylabels.index(ThisSource))
+            ThisTarget = i
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = HeatTot.loc[0,i] / search_PowerPlant(i,'CHPPowerToHeat') / search_PowerPlant(i,'Efficiency')
+            myvalue.append(ThisValue)
+
+            ThisSource = i
+            mysource.append(mylabels.index(ThisSource))
+            if 'DHN' in i:
+                ThisTarget = 'HEAT_LT_DHN'
+            elif 'DEC' in i:
+                ThisTarget = 'HEAT_LT_DEC'
+            else:
+                ThisTarget = 'HEAT_HT'
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = HeatTot.loc[0, i]
+            myvalue.append(ThisValue)
+
+        elif 'HP' in i:
+            ThisSource = 'ELECTRICITY'
+            mysource.append(mylabels.index(ThisSource))
+            ThisTarget = i
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = HeatTot.loc[0, i] / search_PowerPlant(i, 'COP')
+            myvalue.append(ThisValue)
+
+            ThisSource = i
+            mysource.append(mylabels.index(ThisSource))
+            if 'DHN' in i:
+                ThisTarget = 'HEAT_LT_DHN'
+            elif 'DEC' in i:
+                ThisTarget = 'HEAT_LT_DEC'
+            else:
+                ThisTarget = 'HEAT_HT'
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = HeatTot.loc[0, i]
+            myvalue.append(ThisValue)
+
+        elif 'ELEC' in i:
+            ThisSource = 'ELECTRICITY'
+            mysource.append(mylabels.index(ThisSource))
+            ThisTarget = i
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = HeatTot.loc[0, i] / search_PowerPlant(i, 'COP') #Or divide by efficiency ??? IND_DIRECT_ELEC case
+            myvalue.append(ThisValue)
+
+            ThisSource = i
+            mysource.append(mylabels.index(ThisSource))
+            if 'DHN' in i:
+                ThisTarget = 'HEAT_LT_DHN'
+            elif 'DEC' in i:
+                ThisTarget = 'HEAT_LT_DEC'
+            else:
+                ThisTarget = 'HEAT_HT'
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = HeatTot.loc[0, i]
+            myvalue.append(ThisValue)
 
 
         else:
@@ -237,6 +298,7 @@ def get_Sankey():
         ThisValue = HeatSlackTot.loc[0,i]
         myvalue.append(ThisValue)
 
+# Add the ELEC_EUD
         mysource.append(mylabels.index('ELECTRICITY'))
         mytarget.append(mylabels.index('EUD_ELEC'))
         myvalue.append(EUD_ELEC)
