@@ -132,6 +132,11 @@ def get_Sankey():
 
     Countries = ['BE']
 
+    Power = pd.read_csv(input_folder + 'OutputPower_DS_MTS.csv')
+    Heat = pd.read_csv(input_folder + 'OutputHeat_DS_MTS.csv')
+    HeatSlack = pd.read_csv(input_folder + 'OutputHeatSlack_DS_MTS.csv')
+    StorageInput = pd.read_csv(input_folder + 'OutputStorageInput_DS_MTS.csv')
+
     Power = pd.read_csv(input_folder + 'OutputPower_DS.csv')
     Heat = pd.read_csv(input_folder + 'OutputHeat_DS.csv')
     HeatSlack = pd.read_csv(input_folder + 'OutputHeatSlack_DS.csv')
