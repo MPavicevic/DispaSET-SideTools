@@ -59,70 +59,31 @@ for Country in countries:
 tech_country = list()
 
 for y in tech:
-    tech_country.append(Country + '_' + y)
+    dhn=0
+    ind=0
+    dec=0
+    dhn = search_YearBalance(y, 'HEAT_LOW_T_DHN')
+    ind = search_YearBalance(y, 'HEAT_HIGH_T')
+    dec = search_YearBalance(y, 'HEAT_LOW_T_DECEN')
+    if dhn!=0 or ind!=0 or dec!=0:
+        tech_country.append(Country + '_' + y)
 
-ratio_chpp2h_LT = {}
-ratio_chpp2h_HT = {}
 
+print(tech_country)
 
-td_demand_HT = pd.DataFrame(columns=tech) #to create ratios based on typical days
-td_demand_LT = pd.DataFrame(columns=tech)
-
+heat_demand_ESinput = pd.DataFrame(index=range(0,8760), columns=tech_country)
 
 for x in range(0,len(countries)):
-    Country = countries[x]
-    ratio_chpp2h_LT_day = pd.DataFrame(index=range(0,365))
-    ratio_chpp2h_HT_day = pd.DataFrame(index=range(0,365))
-
-    for td in range(1,n_TD+1):
-        TOTAL_HT = 0
-        TOTAL_LT = 0
-        for y in tech:
-            value_HT = 0
-            value_LT = 0
-            for h in range(1,25):
-                value_HT = value_HT + search_HeatLayers('HT',td,h,y)
-                value_LT = value_LT + search_HeatLayers('LT',td,h,y)
-            if 'IND' in y:
-                td_demand_HT.at[td-1,y]=value_HT
-                td_demand_LT.at[td-1,y] = 0
-                TOTAL_HT = TOTAL_HT + value_HT
-            else:
-                td_demand_HT.at[td - 1, y] = 0
-                td_demand_LT.at[td-1,y] = value_LT
-                TOTAL_LT = TOTAL_LT + value_LT
-
-        td_demand_HT.at[td-1,'TOTAL_HT'] = TOTAL_HT
-        td_demand_LT.at[td-1,'TOTAL_LT'] = TOTAL_LT
-
     for day in range(1,366):
-        TD = get_TD((day-1)*24 + 1,n_TD)
-        for y in range(0,len(tech)):
-            if (tech[y])[:3] == 'IND':
-                a = float(td_demand_HT.loc[TD-1, tech[y]])
-                c = float(td_demand_HT.loc[TD-1,'TOTAL_HT'])
-                ratio_chpp2h_HT_day.at[day-1, tech[y]] = a /c
-            else:
-                a = float(td_demand_LT.loc[TD-1, tech[y]])
-                c = float(td_demand_LT.loc[TD-1,'TOTAL_LT'])
-                ratio_chpp2h_LT_day.at[day-1,tech[y]] = a/c
-    ratio_chpp2h_LT[countries[x]] = ratio_chpp2h_LT_day
-    ratio_chpp2h_HT[countries[x]] = ratio_chpp2h_HT_day
-
-#fill heat_demand_ESinput with ts * chp_type/chp+p2h for each chp tech
-heat_demand_ESinput = pd.DataFrame(index=range(0,8760), columns=tech_country)
-i = 0
-for x in range(0,len(tech_country)):
-    countr = (tech_country[x])[:2]
-    countrynumber = countries.index(countr)
-    for h in range(0,8760):
-        thisday = int(h/24)
-        if (tech_country[x])[3:6] == 'IND':
-            factor = float(ratio_chpp2h_HT[countr].loc[thisday,(tech_country[x])[3:]])
-            heat_demand_ESinput.at[h,(tech_country[x])] = heat_demand_ts_HT.iloc[h,countrynumber] * factor
-        else:
-            factor = float(ratio_chpp2h_LT[countr].loc[thisday, (tech_country[x])[3:]])
-            heat_demand_ESinput.at[h,(tech_country[x])] = heat_demand_ts_LT.iloc[h,countrynumber] * factor
+        print(day)
+        for h in range(1,25):
+            thistd = get_TD((day-1)*24+h,n_TD)
+            for y in tech:
+                name = countries[x] + '_' + y
+                if 'IND' in y:
+                    heat_demand_ESinput.at[(day-1)*24+h-1, name] = search_HeatLayers('HT',thistd,h,y) * 1000
+                else:
+                    heat_demand_ESinput.at[(day-1)*24+h-1, name] = search_HeatLayers('LT', thistd,h,y) * 1000
 
 heat_demand = heat_demand_ESinput.set_index(drange)
 print(heat_demand)

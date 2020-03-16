@@ -254,13 +254,12 @@ def search_Dict_list(old_list,type):
     return mylist
 
 ########################################################################################################################
-
 #
 #
 # Input: -numbTD =  the number of typical days in the studied case
 # Output: - list of TD's distribution
 #
-def distri_TD(numbTD):
+def get_TDFile(numbTD):
     input_folder = '../../Inputs/'  # input file = ESTD_12TD.txt (to find installed power f [GW or GWh for storage])
     output_folder = '../../Outputs/'
 
@@ -294,7 +293,26 @@ def distri_TD(numbTD):
         TD_final.at[index, 'hour'] = int(df.iloc[index - 1, 2])
         TD_final.at[index, 'TD'] = int(df.iloc[index - 1, 4])
 
+<<<<<<< HEAD
     print(TD_final)
+=======
+    TD_final.to_csv(input_folder + 'TD_file.csv')
+
+########################################################################################################################
+
+#
+#
+# Input: -numbTD =  the number of typical days in the studied case
+# Output: - list of TD's distribution
+#
+def distri_TD(numbTD):
+    input_folder = '../../Inputs/'  # input file = ESTD_12TD.txt (to find installed power f [GW or GWh for storage])
+    output_folder = '../../Outputs/'
+
+    n_TD = numbTD  # enter number of TD's
+
+    TD_final = pd.read_csv(input_folder + 'TD_file.csv')
+>>>>>>> Update EnergyScope scripts
 
     distri = [0] * n_TD
 
@@ -304,6 +322,28 @@ def distri_TD(numbTD):
         distri[TD - 1] = (distri[TD - 1] + 1)
 
     return distri
+
+
+########################################################################################################################
+
+#
+#
+# Input: -hour =  the hour we need to know the TD ([1 , 8760]
+#        - numbTD = number of typical days
+# Output: - TD number for the concerned hour
+#
+def get_TD(hour,numbTD):
+    input_folder = '../../Inputs/'  # input file = ESTD_12TD.txt (to find installed power f [GW or GWh for storage])
+    output_folder = '../../Outputs/'
+
+    n_TD = numbTD  # enter number of TD's
+
+    TD_final = pd.read_csv(input_folder + 'TD_file.csv')
+
+    TD = TD_final.loc[hour-1,'TD']
+
+    return TD
+
 
 ########################################################################################################################
 

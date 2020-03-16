@@ -254,13 +254,12 @@ def search_Dict_list(old_list,type):
     return mylist
 
 ########################################################################################################################
-
 #
 #
 # Input: -numbTD =  the number of typical days in the studied case
 # Output: - list of TD's distribution
 #
-def distri_TD(numbTD):
+def get_TDFile(numbTD):
     input_folder = '../../Inputs/'  # input file = ESTD_12TD.txt (to find installed power f [GW or GWh for storage])
     output_folder = '../../Outputs/'
 
@@ -294,7 +293,22 @@ def distri_TD(numbTD):
         TD_final.at[index, 'hour'] = int(df.iloc[index - 1, 2])
         TD_final.at[index, 'TD'] = int(df.iloc[index - 1, 4])
 
-    print(TD_final)
+    TD_final.to_csv(input_folder + 'TD_file.csv')
+
+########################################################################################################################
+
+#
+#
+# Input: -numbTD =  the number of typical days in the studied case
+# Output: - list of TD's distribution
+#
+def distri_TD(numbTD):
+    input_folder = '../../Inputs/'  # input file = ESTD_12TD.txt (to find installed power f [GW or GWh for storage])
+    output_folder = '../../Outputs/'
+
+    n_TD = numbTD  # enter number of TD's
+
+    TD_final = pd.read_csv(input_folder + 'TD_file.csv')
 
     distri = [0] * n_TD
 
@@ -304,6 +318,7 @@ def distri_TD(numbTD):
         distri[TD - 1] = (distri[TD - 1] + 1)
 
     return distri
+
 
 ########################################################################################################################
 
@@ -319,37 +334,12 @@ def get_TD(hour,numbTD):
 
     n_TD = numbTD  # enter number of TD's
 
-    # create an empty df
-    # Enter the starting date
-    date_str = '1/1/2015'
-    start = pd.to_datetime(date_str)
-    hourly_periods = 8760
-    drange = pd.date_range(start, periods=hourly_periods, freq='H')
-
-    TD_final = pd.DataFrame(index=range(0, 8760), columns=['#', 'hour', 'TD'])
-
-    # Select lines of ESTD_12TD where TD are described
-    newfile = open("newfile.txt", 'r+')
-    ESTD_TD = input_folder + 'ESTD_12TD.dat'
-    with open(ESTD_TD) as f:
-        for line in f:
-            if line[0] == '(':
-                newfile.write(line)
-
-    df = pd.read_csv('newfile.txt', delimiter='\t', index_col=0)
-
-    cols = list(df.columns.values)
-    TD_final.at[0, '#'] = int(cols[0])
-    TD_final.at[0, 'hour'] = 1
-    TD_final.at[0, 'TD'] = int(cols[4])
-    for index in range(1, 8760):
-        TD_final.at[index, '#'] = int(df.iloc[index - 1, 0])
-        TD_final.at[index, 'hour'] = int(df.iloc[index - 1, 2])
-        TD_final.at[index, 'TD'] = int(df.iloc[index - 1, 4])
+    TD_final = pd.read_csv(input_folder + 'TD_file.csv')
 
     TD = TD_final.loc[hour-1,'TD']
 
     return TD
+
 
 ########################################################################################################################
 

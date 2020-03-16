@@ -77,6 +77,26 @@ def search_PowerPlant(tech, feat):
 
 ########################################################################################################################
 
+#
+#
+# Input :    type = 'LT' or 'HT'
+#           TD = typical day studied
+#           hour = hour studied
+#           tech  = tech studied
+# Output :   Value of the feature asked
+#
+#
+def search_HeatLayers(type, TD, hour, tech):
+    input_folder = '../../Inputs/'  # input file = PowerPlant.csv (to find installed power f [GW or GWh for storage])
+    output_folder = '../../Outputs/'
+    HeatLayers = pd.read_csv(input_folder + type+'layers.txt',delimiter='\t')
+    tech = ''.join(c for c in tech if c not in '-(){}<>[], ')
+    tech = ''.join([i for i in tech if not i.isdigit()])
+    output = HeatLayers.at[((TD-1)*24)+hour - 1, tech]
+    return output
+
+########################################################################################################################
+
 # Mapping for matching ES and DS nomenclature
 
 TECH = {u'CCGT': u'COMC',
@@ -234,13 +254,12 @@ def search_Dict_list(old_list,type):
     return mylist
 
 ########################################################################################################################
-
 #
 #
 # Input: -numbTD =  the number of typical days in the studied case
 # Output: - list of TD's distribution
 #
-def distri_TD(numbTD):
+def get_TDFile(numbTD):
     input_folder = '../../Inputs/'  # input file = ESTD_12TD.txt (to find installed power f [GW or GWh for storage])
     output_folder = '../../Outputs/'
 
@@ -274,6 +293,23 @@ def distri_TD(numbTD):
         TD_final.at[index, 'hour'] = int(df.iloc[index - 1, 2])
         TD_final.at[index, 'TD'] = int(df.iloc[index - 1, 4])
 
+    TD_final.to_csv(input_folder + 'TD_file.csv')
+
+########################################################################################################################
+
+#
+#
+# Input: -numbTD =  the number of typical days in the studied case
+# Output: - list of TD's distribution
+#
+def distri_TD(numbTD):
+    input_folder = '../../Inputs/'  # input file = ESTD_12TD.txt (to find installed power f [GW or GWh for storage])
+    output_folder = '../../Outputs/'
+
+    n_TD = numbTD  # enter number of TD's
+
+    TD_final = pd.read_csv(input_folder + 'TD_file.csv')
+
     distri = [0] * n_TD
 
     for i in range(1, 366):
@@ -282,6 +318,28 @@ def distri_TD(numbTD):
         distri[TD - 1] = (distri[TD - 1] + 1)
 
     return distri
+
+
+########################################################################################################################
+
+#
+#
+# Input: -hour =  the hour we need to know the TD ([1 , 8760]
+#        - numbTD = number of typical days
+# Output: - TD number for the concerned hour
+#
+def get_TD(hour,numbTD):
+    input_folder = '../../Inputs/'  # input file = ESTD_12TD.txt (to find installed power f [GW or GWh for storage])
+    output_folder = '../../Outputs/'
+
+    n_TD = numbTD  # enter number of TD's
+
+    TD_final = pd.read_csv(input_folder + 'TD_file.csv')
+
+    TD = TD_final.loc[hour-1,'TD']
+
+    return TD
+
 
 ########################################################################################################################
 

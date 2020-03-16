@@ -254,7 +254,6 @@ def search_Dict_list(old_list,type):
     return mylist
 
 ########################################################################################################################
-
 #
 #
 # Input: -numbTD =  the number of typical days in the studied case
