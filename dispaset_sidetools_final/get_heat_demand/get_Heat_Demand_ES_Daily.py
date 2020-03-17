@@ -125,7 +125,6 @@ for x in range(0,len(tech_country)):
             heat_demand_ESinput.at[h,(tech_country[x])] = heat_demand_ts_LT.iloc[h,countrynumber] * factor
 
 heat_demand = heat_demand_ESinput.set_index(drange)
-print(heat_demand)
 
 
 
