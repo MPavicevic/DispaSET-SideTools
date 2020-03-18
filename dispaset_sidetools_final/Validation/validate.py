@@ -132,11 +132,6 @@ def get_Sankey():
 
     Countries = ['BE']
 
-    Power = pd.read_csv(input_folder + 'OutputPower_DS_MTS.csv')
-    Heat = pd.read_csv(input_folder + 'OutputHeat_DS_MTS.csv')
-    HeatSlack = pd.read_csv(input_folder + 'OutputHeatSlack_DS_MTS.csv')
-    StorageInput = pd.read_csv(input_folder + 'OutputStorageInput_DS_MTS.csv')
-
     Power = pd.read_csv(input_folder + 'OutputPower_DS.csv')
     Heat = pd.read_csv(input_folder + 'OutputHeat_DS.csv')
     HeatSlack = pd.read_csv(input_folder + 'OutputHeatSlack_DS.csv')
@@ -161,12 +156,15 @@ def get_Sankey():
     HeatSlackTot = pd.DataFrame(columns=HeatSlackColumn)
     for i in HeatSlackTot:
         HeatSlackTot.at[0, i] = HeatSlack[i].sum(axis=0) / 1000
-    StorageColumn = StorageInput.columns[1:3] # Keep only BATT_LI and PHS
-    StorageTot = pd.DataFrame(columns=StorageColumn)
+
+    # Keep only BATT_LI and PHS
+    StoColumn = list()
+    for i in StorageInput.columns:
+        if 'BATT_LI' in i or 'PHS' in i:
+            StoColumn.append(i)
+    StorageTot = pd.DataFrame(columns=StoColumn)
     for i in StorageTot:
         StorageTot.at[0, i] = StorageInput[i].sum(axis=0) / 1000
-
-
 
     #build labels
     mylabels = ['HEAT_HT','HEAT_LT_DHN','HEAT_LT_DEC', 'EUD_ELEC', 'EUD_LT_DHN', 'EUD_LT_DEC','EUD_HT','P2H','ELECTRICITY','HEATSLACK','OtherFuels']
@@ -175,7 +173,7 @@ def get_Sankey():
     mylabels.extend(PowColumn)
     mylabels.extend(HeatColumn)
     mylabels.extend(HeatSlackColumn)
-    mylabels.extend(StorageColumn)
+    mylabels.extend(StoColumn)
 
 
     #build links
@@ -183,8 +181,32 @@ def get_Sankey():
     mytarget = list()
     myvalue = list()
 
-    for i in PowerTot:
+    # STORAGE FLOWS
 
+    ELEC_extract = 0
+    EUD_extract = 0
+    for i in StorageTot:
+        ThisFuel = search_PowerPlant(i, 'Fuel')
+
+        if 'BATT' in i:
+            ThisSource = 'ELECTRICITY'
+            mysource.append(mylabels.index(ThisSource))
+            ThisTarget = i
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = StorageTot.loc[0, i]
+            ELEC_extract = ELEC_extract + ThisValue
+            myvalue.append(ThisValue)
+            ThisSource = i
+            mysource.append(mylabels.index(ThisSource))
+            ThisTarget = 'EUD_ELEC'
+            mytarget.append(mylabels.index(ThisTarget))
+            ThisValue = StorageTot.loc[0, i] * search_PowerPlant(i, 'Efficiency')
+            EUD_extract = EUD_extract + ThisValue
+            myvalue.append(ThisValue)
+
+    # ELECTRICITY FLOWS
+
+    for i in PowerTot:
         if 'COGEN' in i:
             ThisFuel = search_PowerPlant(i, 'Fuel')
             if ThisFuel in mylabels:
@@ -194,7 +216,7 @@ def get_Sankey():
             mysource.append(mylabels.index(ThisSource))
             ThisTarget = i
             mytarget.append(mylabels.index(ThisTarget))
-            ThisValue = PowerTot.loc[0,i] / search_PowerPlant(i,'Efficiency')
+            ThisValue = PowerTot.loc[0, i] / search_PowerPlant(i, 'Efficiency')
             myvalue.append(ThisValue)
 
             ThisSource = i
@@ -205,7 +227,7 @@ def get_Sankey():
             myvalue.append(ThisValue)
 
         elif 'CCGT' in i:
-            ThisFuel = search_PowerPlant(i,'Fuel')
+            ThisFuel = search_PowerPlant(i, 'Fuel')
             if ThisFuel in mylabels:
                 ThisSource = ThisFuel
             else:
@@ -213,7 +235,7 @@ def get_Sankey():
             mysource.append(mylabels.index(ThisSource))
             ThisTarget = i
             mytarget.append(mylabels.index(ThisTarget))
-            ThisValue = PowerTot.loc[0,i] / search_PowerPlant(i,'Efficiency')
+            ThisValue = PowerTot.loc[0, i] / search_PowerPlant(i, 'Efficiency')
             myvalue.append(ThisValue)
 
             ThisSource = i
@@ -223,7 +245,7 @@ def get_Sankey():
             ThisValue = PowerTot.loc[0, i]
             myvalue.append(ThisValue)
 
-        else:
+        elif 'BATT' not in i:
             ThisFuel = search_PowerPlant(i, 'Fuel')
             if ThisFuel in mylabels:
                 ThisSource = ThisFuel
@@ -232,15 +254,17 @@ def get_Sankey():
             mysource.append(mylabels.index(ThisSource))
             ThisTarget = i
             mytarget.append(mylabels.index(ThisTarget))
-            ThisValue = PowerTot.loc[0, i] / search_PowerPlant(i,'Efficiency')
+            ThisValue = PowerTot.loc[0, i] / search_PowerPlant(i, 'Efficiency')
             myvalue.append(ThisValue)
 
             ThisSource = i
             mysource.append(mylabels.index(ThisSource))
             ThisTarget = 'ELECTRICITY'
             mytarget.append(mylabels.index(ThisTarget))
-            ThisValue = PowerTot.loc[0,i]
+            ThisValue = PowerTot.loc[0, i]
             myvalue.append(ThisValue)
+
+    # HEAT FLOWS
 
     for i in HeatTot:
         if 'COGEN' in i:
@@ -251,7 +275,7 @@ def get_Sankey():
             mysource.append(mylabels.index(ThisSource))
             ThisTarget = i
             mytarget.append(mylabels.index(ThisTarget))
-            ThisValue = HeatTot.loc[0,i] / search_PowerPlant(i,'CHPPowerToHeat') / search_PowerPlant(i,'Efficiency')
+            ThisValue = HeatTot.loc[0, i] / search_PowerPlant(i, 'CHPPowerToHeat') / search_PowerPlant(i, 'Efficiency')
             myvalue.append(ThisValue)
 
             ThisSource = i
@@ -291,7 +315,8 @@ def get_Sankey():
             mysource.append(mylabels.index(ThisSource))
             ThisTarget = i
             mytarget.append(mylabels.index(ThisTarget))
-            ThisValue = HeatTot.loc[0, i] / search_PowerPlant(i, 'COP') #Or divide by efficiency ??? IND_DIRECT_ELEC case
+            ThisValue = HeatTot.loc[0, i] / search_PowerPlant(i,
+                                                              'COP')  # Or divide by efficiency ??? IND_DIRECT_ELEC case
             myvalue.append(ThisValue)
 
             ThisSource = i
@@ -321,8 +346,10 @@ def get_Sankey():
             else:
                 ThisTarget = 'HEAT_HT'
             mytarget.append(mylabels.index(ThisTarget))
-            ThisValue = HeatTot.loc[0,i]
+            ThisValue = HeatTot.loc[0, i]
             myvalue.append(ThisValue)
+
+    # HEATSLACK FLOWS
 
     for i in HeatSlackTot:
 
@@ -346,13 +373,14 @@ def get_Sankey():
         else:
             ThisTarget = 'HEAT_HT'
         mytarget.append(mylabels.index(ThisTarget))
-        ThisValue = HeatSlackTot.loc[0,i]
+        ThisValue = HeatSlackTot.loc[0, i]
         myvalue.append(ThisValue)
 
-# Add the ELEC_EUD
-        mysource.append(mylabels.index('ELECTRICITY'))
-        mytarget.append(mylabels.index('EUD_ELEC'))
-        myvalue.append(EUD_ELEC)
+    # Add the ELEC_EUD
+    mysource.append(mylabels.index('ELECTRICITY'))
+    mytarget.append(mylabels.index('EUD_ELEC'))
+    myvalue.append(float(EUD_ELEC) - ELEC_extract)
+
 
     fig = go.Figure(data=[go.Sankey(
         node = dict(
