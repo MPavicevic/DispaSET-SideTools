@@ -62,8 +62,8 @@ for x in range(0,len(countries)):
                 name = countries[x] + '_' + y
                 TotalLoadValue_ESinput.at[(day-1)*24+h-1, name] = search_ElecLayers(thistd,h,y) * 1000 #TO CHECK
 
-TotalLoadValue_ESinput = TotalLoadValue_ESinput.sum(axis=1)
-TotalLoadValue = TotalLoadValue + TotalLoadValue_ESinput
+TotalLoadValue_ESinput = -TotalLoadValue_ESinput.sum(axis=1) #needs to be done per country - TO DO
+TotalLoadValue = TotalLoadValue + TotalLoadValue_ESinput.values # needs to be done per country - TO DO
 ######################################################################################################
 
 def write_csv_files(file_name,demand,write_csv=None):
