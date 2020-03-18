@@ -79,4 +79,5 @@ def write_csv_files(file_name,demand,write_csv=None):
     else:
         print('[WARNING ]: '+'WRITE_CSV_FILES = False, unable to write .csv files')
 
-write_csv_files('2015',TotalLoadValue,True)
+#write_csv_files('2015',TotalLoadValue,True) - TO DO
+TotalLoadValue.to_csv(output_folder + 'TotalLoadValue.csv', index=True)
