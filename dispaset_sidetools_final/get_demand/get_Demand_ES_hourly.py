@@ -40,7 +40,7 @@ TotalLoadValue = pd.read_csv(input_folder + 'EUD_ELEC.txt',delimiter = '\t' ,ind
 TotalLoadValue.set_index(drange, inplace=True)
 TotalLoadValue.columns = countries
 
-#keep only the percentage Tech_LT_heat_prod / CHP_LT_heat_prod + P2H_LT_heat_prod of this time series. put it back in heat_demand_ts for each country.
+
 tech_country = list()
 for Country in countries:
     for y in tech:
@@ -49,9 +49,11 @@ for Country in countries:
             tech_country.append(Country + '_' + y)
 
 
-print(tech_country)
+
 
 TotalLoadValue_ESinput = pd.DataFrame(index=range(0,8760), columns=tech_country)
+
+ElecLayers = pd.read_csv(input_folder + 'ElecLayers.txt',delimiter='\t')
 
 for x in range(0,len(countries)):
     for day in range(1,366):
@@ -60,10 +62,15 @@ for x in range(0,len(countries)):
             thistd = get_TD((day-1)*24+h,n_TD)
             for y in tech:
                 name = countries[x] + '_' + y
-                TotalLoadValue_ESinput.at[(day-1)*24+h-1, name] = search_ElecLayers(thistd,h,y) * 1000 #TO CHECK
+                TotalLoadValue_ESinput.at[(day-1)*24+h-1, name] = search_ElecLayers(ElecLayers,thistd,h,y) * 1000 #TO CHECK
 
-TotalLoadValue_ESinput = -TotalLoadValue_ESinput.sum(axis=1) #needs to be done per country - TO DO
-TotalLoadValue = TotalLoadValue['BE'] + TotalLoadValue_ESinput.values # needs to be done per country - TO DO
+
+TotalLoadValue_ESinput['Sum'] = -TotalLoadValue_ESinput.sum(axis=1)
+TotalLoadValue_ESinput = TotalLoadValue_ESinput.set_index(drange)
+for x in countries:
+    TotalLoadValue[x] = TotalLoadValue[x] + TotalLoadValue_ESinput['Sum'] # TO BE MODIFIED FOR SEVERAL COUNTRIES !!!!!!!!!!!
+
+
 ######################################################################################################
 
 def write_csv_files(file_name,demand,write_csv=None):
@@ -79,5 +86,5 @@ def write_csv_files(file_name,demand,write_csv=None):
     else:
         print('[WARNING ]: '+'WRITE_CSV_FILES = False, unable to write .csv files')
 
-#write_csv_files('2015',TotalLoadValue,True) - TO DO
-TotalLoadValue.to_csv(output_folder + 'TotalLoadValue.csv', index=True)
+write_csv_files('2015',TotalLoadValue,True)
+#TotalLoadValue.to_csv(output_folder + 'TotalLoadValue.csv', index=True)

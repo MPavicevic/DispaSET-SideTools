@@ -73,6 +73,9 @@ print(tech_country)
 
 heat_demand_ESinput = pd.DataFrame(index=range(0,8760), columns=tech_country)
 
+LTlayers = pd.read_csv(input_folder + 'LTlayers.txt',delimiter='\t')
+HTlayers = pd.read_csv(input_folder + 'HTlayers.txt',delimiter='\t')
+
 for x in range(0,len(countries)):
     for day in range(1,366):
         print(day)
@@ -81,14 +84,11 @@ for x in range(0,len(countries)):
             for y in tech:
                 name = countries[x] + '_' + y
                 if 'IND' in y:
-                    heat_demand_ESinput.at[(day-1)*24+h-1, name] = search_HeatLayers('HT',thistd,h,y) * 1000
+                    heat_demand_ESinput.at[(day-1)*24+h-1, name] = search_HeatLayers(HTlayers,thistd,h,y) * 1000
                 else:
-                    heat_demand_ESinput.at[(day-1)*24+h-1, name] = search_HeatLayers('LT', thistd,h,y) * 1000
+                    heat_demand_ESinput.at[(day-1)*24+h-1, name] = search_HeatLayers(LTlayers, thistd,h,y) * 1000
 
 heat_demand = heat_demand_ESinput.set_index(drange)
-print(heat_demand)
-
-
 
 
 def write_csv_files(dem_filename, heat_demand,WRITE_CSV_FILES):

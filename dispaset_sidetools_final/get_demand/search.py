@@ -50,7 +50,6 @@ def search_YearBalance(tech, feat):
     yearbal.set_index('Tech', inplace=True)
     techno = list(yearbal.index)
     techno2 = [x.strip(' ') for x in techno]
-    print(techno2)
     yearbal.set_index([techno2], inplace=True)
     output = yearbal.at[tech, feat]
 
@@ -80,20 +79,19 @@ def search_PowerPlant(tech, feat):
 
 #
 #
-# Input :    type = 'LT' or 'HT'
+# Input :    type = LTlayers or HTlayers dataframe
 #           TD = typical day studied
 #           hour = hour studied
 #           tech  = tech studied
 # Output :   Value of the feature asked
 #
 #
-def search_HeatLayers(type, TD, hour, tech):
+def search_HeatLayers(LayersDF, TD, hour, tech):
     input_folder = '../../Inputs/'  # input file = PowerPlant.csv (to find installed power f [GW or GWh for storage])
     output_folder = '../../Outputs/'
-    HeatLayers = pd.read_csv(input_folder + type+'layers.txt',delimiter='\t')
     tech = ''.join(c for c in tech if c not in '-(){}<>[], ')
     tech = ''.join([i for i in tech if not i.isdigit()])
-    output = HeatLayers.at[((TD-1)*24)+hour - 1, tech]
+    output = LayersDF.at[((TD-1)*24)+hour - 1, tech]
     return output
 
 
@@ -101,19 +99,19 @@ def search_HeatLayers(type, TD, hour, tech):
 
 #
 #
-# Input :   TD = typical day studied
+# Input :  ElecLayersDF = ElecLayers dataframe
+#           TD = typical day studied
 #           hour = hour studied
 #           tech  = tech studied
 # Output :   Value of the feature asked
 #
 #
-def search_ElecLayers(TD, hour, tech):
+def search_ElecLayers(ElecLayersDF,TD, hour, tech):
     input_folder = '../../Inputs/'  # input file = PowerPlant.csv (to find installed power f [GW or GWh for storage])
     output_folder = '../../Outputs/'
-    ElecLayers = pd.read_csv(input_folder + 'ElecLayers.txt',delimiter='\t')
     tech = ''.join(c for c in tech if c not in '-(){}<>[], ')
     tech = ''.join([i for i in tech if not i.isdigit()])
-    output = ElecLayers.at[((TD-1)*24)+hour - 1, tech]
+    output = ElecLayersDF.at[((TD-1)*24)+hour - 1, tech]
     return output
 
 ########################################################################################################################

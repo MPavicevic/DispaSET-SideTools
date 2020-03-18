@@ -31,6 +31,8 @@ drange = pd.date_range(start, periods=hourly_periods, freq='H')
 TotalLoadValue.set_index(drange, inplace=True)
 TotalLoadValue.columns = countries
 
+print(TotalLoadValue)
+
 
 def write_csv_files(file_name,demand,write_csv=None):
 
