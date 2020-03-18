@@ -582,19 +582,18 @@ def distri_TD(numbTD):
 
 #
 #
-# Input: -hour =  the hour we need to know the TD ([1 , 8760]
+# Input: -TD_DF = Typical days dataframe
+#        -hour =  the hour we need to know the TD ([1 , 8760]
 #        - numbTD = number of typical days
 # Output: - TD number for the concerned hour
 #
-def get_TD(hour,numbTD):
+def get_TD(TD_DF, hour,numbTD):
     input_folder = '../../Inputs/'  # input file = ESTD_12TD.txt (to find installed power f [GW or GWh for storage])
     output_folder = '../../Outputs/'
 
     n_TD = numbTD  # enter number of TD's
 
-    TD_final = pd.read_csv(input_folder + 'TD_file.csv')
-
-    TD = TD_final.loc[hour-1,'TD']
+    TD = TD_DF.loc[hour-1,'TD']
 
     return TD
 

@@ -14,6 +14,8 @@ from dispaset_sidetools.common import mapping,outliers,fix_na,make_dir
 from search import *
 #import matplotlib.pyplot as plt
 
+from search import get_TDFile
+
 input_folder = '../../Inputs/'  # Standard input folder
 output_folder = '../../Outputs/'# Standard output folder
 
@@ -24,6 +26,7 @@ countries = list(['BE'])
 
 #Enter number of TD
 n_TD = 12
+get_TDFile(12)
 
 #Enter technology names which elec consumption is to add to EUD
 tech = ['TRAMWAY_TROLLEY','TRAIN_PUB','TRAIN_CapitalfREIGHT'] #change list of tech to investigate - TO DO
@@ -54,12 +57,13 @@ for Country in countries:
 TotalLoadValue_ESinput = pd.DataFrame(index=range(0,8760), columns=tech_country)
 
 ElecLayers = pd.read_csv(input_folder + 'ElecLayers.txt',delimiter='\t')
+TD_DF = pd.read_csv(input_folder + 'TD_file.csv')
 
 for x in range(0,len(countries)):
     for day in range(1,366):
         print(day)
         for h in range(1,25):
-            thistd = get_TD((day-1)*24+h,n_TD)
+            thistd = get_TD(TD_DF,(day-1)*24+h,n_TD)
             for y in tech:
                 name = countries[x] + '_' + y
                 TotalLoadValue_ESinput.at[(day-1)*24+h-1, name] = search_ElecLayers(ElecLayers,thistd,h,y) * 1000 #TO CHECK

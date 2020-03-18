@@ -6,6 +6,10 @@ import pandas as pd
 from search import get_TD
 from search import search_HeatLayers
 
+from search import get_TDFile
+
+
+
 # %% Inputs
 # Folder destinations
 input_folder = '../../Inputs/'  # Standard input folder
@@ -17,6 +21,8 @@ countries = list(['BE'])
 
 #Enter number of TD
 n_TD = 12
+get_TDFile(12)
+
 
 #P2H heat production, from YearBalance
 
@@ -75,12 +81,13 @@ heat_demand_ESinput = pd.DataFrame(index=range(0,8760), columns=tech_country)
 
 LTlayers = pd.read_csv(input_folder + 'LTlayers.txt',delimiter='\t')
 HTlayers = pd.read_csv(input_folder + 'HTlayers.txt',delimiter='\t')
+TD_DF = pd.read_csv(input_folder + 'TD_file.csv')
 
 for x in range(0,len(countries)):
     for day in range(1,366):
         print(day)
         for h in range(1,25):
-            thistd = get_TD((day-1)*24+h,n_TD)
+            thistd = get_TD(TD_DF,(day-1)*24+h,n_TD)
             for y in tech:
                 name = countries[x] + '_' + y
                 if 'IND' in y:
