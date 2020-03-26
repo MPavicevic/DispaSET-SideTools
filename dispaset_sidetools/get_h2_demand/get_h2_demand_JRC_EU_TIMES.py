@@ -17,7 +17,7 @@ SCENARIO = 'ProRes1'  # Scenario name, used for naming csv files
 CASE = 'ALLFLEX'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 EFF_DIESEL = 0.78 # Efficiency of hydrogenation to diesel
-EFF_METHANOL = 0.82 # Efficiency of hydrogenation to methanol
+EFF_METHANOL = 0.818 # Efficiency of hydrogenation to methanol
 
 # %% Inputs
 # Folder destinations
