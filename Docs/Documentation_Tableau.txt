@@ -9,8 +9,7 @@ o TIMES_Capacities_technology_2050_times_names.xlsx:
 		 * Scenario, period
 	COLUMNS: * Technology main input
 		 * Process Description 1
-	LINES:   * Region
-	
+	LINES:   * Region	
 o TIMES_Capacities_fuel_2050_times_names.xlsx
 	FILTERS: * Attribute: Var_Cap
 		 * Main activity: CHP, Electricity generation
@@ -44,12 +43,12 @@ o TIMES_BATS_Capacities_2050.xlsx
  					  RSD - Battery (Lead-acid) ELC storage: Daynite (accompying tech to represent power),
 					  RSD - Battery (Li-ion) ELC storage: Daynite (accompying tech to represent power)
 o TIMES_EV_Capacities.xlsx
-	FILTERS: * Attribute: VAR_FIn, VAR_FOut
-		 * Commodity: TRAELC, TRAELC_EV
+	FILTERS: * Attribute: VAR_FOut
+		 * Commodity: TRAELC_EV
 		 * Process Description 1: Battery charging station
 o TIMES_P2H_Capacities_2050.xlsx
 	FILTERS: * Attribute: VAR_Cap
-		 * Main activity: Heat, Heat generation, Heating, Hot water, Process heat
+		 * Main activity: Heating, Hot water
 		 * Unit - capacity : GW
 	  	 * Technology main input: Electricity
 		 * Technology sector: Buildings - commercial, Buildings - residential
@@ -70,32 +69,29 @@ o TIMES_Energy_HDAM.xlsx
 		 * Technology Main input: Hydro
 		 * Process description 1: Existing Hydro Dams, Lake Large scale cheap hydroelectricity > 10 MW
 o TIMES_P2H_Demand_tech_2050.xlsx
-	FILTERS: * Attribute: VAR_FIn
-		 * Unit - activity1: PJ
-		 * Main activity: Heat, Heat generation, Heating, Hot water
-		 * Technology subtype: Null, Heat pump-air, Heat pump - ground
+	FILTERS: * Attribute: VAR_FOut
+		 * Main activity: Heating, Hot water
+		 * Commod unit: PJ
 		 * Technology main input: electricity
-		 * Commodity main group: Final energy
+		 * Commodity: all but those which contain "Cool"
 o TIMES_DH_Demand_2050.xlsx
 	FILTERS: * Attribute: VAR_FOut
-		 * Main activity: CHP, Heat generation, Heating
-		 * Commodity subtype FIn: Disctrict heat
+		 * Main activity: Heating, Heat generation, CHP
 		 * Commod unit: PJ
+		 * Commodity subtype Fin: District heat
+		 * Technology main input: Biogas, coal, gas, heat, other biomass
 o TIMES_Electricity_generation_2050.csv
-	FILTERS: * Attribute: VAR_FIn, VAR_FOut
+	FILTERS: * Attribute: VAR_FOut, Var_FOut
 		 * Period
 		 * Unit - activity1: PJ
 		 * Commodity subtype: electricity
 		 * Main activity: CHP, Electricity generation, Export, Import, Trade
 o TIMES_Delta_P2H_2050-2020.csv
-	FILTERS: * Attribute: VAR_FIn, VAR_FOut
-		 * Technology Main Input: Electricity, Gas (possibly blended), Hydrogen, Solar
+	FILTERS: * Attribute: VAR_FOut
+		 * Technology Main Input: Electricity
 		 * Main activity: Heating, hot water
-		 * Commodity subtype Fin: Electricity
-		 * Commodity sector: Buildings - commercial, Buildings - residential
-		 * Technology subtype: Null, Fuel cell, Heat pump - air, Heat pump - ground
-	/!\ To compute the DELTA: subtract 2050 - 2020 AND devide by COP!!!
-		-> See  TIMES_Delta_preprocess.xlsx
+		 * Technology subtype: Null, Heat pump - air, Heat pump - ground
+		 * Commodity: all that finish with "heat"
 o TIMES_EV_Demand_2050.csv
 	FILTERS: * Attribute: VAR_FOut
 		 * Unit-activity1: PJ
@@ -103,7 +99,12 @@ o TIMES_EV_Demand_2050.csv
 		 * Technology main input: Electricity
 	/!\ Need to devide by 3.6 to get TWh
 o TIMES_H2_Demand_2050.xlsx
-	FILTERS: * Attribute: VAR_FOut
+	FILTERS: * Attribute: VAR_FIn
 		 * Unit-activity1: PJ
 		 * Technology main input: Hydrogen
-		 * Process description: Everything BUT the last one (PEM fuel cell)
+		 * Process description: Everything BUT the last one (PEM fuel cell), District heating & Convert H2 to commodity...
+		 * Commodity: SYNH2CT, SYNH2CU, SYNH2DT
+o TIMES_H2_Demand_PtL_2015.xslx
+	FILTERS: * Attribute: Var_FOut
+		 * Main activity: Power to liquid
+		 * Unit activity1: PJ
