@@ -8,6 +8,8 @@ Created on Sun Apr  7 18:53:45 2019
 
 import pickle
 import pandas as pd
+import sys,os
+sys.path.append(os.path.abspath(r'../..')) 
 from dispaset_sidetools.common import make_dir
 
 # %% Adjustable inputs that should be modified
@@ -54,7 +56,7 @@ times_p2h_demand = pd.read_excel(input_folder + source_folder + scenario + input
 times_p2h_demand.fillna(0, inplace=True)
 times_p2h_demand = times_p2h_demand / 3.6  # TWh
 
-times_dh_demand = pd.read_excel(input_folder + source_folder + scenario + inputfile_dh, index_col=0, header=0, skiprows=1)
+times_dh_demand = pd.read_excel(input_folder + source_folder + scenario + inputfile_dh, index_col=0, header=0, skiprows=0)
 times_dh_demand.fillna(0, inplace=True)
 times_dh_demand = times_dh_demand / 3.6  # TWh
 
@@ -110,7 +112,7 @@ for c in demand_heat_ad_2016.columns:
     curve_p2h[c] = pd.DataFrame(1, index=demand_heat_ad_2016[c].index, columns=times_p2h_demand.loc[c, :].index)
     for tech in times_p2h_demand.columns:
         curve_p2h[c][tech] = demand_heat_ad_2016[c] * times_p2h_demand.loc[c, tech] * 1e6
-    curve_p2h[c]['Total'] = curve_p2h[c]['Electric boilers'] + curve_p2h[c]['Heat pump - air'] + \
+    curve_p2h[c]['Total'] = curve_p2h[c]['Null'] + curve_p2h[c]['Heat pump - air'] + \
                             curve_p2h[c]['Heat pump - ground']
     curve_p2h[c] = pd.DataFrame(curve_p2h[c]['Total'])
     curve_p2h[c].rename(columns={"Total": c + '_P2HT_OTH'}, inplace=True)
