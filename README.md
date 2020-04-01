@@ -38,19 +38,19 @@ Projects
 ========
 JRC-EU-TIMES
 ------------
-Data extraction from JRC-EU-TIMES model (Tableau database) used in the soft-linging project with Dispa-SET. Main focus on ProRES and NearZeroCarbon scenarios
-ProRES - Projections up to 2050 (10 year interval), slightly less ambitious, sector coupling limited (without gas)
-NearZeroCarbon - Projections up tp 2050 (10 year interval), highly ambitious scenario with 95% carbon reduction compared to 1990. High focus on gas sector.
+Data extraction from [JRC-EU-TIMES](https://data.jrc.ec.europa.eu/dataset/8141a398-41a8-42fa-81a4-5b825a51761b) model (Tableau database) used in the soft-linging project with Dispa-SET. Main focus on ProRES and NearZeroCarbon scenarios
+- ProRES - Projections up to 2050 (10 year interval), slightly less ambitious, sector coupling limited (without gas)
+- NearZeroCarbon - Projections up tp 2050 (10 year interval), highly ambitious scenario with 95% carbon reduction compared to 1990. High focus on gas sector.
 
 OSE-MC
 ------
 Model comparison project (Open Source Energy - Model Comparison). Dispa-SET linked with the following six models:
-- 'CALLIOPE'
-- 'DIETER'                      
-- 'dynELMOD'
-- 'EMMA'
-- 'URBS'
-- 'PLEXOS'
+- [CALLIOPE](https://calliope.readthedocs.io/en/stable/#)
+- [DIETER](https://www.diw.de/en/diw_01.c.599753.en/models.html#ab_608464)                      
+- [dynELMOD](https://gitlab.tubit.tu-berlin.de/wip/dynelmod_public)
+- [EMMA](https://neon-energie.de/en/emma/)
+- [URBS](https://urbs.readthedocs.io/en/latest/)
+- [PLEXOS](https://energyexemplar.com/solutions/plexos/)
 
 ARES-African Power Pools
 ------------------------
@@ -69,5 +69,5 @@ Currently the main developers of the DispaSET-SideTools package are the followin
 
 Contributors:
 
-- Andrea Mangipinto
-- Eva Joskin
+- Andrea Mangipinto (Politecnico di Milano, Italy)
+- Eva Joskin (University of Liège, Belgium)
