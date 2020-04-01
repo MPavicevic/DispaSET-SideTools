@@ -9,41 +9,51 @@ This script generates the PowerPlant Dispa-SET data for the JRC-EU-TIMES runs
 from __future__ import division
 
 import pickle
-import sys
+import sys,os
+sys.path.append(os.path.abspath(r'../..')) 
 
 import numpy as np
 import pandas as pd
 
 # Third-party imports
 # Local source tree imports
-# from .common import mapping,outliers_vre,fix_na,make_dir,entsoe_types,commons
 from dispaset_sidetools.common import make_dir
 
 # %% Adjustable inputs that should be modified
 # Scenario definition
 """ output file: SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE """
 YEAR = 2050  # considered year
-WRITE_CSV_FILES = False  # Write csv database
-SCENARIO = 'ProRes1'  # Scenario name, used for naming csv files
-CASE = 'ALLFLEX'  # Case name, used for naming csv files
+WRITE_CSV_FILES = True  # Write csv database
+SCENARIO = 'NearZeroCarbon'  # Scenario name, used for data and naming the files. ProRes1 or NearZeroCarbon
+CASE = 'NOFLEX'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 
 # Technology definition
 TECHNOLOGY_THRESHOLD = 0  # threshold (%) below which a technology is considered negligible and no unit is created
-CHP_TES_CAPACITY = 12  # No of storage hours in TES
-CSP_TES_CAPACITY = 15  # No of storage hours in CSP units (usually 7.5 hours)
-P2G_TES_CAPACITY = 5  # No of storage hours in P2H units (500l tank = 5h of storage)
-CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
-V2G_SHARE = 0.5  # Define how many EV's are V2G
-V2G_PE_RATIO = 4.1 # Define Power to Energy ratio [MWh / MW]
+# Define Power to Energy ratio [MWh / MW]
+CHP_TES_CAPACITY = 0  # No of storage hours in TES
+CSP_TES_CAPACITY = 0  # No of storage hours in CSP units (usually 7.5 hours)
+P2G_TES_CAPACITY = 0  # No of storage hours in P2H units (500l tank = 5h of storage)
+HYDRO_CAPACITY = 0 # No of storage hours in HPHS and HDAM
+BATS_Liion_CAPACITY = 0 # No of storage hours for batteries
+BATS_Lead_CAPACITY = 0
+V2G_CAPACITY = 0 # No of storage for vehicles 2 grid 
+H2_STORAGE = False
+
+CHP_TYPE = 'back-pressure'  # Define CHP type: None, back-pressure or Extraction
+V2G_SHARE = 0  # Define how many EV's are V2G
 
 # Clustering options (reduce the number of units - healthy number of units should be <300)
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
 OCEAN = 'WAT'  # Define what ocean fuel equals to (WAT or OTH)
 CSP = True  # Turn Concentrated solar power on/off (when False grouped with PHOT)
-HYDRO_CLUSTERING = 'OFF'  # Define type of hydro clustering (OFF, HPHS, HROR)
+HYDRO_CLUSTERING = 'HROR'  # Define type of hydro clustering (OFF, HPHS, HROR)
 TECH_CLUSTERING = True  # Clusters technologies by treshold (efficient way to reduce total number of units)
 CLUSTER_TRESHOLD = 0.3  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
+
+STOSELFDISCHARGE_SUN = 0.03
+STOSELFDISCHARGE_P2H = 0.03
+STOSELFDISCHARGE_TES = 0.03
 
 # TODO:
 CCS = False  # Turn Carbon capture and sotrage on/off  (When false grouped by same Fuel type)
@@ -53,40 +63,56 @@ CCS = False  # Turn Carbon capture and sotrage on/off  (When false grouped by sa
 input_folder = '../../Inputs/'  # Standard input folder
 source_folder = 'JRC_EU_TIMES/'
 output_folder = '../../Outputs/'  # Standard output folder
+scenario = SCENARIO + '/'
 
 # Local files
 # Typical units
-typical_units = pd.read_csv(input_folder + 'Default/' + 'Typical_Units_JRC_EU_TIMES.csv')
+typical_units = pd.read_csv(input_folder + source_folder + 'Typical_Units_JRC_EU_TIMES.csv')
 typical_tech_input_raw_h = pd.read_excel(
-    input_folder + source_folder + 'TIMES_Capacities_technology_2050_times_names.xlsx', 
+    input_folder + source_folder + scenario + 'TIMES_Capacities_technology_2050_times_names.xlsx', 
     header=None, nrows = 2, index_col = 0, skiprows = 1)
 typical_tech_input_raw = pd.read_excel(
-    input_folder + source_folder + 'TIMES_Capacities_technology_2050_times_names.xlsx',
+    input_folder + source_folder + scenario +'TIMES_Capacities_technology_2050_times_names.xlsx',
     header=None, index_col = 0, skiprows = 3)
 
 # Capacities
 capacities_raw_h = pd.read_excel(
-    input_folder + source_folder + 'TIMES_Capacities_fuel_2050_times_names.xlsx', 
+    input_folder + source_folder + scenario + 'TIMES_Capacities_fuel_2050_times_names.xlsx', 
     header=None, nrows = 1, index_col = 0, skiprows = 1)
 capacities_raw = pd.read_excel(
-    input_folder + source_folder + 'TIMES_Capacities_fuel_2050_times_names.xlsx', 
+    input_folder + source_folder + scenario + 'TIMES_Capacities_fuel_2050_times_names.xlsx', 
     header=None, index_col = 0, skiprows = 2)
 chp_capacities_raw_h = pd.read_excel(
-    input_folder + source_folder + 'TIMES_CHP_Capacities_2050_times_names.xlsx', 
+    input_folder + source_folder + scenario + 'TIMES_CHP_Capacities_2050_times_names.xlsx', 
     header=None, nrows = 2, skiprows = 1, index_col = 0)
 chp_capacities_raw = pd.read_excel(
-    input_folder + source_folder + 'TIMES_CHP_Capacities_2050_times_names.xlsx', 
+    input_folder + source_folder + scenario + 'TIMES_CHP_Capacities_2050_times_names.xlsx', 
     header=None, index_col = 0, skiprows = 3)
+p2g_capacities_raw_h = pd.read_excel(
+    input_folder + source_folder + scenario + 'TIMES_P2GS_Capacities_2050.xlsx',
+    header = None, nrows = 1, skiprows = 1, index_col=0)
+p2g_capacities_raw = pd.read_excel(
+    input_folder + source_folder + scenario + 'TIMES_P2GS_Capacities_2050.xlsx',
+    header = None, skiprows = 2, index_col=0)
+h2_storage_capacities = pd.read_excel(
+    input_folder + source_folder + scenario + 'TIMES_H2STO_Capacities_2050.xlsx',
+    header=None,skiprows=3, index_col=0)
+bats_capacities_raw_h= pd.read_excel(
+    input_folder + source_folder + scenario + 'TIMES_BATS_Capacities_2050.xlsx',
+    header = None, nrows = 1, skiprows = 1, index_col=0)
+bats_capacities_raw= pd.read_excel(
+    input_folder + source_folder + scenario + 'TIMES_BATS_Capacities_2050.xlsx',
+    header = None, skiprows = 2, index_col=0)
 
 # Hydro reservoirs
-reservoirs = pd.read_csv(input_folder + 'Hydro_Reservoirs.csv', index_col=0, header=None)
+reservoirs = pd.read_csv(input_folder + 'Default/' + 'Hydro_Reservoirs.csv', index_col=0, header=None)
 
 # Electric wehicles
-batteries = pd.read_excel(input_folder + source_folder + 'TIMES_EV_Capacities.xlsx', index_col=0)
+ev_batteries = pd.read_excel(input_folder + source_folder + scenario + 'TIMES_EV_Capacities.xlsx', index_col=0)
 
 # Power to heat
-power2heat_capacities = pd.read_excel(input_folder + source_folder + 'TIMES_P2H_Capacities_2050.xlsx', index_col=0)
-power2heat_COP = pd.read_excel(input_folder + source_folder + 'TIMES_P2H_COP_Parameters_2050.xlsx', index_col=0)
+power2heat_capacities = pd.read_excel(input_folder + source_folder + scenario + 'TIMES_P2H_Capacities_2050.xlsx', index_col=0)
+power2heat_COP = pd.read_excel(input_folder + source_folder + scenario + 'TIMES_P2H_COP_Parameters_2050.xlsx', index_col=0)
 
 # %% Preprocessing of inputs 
 
@@ -118,6 +144,7 @@ dispaset_rename_tech= {'Int Combust' : 'ICEN',
                        'Supercritical': 'STUR',
                        'Nuclear': 'STUR',
                        'Steam Turb': 'STUR',
+                       'steam turbine' : 'STUR',
                        'Ranking': 'STUR',
                        'Recovery Boiler': 'STUR',
                        'Autoproducer': 'Autoproducers',
@@ -127,11 +154,15 @@ dispaset_rename_tech= {'Int Combust' : 'ICEN',
                        'Wave': 'WAVE',
                        'Tidal':'TIDAL',   
                        'SOFC': 'SOFC',
-                       'PEM':'PEMFC',
+                       'PEM fuel cell':'PEMFC',
                        'Dams':'HDAM',
                        'Lake large scale':'HPHS',
                        'COMC_CCS': 'COMC_CCS',
-                       'STUR_CCS': 'STUR_CCS'}
+                       'STUR_CCS': 'STUR_CCS',
+                       'Electrolyzer': 'P2GS',
+                       'Electrolyser' : 'P2GS',
+                       'Lead-acid' : 'BATS',
+                       'Li-ion' : 'BATS'}
 
 # Pre-process the capacities (by fuel) changing the names from TIMES nomenclature to Dispa-SET nomencalture
 
@@ -227,6 +258,62 @@ chp_capacities = chp_capacities_raw.groupby(chp_capacities_raw.columns, axis=1).
 
 chp_capacities.loc['MT',:] = 0
 chp_capacities.sort_index(axis = 0, inplace = True)
+
+# Pre-process the P2GS technologies
+
+for c in range(len(p2g_capacities_raw_h.iloc[0,:])):
+    for key in dispaset_rename_tech:
+        if key in p2g_capacities_raw_h.iloc[0,c]:
+            p2g_capacities_raw_h.iloc[0,c] = dispaset_rename_tech[key] 
+                        
+p2g_capacities_raw = p2g_capacities_raw.rename(columns=p2g_capacities_raw_h.iloc[0,:], copy=False)  
+p2g_capacities_raw.fillna(0, inplace = True)
+p2g_capacities_raw = p2g_capacities_raw*1000  #Convert to MW
+p2g_capacities = p2g_capacities_raw.groupby(p2g_capacities_raw.columns, axis=1).sum() 
+
+# Pre-process the batteries
+# Function to insert row in the dataframe 
+def Insert_row_(row_number, df, row_value): 
+    if row_number==0:
+        df1=row_value
+      #  df1.index=[idx]
+        df2=df
+    else:# Slice the upper half of the dataframe 
+        df1 = df[0:row_number]   
+        # Store the result of lower half of the dataframe 
+        df2 = df[row_number:]   
+        # Insert the row in the upper half dataframe 
+        df1 = df1.append(row_value)  
+     #   df1.index[row_number] = [idx]
+    # Concat the two dataframes 
+    df_result = pd.concat([df1, df2])    
+    # Return the updated dataframe 
+    return df_result
+
+countries = list(capacities.index)
+for c in range(len(countries)):
+    if countries[c] not in bats_capacities_raw.index:
+       bats_capacities_raw = Insert_row_(c, bats_capacities_raw,pd.DataFrame(np.zeros([1,len(bats_capacities_raw.iloc[0,:])]),columns = bats_capacities_raw.columns,index=[countries[c]])) 
+
+for c in range(len(bats_capacities_raw_h.iloc[0,:])):
+    if 'Li-ion' in bats_capacities_raw_h.iloc[0,c]:
+        bats_capacities_raw_h.iloc[0,c]='Li-ion'
+    elif 'Lead-acid' in bats_capacities_raw_h.iloc[0,c]:
+        bats_capacities_raw_h.iloc[0,c]='Lead-acid'
+    else:
+       print('[CRITICAL  ]: There are other types of batteries than Li-ion and Lead-Acid')
+       sys.exit()
+bats_capacities_raw = bats_capacities_raw.rename(columns=bats_capacities_raw_h.iloc[0,:],copy=False)
+bats_capacities_raw.fillna(0,inplace=True)
+bats_capacities_copy = bats_capacities_raw.groupby(bats_capacities_raw.columns,axis=1).sum() # used to deal with the diff kinds of batteries
+
+for c in range(len(bats_capacities_raw_h.iloc[0,:])):
+    for key in dispaset_rename_tech:
+        if key in bats_capacities_raw_h.iloc[0,c]:
+            bats_capacities_raw_h.iloc[0,c] = dispaset_rename_tech[key] 
+                        
+bats_capacities_raw.columns = bats_capacities_raw_h.iloc[0,:] 
+bats_capacities = bats_capacities_raw.groupby(bats_capacities_raw.columns, axis=1).sum()
 
 # Check if the technology/fuel names are all considered in the renaming
 
@@ -326,9 +413,8 @@ def get_reservoir_capacities(reservoirs):
 reservoirs = get_reservoir_capacities(reservoirs)
 
 # %% BATS and BEVS data
-countries = list(capacities.index)
 bevs_cap = pd.DataFrame()
-bevs_cap['BEVS'] = batteries[str(YEAR)] * 1000
+bevs_cap['BEVS'] = ev_batteries[str(YEAR)] * 1000
 
 # %% P2H data
 power2heat_capacities = pd.DataFrame(power2heat_capacities)
@@ -396,6 +482,7 @@ def get_above_tech_treshold(typical_tech, treshold):
     tmp3 = tmp['GTUR'][cond3]
     tmp4 = tmp['STUR'][cond4]
     tmp = pd.DataFrame([tmp1, tmp2, tmp3, tmp4]).fillna(0).T
+    tmp.columns = ['COMC', 'ICEN', 'GTUR', 'STUR']
     return tmp
 
 
@@ -411,6 +498,7 @@ def get_below_tech_treshold(typical_tech, treshold):
     tmp3 = tmp['GTUR'][cond3]
     tmp4 = tmp['STUR'][cond4]
     tmp = pd.DataFrame([tmp1, tmp2, tmp3, tmp4]).fillna(0).T
+    tmp.columns = ['COMC', 'ICEN', 'GTUR', 'STUR']
     return tmp
 
 
@@ -455,10 +543,16 @@ if len(list(set(chp_fuel_types) - set(typical_tech_input.columns))) != 0:
 
 if CCS is False:
     typical_tech_input['GAS_COMC'] = typical_tech_input['GAS_COMC'] + typical_tech_input['GAS_COMC_CCS']
-    typical_tech_input['BIO_COMC'] = typical_tech_input['BIO_COMC'] + typical_tech_input['BIO_COMC_CCS']
-    typical_tech_input['BIO_STUR'] = typical_tech_input['BIO_STUR'] + typical_tech_input['BIO_STUR_CCS']
-    typical_tech_input['HRD_COMC'] = typical_tech_input['HRD_COMC'] + typical_tech_input['HRD_COMC_CCS']
-    typical_tech_input.drop(columns=['BIO_COMC_CCS', 'BIO_STUR_CCS', 'GAS_COMC_CCS', 'HRD_COMC_CCS'], inplace=True)
+    typical_tech_input.drop(columns=['GAS_COMC_CCS'], inplace=True)
+    if 'BIO_COMC_CCS'in typical_tech_input.columns:
+        typical_tech_input['BIO_COMC'] = typical_tech_input['BIO_COMC'] + typical_tech_input['BIO_COMC_CCS']
+        typical_tech_input.drop(columns=['BIO_COMC_CCS'], inplace = True)
+    if 'BIO_STUR_CCS' in typical_tech_input.columns:
+        typical_tech_input['BIO_STUR'] = typical_tech_input['BIO_STUR'] + typical_tech_input['BIO_STUR_CCS']
+        typical_tech_input.drop(columns=['BIO_STUR_CCS'], inplace = True)
+    if 'HRD_COMC_CCS' in typical_tech_input.columns:
+        typical_tech_input['HRD_COMC'] = typical_tech_input['HRD_COMC'] + typical_tech_input['HRD_COMC_CCS']
+        typical_tech_input.drop(columns=['HRD_COMC_CCS'], inplace = True)
 
 if BIOGAS == 'GAS':
     typical_tech_input['GAS_ICEN'] = typical_tech_input['GAS_ICEN'] + typical_tech_input['Biogas_ICEN']
@@ -546,7 +640,7 @@ typical_hrd = (typical_hrd.loc[:, 'COMC':'STUR'].div(typical_hrd['sum'], axis=0)
 typical_hrd['STUR'].fillna(1, inplace=True)
 typical_hrd.fillna(0, inplace=True)
 
-# %% HRD
+# %% OIL
 typical_oil = pd.DataFrame([typical_tech_oil['COMC'], typical_tech_oil['GTUR'], typical_tech_oil['STUR']]).T
 typical_oil['sum'] = typical_oil.sum(axis=1)
 typical_oil = (typical_oil.loc[:, 'COMC':'STUR'].div(typical_oil['sum'], axis=0))
@@ -559,7 +653,6 @@ typical_sun['sum'] = typical_sun.sum(axis=1)
 typical_sun = (typical_sun.loc[:, 'PHOT':'STUR'].div(typical_sun['sum'], axis=0))
 typical_sun['PHOT'].fillna(1, inplace=True)
 typical_sun.fillna(0, inplace=True)
-
 
 # %% HYDRO
 # Make a function with three statements, hydro can either HROR only, HDAM+HPHS, or each technology individually
@@ -631,6 +724,11 @@ for c in countries:
     tmp_P2H = pd.DataFrame(p2h_cap.loc[c])
     tmp_P2H.rename(columns={c: 'OTH'}, inplace=True)
     tmp_OTH = tmp_BEV.combine_first(tmp_P2H)
+    tmp_HYD = pd.DataFrame(p2g_capacities.loc[c])
+    tmp_HYD.rename(columns={c: 'HYD'}, inplace=True)
+    tmp_BATS = pd.DataFrame(bats_capacities.loc[c])
+    tmp_BATS.rename(columns={c: 'OTH'}, inplace=True)
+    tmp_OTH = tmp_OTH.combine_first(tmp_BATS)
     tmp_other = pd.DataFrame([tmp_cap['GEO'], tmp_cap['LIG'], tmp_cap['NUC'], tmp_cap['PEA'], tmp_cap['WST']]).T
     tmp_other.rename(index={c: 'STUR'}, inplace=True)
     df_merged = tmp_other.merge(tmp_GAS, how='outer', left_index=True, right_index=True)
@@ -644,6 +742,7 @@ for c in countries:
     min_cap = total_cap * TECHNOLOGY_THRESHOLD
     df_merged[df_merged < min_cap] = 0
     df_merged = df_merged.merge(tmp_OTH, how='outer', left_index=True, right_index=True)
+    df_merged = df_merged.merge(tmp_HYD, how='outer', left_index=True, right_index=True)
     cap[c] = df_merged
     cap[c].fillna(0, inplace=True)
     # CHP
@@ -714,7 +813,7 @@ for c in cap:
                 if (i == 'STUR') and (j == 'SUN'):
                     tmp_tes = pd.DataFrame(units.loc[:, name], columns=[name]).T
                     tmp_tes['STOCapacity'] = tmp_tes['PowerCapacity'] * CSP_TES_CAPACITY
-                    tmp_tes['STOSelfDischarge'] = str(0.03)
+                    tmp_tes['STOSelfDischarge'] = STOSELFDISCHARGE_SUN
                     tmp_tes = tmp_tes.T
                     units.update(tmp_tes)
                     print('[INFO    ]: ' + 'Country ' + c + ' (' + name + '): Storage of ' + str(CSP_TES_CAPACITY) +
@@ -783,7 +882,7 @@ for c in cap:
                 # units_chp.loc['STOCapacity',name] = units_chp[name, 'PowerCapacity'].values * CHP_TES_CAPACITY
                 tmp_tes = units_chp.T
                 tmp_tes['STOCapacity'] = tmp_tes['PowerCapacity'] / tmp_tes['CHPPowerToHeat'] * CHP_TES_CAPACITY
-                tmp_tes['STOSelfDischarge'] = str(0.03)
+                tmp_tes['STOSelfDischarge'] = STOSELFDISCHARGE_TES
                 tmp_tes = tmp_tes.T
                 units_chp.update(tmp_tes)
     if len(units_chp) > 0:
@@ -818,7 +917,7 @@ for c in cap:
             else:
                 print('[INFO    ]: ' + 'Country ' + c + ' No Reservoir Capacity data for country ' + c +
                       '. Assuming a conservative 5 hours of storage')
-                hphsdata['STOCapacity'] = hphsdata['PowerCapacity'] * 5
+                hphsdata['STOCapacity'] = hphsdata['PowerCapacity'] * HYDRO_CAPACITY
             units.loc[hphsindex, :] = hphsdata
         elif len(tmp) == 0:
             tmp = units[units.Technology == 'HDAM']
@@ -828,7 +927,7 @@ for c in cap:
                 else:
                     print('[INFO    ]: ' + 'Country ' + c + ' No Reservoir Capacity data for country ' + c +
                           '. Assuming a conservative 5 hours of storage')
-                    units.loc[tmp.index[0], 'STOCapacity'] = units.loc[tmp.index[0], 'PowerCapacity'] * 5
+                    units.loc[tmp.index[0], 'STOCapacity'] = units.loc[tmp.index[0], 'PowerCapacity'] * HYDRO_CAPACITY
         else:
             sys.exit('Various HPHS units!')
     else:
@@ -839,8 +938,8 @@ for c in cap:
             # The pumped hydro power is also the chargin power:
             hphsdata['STOMaxChargingPower'] = hphsdata['PowerCapacity']
             print(
-                '[INFO    ]: ' + 'Country ' + c + ' (HPHS,WAT) No Reservoir Capacity data for country ' + c + '. Assuming a conservative 5 hours of storage')
-            hphsdata['STOCapacity'] = hphsdata['PowerCapacity'] * 5
+                '[INFO    ]: ' + 'Country ' + c + ' (HPHS,WAT) No Reservoir Capacity data for country ' + c + '. Assuming a conservative' + str(HYDRO_CAPACITY) + 'hours of storage')
+            hphsdata['STOCapacity'] = hphsdata['PowerCapacity'] * HYDRO_CAPACITY
             units.loc[hphsindex, :] = hphsdata
         else:
             print('[INFO    ]: ' + 'Country ' + c + ' No HPHS for country ' + c)
@@ -853,8 +952,8 @@ for c in cap:
                 units.loc[tmp.index[0], 'STOCapacity'] = reservoirs[c]
             else:
                 print(
-                    '[INFO    ]: ' + 'Country ' + c + ' (HDAM,WAT) No Reservoir Capacity data for country ' + c + '. Assuming a conservative 5 hours of storage')
-                units.loc[tmp.index[0], 'STOCapacity'] = units.loc[tmp.index[0], 'PowerCapacity'] * 5
+                    '[INFO    ]: ' + 'Country ' + c + ' (HDAM,WAT) No Reservoir Capacity data for country ' + c + '. Assuming a conservative'+ str(HYDRO_CAPACITY) + 'hours of storage')
+                units.loc[tmp.index[0], 'STOCapacity'] = units.loc[tmp.index[0], 'PowerCapacity'] * HYDRO_CAPACITY
         else:
             print('[INFO    ]: ' + 'Country ' + c + ' No HDAM for country ' + c)
 
@@ -866,7 +965,7 @@ for c in cap:
         bevsindex = tmp_bev.index[0]
         tmp_bev['PowerCapacity'] = tmp_bev['PowerCapacity'] * V2G_SHARE
         tmp_bev['STOMaxChargingPower'] = tmp_bev['PowerCapacity']
-        tmp_bev['STOCapacity'] = tmp_bev['PowerCapacity'] * V2G_PE_RATIO
+        tmp_bev['STOCapacity'] = tmp_bev['PowerCapacity'] * V2G_CAPACITY
         # tmp_bev['PowerCapacity'] = tmp_bev['STOMaxChargingPower']
         units.update(tmp_bev)
         if units[units.Technology == 'BEVS'].PowerCapacity.values == 0:
@@ -886,15 +985,52 @@ for c in cap:
             print('[INFO    ]: ' + 'Country ' + c + ' (' + name + '): no P2H_TES unit')
         else:
             tmp_p2h['STOCapacity'] = tmp_p2h['PowerCapacity'] * P2G_TES_CAPACITY
-            tmp_p2h['STOSelfDischarge'] = 0.03
+            tmp_p2h['STOSelfDischarge'] = STOSELFDISCHARGE_P2H
         units.update(tmp_p2h)
-
+        
+    # Special treatment for P2GS units
+    tmp=units[units.Fuel == 'HYD']  
+    if len(tmp) == 0:
+        print('[INFO    ]: ' + 'Country ' + c + ' (P2G) capacity is 0 or H2 storage is not present')
+    elif len(tmp) == 1:
+        h2data = tmp
+        h2index = tmp.index
+        h2data['STOMaxChargingPower'] = h2data['PowerCapacity']
+        h2data['PowerCapacity']=typical_tech_input.loc[c,'HYD_PEMFC']
+        if H2_STORAGE:
+            h2data['STOCapacity'] = h2_storage_capacities.loc[c,1]/(3.6e-6) #convert from PJ to MWh
+        else:
+            h2data['STOCapacity'] = 0
+        units.loc[h2index,:] = h2data    
+        if h2data['PowerCapacity'].item() ==0 and h2data['STOMaxChargingPower'].item() ==0:
+            units.drop(c+'_P2GS_HYD', inplace=True)
+    else:
+        sys.exit('Too many P2G units!')
+        
+    # Special treatment for bats units
+    tmp=units[units.Technology == 'BATS']
+    if len(tmp) == 0:
+        print('[INFO    ]: ' + 'Country ' + c + ' batteries are not present')
+    elif len(tmp) == 1:
+        batsdata = tmp
+        batsindex = tmp.index
+        if BATS_Lead_CAPACITY == 0:
+            units.drop(c+'_BATS_OTH', inplace=True)
+        else:
+            batsdata['PowerCapacity'] = batsdata['PowerCapacity'].values/(3.6e-6) # From PJ/h to MW
+            batsdata['STOCapacity'] = BATS_Liion_CAPACITY * bats_capacities_copy.loc[c,'Li-ion'] + BATS_Lead_CAPACITY * bats_capacities_copy.loc[c,'Lead-acid']
+            batsdata['STOCapacity'] = batsdata['STOCapacity'].values/(3.6e-6) # From PJ to MWh
+            batsdata['STOMaxChargingPower'] = batsdata['PowerCapacity'].copy()
+            units.loc[batsindex,:] = batsdata
+    else:
+       sys.exit('Too many bats units!') 
+    
     # Sort columns as they should be and check if Zone is defined
     cols = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Technology', 'Fuel', 'Efficiency', 'MinUpTime',
             'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu',
             'RampingCost', 'PartLoadMin', 'MinEfficiency', 'StartUpTime', 'CO2Intensity',
             'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor', 'COP', 'Tnominal', 'coef_COP_a', 'coef_COP_b',
-            'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency', 'CHPMaxHeat']
+            'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency']
     units['Zone'] = c
     units = units[cols]
 
@@ -910,8 +1046,8 @@ def write_pickle_file(units, file_name):
     allunits = units
 
     make_dir((input_folder))
-    make_dir(input_folder + source_folder)
-    folder = input_folder + source_folder
+    make_dir(input_folder + source_folder )
+    folder = input_folder + source_folder + scenario
     make_dir(folder)
     pkl_file = open(folder + file_name + '.p', 'wb')
     pickle.dump(allunits, pkl_file)
@@ -948,7 +1084,7 @@ def write_csv_files(power_plant_filename, units, write_csv=None):
         for c in allunits:
             make_dir((output_folder))
             make_dir(output_folder + source_folder + 'Database')
-            folder = output_folder + source_folder + 'Database/PowerPlants/'
+            folder = output_folder + source_folder + 'Database/' + scenario + 'PowerPlants/'
             make_dir(folder)
             make_dir(folder + c)
             allunits[c].to_csv(folder + c + '/' + filename)
