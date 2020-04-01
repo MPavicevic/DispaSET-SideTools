@@ -42,9 +42,13 @@ Data extraction from [JRC-EU-TIMES](https://data.jrc.ec.europa.eu/dataset/8141a3
 - ProRES - Projections up to 2050 (10 year interval), slightly less ambitious, sector coupling limited (without gas)
 - NearZeroCarbon - Projections up tp 2050 (10 year interval), highly ambitious scenario with 95% carbon reduction compared to 1990. High focus on gas sector.
 
+ENERGYscope
+-----------
+Soft linking between [ENERGYscope](http://www.energyscope.ch/) and Dispa-SET model.
+
 OSE-MC
 ------
-Model comparison project (Open Source Energy - Model Comparison). Dispa-SET linked with the following six models:
+Model comparison project (Open Source Energy - Model Comparison). Dispa-SET soft-linked with the following six models:
 - [CALLIOPE](https://calliope.readthedocs.io/en/stable/#)
 - [DIETER](https://www.diw.de/en/diw_01.c.599753.en/models.html#ab_608464)                      
 - [dynELMOD](https://gitlab.tubit.tu-berlin.de/wip/dynelmod_public)
@@ -54,7 +58,11 @@ Model comparison project (Open Source Energy - Model Comparison). Dispa-SET link
 
 ARES-African Power Pools
 ------------------------
-TBD
+Soft linking between [LISFLOOD](https://ec.europa.eu/jrc/en/publication/eur-scientific-and-technical-research-reports/lisflood-distributed-water-balance-and-flood-simulation-model-revised-user-manual-2013), [TEMBA - OSeMOSYS](http://www.osemosys.org/temba.html) and Dispa-SET models applied to the following African Power Pools:
+- Norht African Power Pool - NAPP
+- Central African Power Pool - CAPP
+- East African Power Pool - EAPP
+Release date: TBD
 
 Get involved
 ============
@@ -71,3 +79,5 @@ Contributors:
 
 - Andrea Mangipinto (Politecnico di Milano, Italy)
 - Eva Joskin (University of Liège, Belgium)
+- Damon Coates (UCLouvain, Belgium)
+- Guillaume Percy (UCLouvain, Belgium)
