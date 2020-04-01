@@ -25,30 +25,30 @@ from dispaset_sidetools.common import make_dir
 """ output file: SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE """
 YEAR = 2050  # considered year
 WRITE_CSV_FILES = True  # Write csv database
-SCENARIO = 'ProRes1'  # Scenario name, used for data and naming the files. ProRes1 or NearZeroCarbon
-CASE = 'ALLFLEX'  # Case name, used for naming csv files
+SCENARIO = 'NearZeroCarbon'  # Scenario name, used for data and naming the files. ProRes1 or NearZeroCarbon
+CASE = 'NOFLEX'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 
 # Technology definition
 TECHNOLOGY_THRESHOLD = 0  # threshold (%) below which a technology is considered negligible and no unit is created
 # Define Power to Energy ratio [MWh / MW]
-CHP_TES_CAPACITY = 12  # No of storage hours in TES
-CSP_TES_CAPACITY = 15  # No of storage hours in CSP units (usually 7.5 hours)
-P2G_TES_CAPACITY = 5  # No of storage hours in P2H units (500l tank = 5h of storage)
-HYDRO_CAPACITY = 5 # No of storage hours in HPHS and HDAM
-BATS_Liion_CAPACITY = 1 # No of storage hours for batteries
-BATS_Lead_CAPACITY = 4
-V2G_CAPACITY = 4.487 # No of storage for vehicles 2 grid 
-H2_STORAGE = True
+CHP_TES_CAPACITY = 0  # No of storage hours in TES
+CSP_TES_CAPACITY = 0  # No of storage hours in CSP units (usually 7.5 hours)
+P2G_TES_CAPACITY = 0  # No of storage hours in P2H units (500l tank = 5h of storage)
+HYDRO_CAPACITY = 0 # No of storage hours in HPHS and HDAM
+BATS_Liion_CAPACITY = 0 # No of storage hours for batteries
+BATS_Lead_CAPACITY = 0
+V2G_CAPACITY = 0 # No of storage for vehicles 2 grid 
+H2_STORAGE = False
 
-CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
-V2G_SHARE = 0.5  # Define how many EV's are V2G
+CHP_TYPE = 'back-pressure'  # Define CHP type: None, back-pressure or Extraction
+V2G_SHARE = 0  # Define how many EV's are V2G
 
 # Clustering options (reduce the number of units - healthy number of units should be <300)
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
 OCEAN = 'WAT'  # Define what ocean fuel equals to (WAT or OTH)
 CSP = True  # Turn Concentrated solar power on/off (when False grouped with PHOT)
-HYDRO_CLUSTERING = 'OFF'  # Define type of hydro clustering (OFF, HPHS, HROR)
+HYDRO_CLUSTERING = 'HROR'  # Define type of hydro clustering (OFF, HPHS, HROR)
 TECH_CLUSTERING = True  # Clusters technologies by treshold (efficient way to reduce total number of units)
 CLUSTER_TRESHOLD = 0.3  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
 
@@ -729,7 +729,7 @@ for c in countries:
     tmp_HYD.rename(columns={c: 'HYD'}, inplace=True)
     tmp_BATS = pd.DataFrame(bats_capacities.loc[c])
     tmp_BATS.rename(columns={c: 'OTH'}, inplace=True)
-    tmp_OTH = tmp_BEV.combine_first(tmp_BATS)
+    tmp_OTH = tmp_OTH.combine_first(tmp_BATS)
     tmp_other = pd.DataFrame([tmp_cap['GEO'], tmp_cap['LIG'], tmp_cap['NUC'], tmp_cap['PEA'], tmp_cap['WST']]).T
     tmp_other.rename(index={c: 'STUR'}, inplace=True)
     df_merged = tmp_other.merge(tmp_GAS, how='outer', left_index=True, right_index=True)
@@ -1015,11 +1015,14 @@ for c in cap:
     elif len(tmp) == 1:
         batsdata = tmp
         batsindex = tmp.index
-        batsdata['PowerCapacity'] = batsdata['PowerCapacity'].values/(3.6e-6) # From PJ/h to MW
-        batsdata['STOCapacity'] = BATS_Liion_CAPACITY * bats_capacities_copy.loc[c,'Li-ion'] + BATS_Lead_CAPACITY * bats_capacities_copy.loc[c,'Lead-acid']
-        batsdata['STOCapacity'] = batsdata['STOCapacity'].values/(3.6e-6) # From PJ to MWh
-        batsdata['STOMaxChargingPower'] = batsdata['PowerCapacity'].copy()
-        units.loc[batsindex,:] = batsdata
+        if BATS_Lead_CAPACITY == 0:
+            units.drop(c+'_BATS_OTH', inplace=True)
+        else:
+            batsdata['PowerCapacity'] = batsdata['PowerCapacity'].values/(3.6e-6) # From PJ/h to MW
+            batsdata['STOCapacity'] = BATS_Liion_CAPACITY * bats_capacities_copy.loc[c,'Li-ion'] + BATS_Lead_CAPACITY * bats_capacities_copy.loc[c,'Lead-acid']
+            batsdata['STOCapacity'] = batsdata['STOCapacity'].values/(3.6e-6) # From PJ to MWh
+            batsdata['STOMaxChargingPower'] = batsdata['PowerCapacity'].copy()
+            units.loc[batsindex,:] = batsdata
     else:
        sys.exit('Too many bats units!') 
     

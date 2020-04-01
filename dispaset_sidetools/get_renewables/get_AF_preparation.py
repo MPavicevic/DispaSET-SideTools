@@ -71,6 +71,22 @@ af['MT']['HROR'] = af['EL']['HROR']
 af['HU']['HROR'] = af['SK']['HROR']
 af['NL']['HROR'] = af['BE']['HROR']
 
+af['BG']['WTOF'] = af['FR']['WTOF']
+af['CY']['WTOF'] = af['FR']['WTOF']
+af['EE']['WTOF'] = af['FI']['WTOF']
+af['EL']['WTOF'] = af['FR']['WTOF']
+af['ES']['WTOF'] = af['FR']['WTOF']
+af['HR']['WTOF'] = af['FR']['WTOF']
+af['IT']['WTOF'] = af['FR']['WTOF']
+af['LT']['WTOF'] = af['EE']['WTOF']
+af['LV']['WTOF'] = af['EE']['WTOF']
+af['MT']['WTOF'] = af['FR']['WTOF']
+af['MT']['WTON'] = af['IT']['WTON']
+af['PL']['WTOF'] = af['DE']['WTOF']
+af['PT']['WTOF'] = af['FR']['WTOF']
+af['RO']['WTOF'] = af['FR']['WTOF']
+af['SI']['WTOF'] = af['FR']['WTOF']
+
 #%% ############### Cf for HROR units ####################
 
 #Calculate the capacity factor for the HROR Units 
@@ -144,6 +160,9 @@ for c in countries:
     
 for c in countries: 
     af_scaled[c]['BEVS'] = af[c]['BEVS']
+    af_scaled[c]['WTON'] = af[c]['WTON']
+    af_scaled[c]['WTOF'] = af[c]['WTOF']
+    
     
 #%% Save to csv
 
