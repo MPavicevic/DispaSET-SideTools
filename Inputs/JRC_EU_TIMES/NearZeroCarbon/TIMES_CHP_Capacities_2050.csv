@@ -1,0 +1,32 @@
+﻿;Technology main input  /  Process Description1 (group);;;;;;;;;;;;;;;;;;;;
+;Biogas;Coal;;;Gas (possibly blended);;;;;;Other biomass;;;;;;Petroleum (possibly blended);;;;
+Region;CHP: Int Combust.BGS.PUB;Existing CHP plant - coal_CCGT;Existing CHP plant - coal_thermal;Existing CHP plant - lignite_thermal;CHP: Comb CYC condensing L.GAS.IND;CHP: Comb CYC.GAS.CCSpoc.PUB;CHP: Int Combust.GAS.PUB;CHP.Autoproducer.Biomass.00, CHP.Autoproducer.Black Liquor.00, CHP.Autoproducer.GASCOGBFG.00 and 6 more;Existing CHP plant - naturalgas_thermal;Fuel cell - SOFC - for heat and power  - Hospital;CHP: IGCC Large.Black Liquor.Pulp&Paper Heat;CHP: IGCC.WOO.IND;CHP: Organic.Ranking CYC.WOO.PUB;CHP: Recovery Boiler Large.Black Liquor.Pulp&Paper Heat;CHP: Steam Turb condensing.WOO.IND;Existing CHP plant - biomass_thermal;CHP: Comb CYC condensing S.OIL.IND;CHP.Autoproducer.Biomass.00, CHP.Autoproducer.Black Liquor.00, CHP.Autoproducer.GASCOGBFG.00 and 6 more;Existing CHP plant - HFO_CCGT;Existing CHP plant - LFO_OCGT;Existing CHP plant - LFO_thermal
+AT;0,229;;0,000;0,000;;;;0,000;0,000;;1,960;;;;;;;;0,000;;
+BE;;;;;;0,076;;0,399;0,000;;;;;1,474;;;;;;;
+BG;0,081;;0,000;0,000;;;;;0,000;;0,038;;;0,071;;;;;;;
+CH;0,139;;;;;;;;;;;;0,165;0,225;;;;;;;
+CY;0,040;;;;;;;;;;;;;;;;;;;;
+CZ;0,014;0,000;0,000;0,000;0,497;;0,118;0,181;;;0,401;1,737;;;0,034;;;;;;
+DE;1,687;;0,000;0,000;;;0,229;0,000;0,000;;9,794;;0,288;;;0,000;;0,000;;0,000;0,000
+DK;0,110;;0,000;;;0,593;;0,000;0,000;;0,404;0,116;;;;0,000;;0,000;;;
+EE;0,119;;;;;0,015;;;;;0,030;0,038;0,055;;;;;;;;
+EL;;;;0,000;0,011;;;0,000;;;0,580;;;;;;;;;;
+ES;;;;;;;;0,000;0,000;;1,747;;;5,602;;0,000;;0,000;;;0,000
+FI;0,390;;0,000;;;;;0,000;;;1,312;0,608;;;;0,000;;0,000;;;
+FR;0,684;;;;0,217;;;0,000;;;3,693;;;;;;;;;;
+HR;;;;;;;;0,180;;;0,222;;;;;;;0,000;;;
+HU;0,803;;;0,000;0,070;;;0,000;0,000;;0,182;;;0,713;;;0,011;;;;
+IE;0,014;;;;0,253;;;0,000;;;0,872;0,200;;;;;;;;;
+IT;;;;;1,324;;0,843;0,000;;;7,445;;;;;;;0,000;;;
+LT;0,223;;;;;;;;;;;;0,013;0,040;;;;0,000;;;
+LU;;;;;0,048;;;;;;0,024;0,061;;;;;;;;;
+LV;0,089;;;;;;;0,200;;;0,068;0,024;;;;;;;;;
+NL;;0,000;0,000;;;;;0,435;;;1,724;;;0,407;;;;;;;
+NO;;;;;;;;0,000;;0,455;1,846;;;;;;;;;;
+PL;1,418;;0,000;;;;;0,878;;;5,569;0,044;;0,063;0,154;0,000;;;;;
+PT;;;;;0,306;;;0,000;;;1,163;;;0,198;;;;;;;
+RO;;;0,000;0,000;;;;0,186;1,004;;0,430;0,328;;;0,042;;;0,000;;;
+SE;1,086;;0,000;;;;;0,000;;;2,560;;;;;0,000;;0,000;;;
+SI;;;;;0,011;;0,050;;;;0,326;;0,035;;;;;;;;
+SK;;;0,000;;0,741;;;0,000;;0,755;0,526;0,206;;;;;;;;;
+UK;;;0,000;;1,717;;;0,000;;;2,537;5,132;;;;;;0,000;;;

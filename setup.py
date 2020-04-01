@@ -30,5 +30,5 @@ setup(
         'Intended Audience :: Science/Research',
         'Programming Language :: Python'
     ],
-    keywords=['database', 'energy systems analysis']
+    keywords=['database', 'energy systems analysis'], install_requires=['numpy', 'pandas']
 )
