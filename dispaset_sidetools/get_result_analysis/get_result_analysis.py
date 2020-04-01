@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """
+Not part of Dispa-SET sidetools module
 @author: Andrea Mangipinto
 """
 

@@ -34,6 +34,28 @@ pip install -e . # Install editable local version
 
 The above commands create a dedicated environment so that your anaconda configuration remains clean from the required dependencies installed.
 
+Projects
+========
+JRC-EU-TIMES
+------------
+Data extraction from JRC-EU-TIMES model (Tableau database) used in the soft-linging project with Dispa-SET. Main focus on ProRES and NearZeroCarbon scenarios
+ProRES - Projections up to 2050 (10 year interval), slightly less ambitious, sector coupling limited (without gas)
+NearZeroCarbon - Projections up tp 2050 (10 year interval), highly ambitious scenario with 95% carbon reduction compared to 1990. High focus on gas sector.
+
+OSE-MC
+------
+Model comparison project (Open Source Energy - Model Comparison). Dispa-SET linked with the following six models:
+- 'CALLIOPE'
+- 'DIETER'                      
+- 'dynELMOD'
+- 'EMMA'
+- 'URBS'
+- 'PLEXOS'
+
+ARES-African Power Pools
+------------------------
+TBD
+
 Get involved
 ============
 This project is an open-source project. Interested users are therefore invited to test, comment or [contribute](CONTRIBUTING.md) to the tool. Submitting issues is the best way to get in touch with the development team, which will address your comment, question, or development request in the best possible way. We are also looking for contributors to the main code, willing to contibute to its capabilities, computational-efficiency, formulation, etc. Finally, we are willing to collaborate with national agencies, reseach centers, or academic institutions on the use on the model for different data sets relative to EU countries.
@@ -48,3 +70,4 @@ Currently the main developers of the DispaSET-SideTools package are the followin
 Contributors:
 
 - Andrea Mangipinto
+- Eva Joskin
