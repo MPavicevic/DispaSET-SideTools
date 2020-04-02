@@ -9,7 +9,7 @@ import pandas as pd
 import os
 import sys
 # Local source tree imports
-from dispaset_sidetools.common import make_dir, date_range, get_country_codes
+from dispaset_sidetools.common import make_dir, date_range, get_country_codes, write_csv_zonal
 
 sys.path.append(os.path.abspath(r'../..'))
 
@@ -30,6 +30,7 @@ WRITE_CSV = False
 YEAR = 2016
 
 # Source for demand projections
+# TEMBA, IEA, JRC, World Bank, CIA: World Fact Book, Indexmundi
 SOURCE = 'TEMBA'
 
 # %% Data preprocessing
@@ -54,38 +55,17 @@ data[str(2010)].drop(columns=['Unknown code'], inplace=True)
 data[str(2015)].drop(columns=['Unknown code'], inplace=True)
 
 # South Sudan profile scaled from Sudan
-ss_anual = 391800  # MWh
-data['2015']['SS'] = data['2015'].loc[:, 'SD'] / data['2015'].loc[:, 'SD'].sum() * ss_anual
-data['2015']['MG'] = data['2015'].loc[:, 'MZ'] / data['2015'].loc[:, 'MZ'].sum() * 100
-data['2015']['MU'] = data['2015'].loc[:, 'MZ'] / data['2015'].loc[:, 'MZ'].sum() * 100
-data['2015']['NA'] = data['2015'].loc[:, 'BW'] / data['2015'].loc[:, 'BW'].sum() * 100
-data['2015']['SC'] = data['2015'].loc[:, 'MZ'] / data['2015'].loc[:, 'MZ'].sum() * 100
+ss_annual = 391800  # MWh
+data['2015']['SS'] = data['2015'].loc[:, 'SD'] / data['2015'].loc[:, 'SD'].sum() * ss_annual
 
 # Annual adjustments based on external projections
-data_anual = pd.read_excel(input_folder + source_folder + input_file_annual_data, sheet_annual_data)
-tmp_data = data_anual.loc[(data_anual['Source'] == SOURCE) & (data_anual['Year'] == YEAR)]
+data_annual = pd.read_excel(input_folder + source_folder + input_file_annual_data, sheet_annual_data)
+tmp_data = data_annual.loc[(data_annual['Source'] == SOURCE) & (data_annual['Year'] == YEAR)]
 tmp_data.index = tmp_data['Country']
 
+# Scaling to desired year according to source
 anual_scaling_factor = data['2015'] / data['2015'].sum()
 data[str(YEAR)] = anual_scaling_factor * tmp_data['Energy'] * 1e3
 
-if WRITE_CSV is True:
-    for c in data[str(2010)].columns:
-        make_dir(output_folder + 'Database')
-        folder = output_folder + 'Database/TotalLoadValue/'
-        make_dir(folder)
-        make_dir(folder + c)
-        data[str(2010)][c].to_csv(folder + c + '/ARES_TotalLoadValue_2010.csv', header=False)
-    for c in data[str(2015)].columns:
-        make_dir(output_folder + 'Database')
-        folder = output_folder + 'Database/TotalLoadValue/'
-        make_dir(folder)
-        make_dir(folder + c)
-        data[str(2015)][c].to_csv(folder + c + '/ARES_TotalLoadValue_2015.csv', header=False)
-    for c in data[str(2010)].columns:
-        make_dir(output_folder + 'Database')
-        folder = output_folder + 'Database/TotalLoadValue/'
-        make_dir(folder)
-        make_dir(folder + c)
-        data[str(YEAR)][c].to_csv(folder + c + '/ARES_TotalLoadValue_' + SOURCE + '_' + str(YEAR) + '.csv',
-                                  header=False)
+# Generate database
+write_csv_zonal(data[str(YEAR)], 'ARES_APP', SOURCE, 'TotalLoadValue', str(YEAR), True)

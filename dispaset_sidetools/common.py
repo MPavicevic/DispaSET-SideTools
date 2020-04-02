@@ -441,6 +441,28 @@ def get_country_codes(zones):
     return codes
 
 
+def write_csv_zonal(data, model_folder, source_name, variable, year=None, write_csv=False):
+    """
+    Dispa-SET-sidetools function that generates zonal csv. files in Dispa-SET readable format
+    :param data:            Data to be saved as csv. files
+    :param source_folder:   Name of the model for which Dispa-SET database is created
+    :param source_name:     Name of the data source
+    :param variable:        Name of the variable to be saved: TotalLoadValue, AvailabilityFactor...
+    :param year:            Optional Year for the input data
+    :param write_csv:       True creates csv database
+    :return:
+    """
+    if write_csv is True:
+        for c in data.columns:
+            make_dir('../../Outputs/')
+            make_dir('../../Outputs/' + model_folder)
+            make_dir('../../Outputs/' + model_folder + '/Database/')
+            folder = '../../Outputs/' + model_folder + '/Database/' + variable + '/'
+            make_dir(folder)
+            make_dir(folder + c)
+            data[c].to_csv(folder + c + '/' + source_name + '_' + str(year) + '.csv', header=False)
+
+
 def invert_dic_df(dic, tablename=''):
     """
     Function that takes as input a dictionary of dataframes, and inverts the key of
