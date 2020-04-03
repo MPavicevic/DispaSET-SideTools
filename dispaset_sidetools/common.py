@@ -47,6 +47,14 @@ Dictionary with the common variable definitions
 to be used in Dispa-SET
 '''
 commons = {}
+
+# Logging
+commons['logfile'] = str(datetime.datetime.now()).replace(':', '-').replace(' ', '_') + '.dispa_sidetools.log'
+
+# Standard folders
+commons['InputFolder'] = '../../Inputs/'
+commons['OutputFolder'] = '../../Outputs/'
+
 # Timestep
 commons['TimeStep'] = '1h'
 
@@ -504,6 +512,3 @@ def invert_dic_df(dic, tablename=''):
                     'will be assumed')
         dic_out[item] = panel[item].fillna(0)
     return dic_out
-
-
-commons['logfile'] = str(datetime.datetime.now()).replace(':', '-').replace(' ', '_') + '.dispa_sidetools.log'

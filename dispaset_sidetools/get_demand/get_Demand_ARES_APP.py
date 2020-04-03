@@ -9,15 +9,15 @@ import pandas as pd
 import os
 import sys
 # Local source tree imports
-from dispaset_sidetools.common import date_range, get_country_codes, write_csv_files
+from dispaset_sidetools.common import date_range, get_country_codes, write_csv_files, commons
 
 sys.path.append(os.path.abspath(r'../..'))
 
 # %% Inputs
 # Folder destinations
-input_folder = '../../Inputs/'  # Standard input folder
+input_folder = commons['InputFolder']
 source_folder = 'ARES_Africa/'
-output_folder = '../../Outputs/'  # Standard output folder
+output_folder = commons['OutputFolder']
 
 # File names
 input_file_hourly_data = 'Estimated hourly load profiles (for 2010 and 2015).xlsx'
