@@ -9,7 +9,7 @@ import pandas as pd
 import os
 import sys
 # Local source tree imports
-from dispaset_sidetools.common import make_dir, date_range, get_country_codes, write_csv_zonal
+from dispaset_sidetools.common import date_range, get_country_codes, write_csv_files
 
 sys.path.append(os.path.abspath(r'../..'))
 
@@ -68,4 +68,4 @@ anual_scaling_factor = data['2015'] / data['2015'].sum()
 data[str(YEAR)] = anual_scaling_factor * tmp_data['Energy'] * 1e3
 
 # Generate database
-write_csv_zonal(data[str(YEAR)], 'ARES_APP', SOURCE, 'TotalLoadValue', str(YEAR), True)
+write_csv_files(data[str(YEAR)], 'ARES_APP', SOURCE, 'TotalLoadValue', str(YEAR), WRITE_CSV, 'Zonal')

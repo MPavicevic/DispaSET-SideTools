@@ -11,6 +11,8 @@ import datetime
 import itertools
 import os
 import sys
+import re
+import logging
 
 import numpy as np
 import pandas as pd
@@ -441,26 +443,36 @@ def get_country_codes(zones):
     return codes
 
 
-def write_csv_zonal(data, model_folder, source_name, variable, year=None, write_csv=False):
+def write_csv_files(data, model_folder, source_name, variable_name, year=None, write_csv=False, agg_type=None):
     """
     Dispa-SET-sidetools function that generates zonal csv. files in Dispa-SET readable format
-    :param data:            Data to be saved as csv. files
-    :param source_folder:   Name of the model for which Dispa-SET database is created
-    :param source_name:     Name of the data source
-    :param variable:        Name of the variable to be saved: TotalLoadValue, AvailabilityFactor...
-    :param year:            Optional Year for the input data
-    :param write_csv:       True creates csv database
+    :param data:                Data to be saved as csv. files
+    :param model_folder:        Name of the model whos database should be generated
+    :param source_name:         Name of the model for which Dispa-SET database is created
+    :param variable_name:       Name of the variable to be saved: TotalLoadValue, AvailabilityFactor...
+    :param year:                Optional Year for the input data
+    :param write_csv:           True creates csv database
+    :param agg_type:                Type of data to be written ['Zonal','Aggregated']
     :return:
     """
+    acronym = re.sub(r'[a-z ]+', '', variable_name)
     if write_csv is True:
-        for c in data.columns:
-            make_dir('../../Outputs/')
-            make_dir('../../Outputs/' + model_folder)
-            make_dir('../../Outputs/' + model_folder + '/Database/')
-            folder = '../../Outputs/' + model_folder + '/Database/' + variable + '/'
-            make_dir(folder)
-            make_dir(folder + c)
-            data[c].to_csv(folder + c + '/' + source_name + '_' + str(year) + '.csv', header=False)
+        make_dir('../../Outputs/')
+        make_dir('../../Outputs/' + model_folder)
+        make_dir('../../Outputs/' + model_folder + '/Database/')
+        folder = '../../Outputs/' + model_folder + '/Database/' + variable_name + '/'
+        make_dir(folder)
+        if (agg_type == 'Zonal') or (agg_type is None):
+            for c in data.columns:
+                make_dir(folder + c)
+                data[c].to_csv(folder + c + '/' + acronym + '_' + source_name + '_' + str(year) + '.csv', header=False)
+                logging.info(variable_name + ' database was created for zone: ' + c + '.')
+        elif agg_type == 'Aggregated':
+            data.to_csv(folder + acronym + '_' + source_name + '_' + str(year) + '.csv', header=True)
+            logging.info(type + ' Database was created for the following input: ' + variable_name + '.')
+        else:
+            logging.critical('Wrong type name. Should be: Zonal, Aggregated or None!')
+            sys.exit(0)
 
 
 def invert_dic_df(dic, tablename=''):
@@ -488,6 +500,10 @@ def invert_dic_df(dic, tablename=''):
         for key in dic.keys():
             if item not in dic[key].columns:
                 print(
-                    'The column "' + item + '" is not present in "' + key + '" for the "' + tablename + '" data. Zero will be assumed')
+                    'The column "' + item + '" is not present in "' + key + '" for the "' + tablename + '" data. Zero '
+                    'will be assumed')
         dic_out[item] = panel[item].fillna(0)
     return dic_out
+
+
+commons['logfile'] = str(datetime.datetime.now()).replace(':', '-').replace(' ', '_') + '.dispa_sidetools.log'
