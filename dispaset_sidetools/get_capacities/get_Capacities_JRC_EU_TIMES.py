@@ -40,6 +40,7 @@ BATS_Lead_CAPACITY = 4
 V2G_CAPACITY = 4.487 # No of storage for vehicles 2 grid 
 H2_STORAGE = True
 P2GS_UNITS = True # False if we want to remove P2G sector
+P2HT_UNITS = True # False if we want to remove P2HT sector
 
 CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
 V2G_SHARE = 0  # Define how many EV's are V2G
@@ -988,6 +989,8 @@ for c in cap:
             tmp_p2h['STOCapacity'] = tmp_p2h['PowerCapacity'] * P2G_TES_CAPACITY
             tmp_p2h['STOSelfDischarge'] = STOSELFDISCHARGE_P2H
         units.update(tmp_p2h)
+    if P2HT_UNITS==False:
+        units.drop(c+'_P2HT_OTH', inplace=True)
         
     # Special treatment for P2GS units
     tmp=units[units.Fuel == 'HYD']  
