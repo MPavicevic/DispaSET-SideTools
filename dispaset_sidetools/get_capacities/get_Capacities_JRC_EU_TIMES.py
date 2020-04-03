@@ -17,7 +17,6 @@ import pandas as pd
 
 # Third-party imports
 # Local source tree imports
-# from .common import mapping,outliers_vre,fix_na,make_dir,entsoe_types,commons
 from dispaset_sidetools.common import make_dir
 
 # %% Adjustable inputs that should be modified
