@@ -60,8 +60,7 @@ commons['TimeStep'] = '1h'
 
 # DispaSET technologies:
 commons['Technologies'] = ['COMC', 'GTUR', 'HDAM', 'HROR', 'HPHS', 'ICEN', 'PHOT', 'STUR', 'WTOF', 'WTON', 'CAES',
-                           'BATS',
-                           'BEVS', 'THMS', 'P2GS']
+                           'BATS', 'BEVS', 'THMS', 'P2GS']
 # List of renewable technologies:
 commons['tech_renewables'] = ['WTON', 'WTOF', 'PHOT', 'HROR']
 # List of storage technologies:
@@ -324,6 +323,13 @@ mapping['iso2dispa'] = {u'AT': u'AT',
                         u'SI': u'SI',
                         u'SK': u'SK'}
 
+commons['ColumnNames'] = list(
+    ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Technology', 'Fuel', 'Efficiency', 'MinUpTime', 'MinDownTime',
+     'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu', 'RampingCost', 'PartLoadMin',
+     'MinEfficiency', 'StartUpTime', 'CO2Intensity', 'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor',
+     'COP', 'Tnominal', 'coef_COP_a', 'coef_COP_b', 'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower',
+     'STOChargingEfficiency', 'CHPMaxHeat'])
+
 # inverting dictionary (list of subzones for each zone):
 mapping['iso2entsoe'] = {}
 for key in mapping['original']:
@@ -437,12 +443,19 @@ def get_country_codes(zones):
     """
     dic = {'Democratic Republic of the Congo': 'Congo, The Democratic Republic of the',
            'Republic of the Congo': 'Congo',
+           'United Republic of Tanzania': 'Tanzania, United Republic of',
            'Tanzania': 'Tanzania, United Republic of',
            "Cote d'Ivoire": "Côte d'Ivoire",
            'Swaziland': 'Eswatini',
            'western Sahara': 'Western Sahara',
            'Santa Helena': 'Saint Helena, Ascension and Tristan da Cunha',
-           'Reunion': 'Réunion'}
+           'Reunion': 'Réunion',
+           'Congo Dem Rep': 'Congo',
+           "Cote D'Ivoire": "Côte d'Ivoire",
+           'São Tomé and Príncipe': 'Sao Tome and Principe',
+           'Sao Tome & Principe': 'Sao Tome and Principe',
+           'Cape Verde': 'Cabo Verde'
+           }
     zones = [dic.get(n, n) for n in zones]
     countries = {}
     for country in pycountry.countries:
@@ -471,10 +484,18 @@ def write_csv_files(data, model_folder, source_name, variable_name, year=None, w
         folder = '../../Outputs/' + model_folder + '/Database/' + variable_name + '/'
         make_dir(folder)
         if (agg_type == 'Zonal') or (agg_type is None):
-            for c in data.columns:
-                make_dir(folder + c)
-                data[c].to_csv(folder + c + '/' + acronym + '_' + source_name + '_' + str(year) + '.csv', header=False)
-                logging.info(variable_name + ' database was created for zone: ' + c + '.')
+            if isinstance(data, dict):
+                for c in list(data):
+                    make_dir(folder + c)
+                    data[c].to_csv(folder + c + '/' + acronym + '_' + source_name + '_' + str(year) + '.csv',
+                                   header=True)
+                    logging.info(variable_name + ' database was created for zone: ' + c + '.')
+            else:
+                for c in data.columns:
+                    make_dir(folder + c)
+                    data[c].to_csv(folder + c + '/' + acronym + '_' + source_name + '_' + str(year) + '.csv',
+                                   header=False)
+                    logging.info(variable_name + ' database was created for zone: ' + c + '.')
         elif agg_type == 'Aggregated':
             data.to_csv(folder + acronym + '_' + source_name + '_' + str(year) + '.csv', header=True)
             logging.info(type + ' Database was created for the following input: ' + variable_name + '.')
@@ -509,6 +530,6 @@ def invert_dic_df(dic, tablename=''):
             if item not in dic[key].columns:
                 print(
                     'The column "' + item + '" is not present in "' + key + '" for the "' + tablename + '" data. Zero '
-                    'will be assumed')
+                                                                                                        'will be assumed')
         dic_out[item] = panel[item].fillna(0)
     return dic_out
