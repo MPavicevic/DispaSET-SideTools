@@ -32,23 +32,24 @@ SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 # Technology definition
 TECHNOLOGY_THRESHOLD = 0  # threshold (%) below which a technology is considered negligible and no unit is created
 # Define Power to Energy ratio [MWh / MW]
-CHP_TES_CAPACITY = 0  # No of storage hours in TES
-CSP_TES_CAPACITY = 0  # No of storage hours in CSP units (usually 7.5 hours)
-P2G_TES_CAPACITY = 0  # No of storage hours in P2H units (500l tank = 5h of storage)
-HYDRO_CAPACITY = 0 # No of storage hours in HPHS and HDAM
-BATS_Liion_CAPACITY = 0 # No of storage hours for batteries
-BATS_Lead_CAPACITY = 0
-V2G_CAPACITY = 0 # No of storage for vehicles 2 grid 
-H2_STORAGE = False
+CHP_TES_CAPACITY = 12  # No of storage hours in TES
+CSP_TES_CAPACITY = 15  # No of storage hours in CSP units (usually 7.5 hours)
+P2G_TES_CAPACITY = 5  # No of storage hours in P2H units (500l tank = 5h of storage)
+HYDRO_CAPACITY = 5 # No of storage hours in HPHS and HDAM
+BATS_Liion_CAPACITY = 1 # No of storage hours for batteries
+BATS_Lead_CAPACITY = 4
+V2G_CAPACITY = 4.487 # No of storage for vehicles 2 grid 
+H2_STORAGE = True
+P2GS_UNITS = True # False if we want to remove P2G sector
 
-CHP_TYPE = 'back-pressure'  # Define CHP type: None, back-pressure or Extraction
+CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
 V2G_SHARE = 0  # Define how many EV's are V2G
 
 # Clustering options (reduce the number of units - healthy number of units should be <300)
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
 OCEAN = 'WAT'  # Define what ocean fuel equals to (WAT or OTH)
 CSP = True  # Turn Concentrated solar power on/off (when False grouped with PHOT)
-HYDRO_CLUSTERING = 'HROR'  # Define type of hydro clustering (OFF, HPHS, HROR)
+HYDRO_CLUSTERING = 'OFF'  # Define type of hydro clustering (OFF, HPHS, HROR)
 TECH_CLUSTERING = True  # Clusters technologies by treshold (efficient way to reduce total number of units)
 CLUSTER_TRESHOLD = 0.3  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
 
@@ -1003,7 +1004,7 @@ for c in cap:
         else:
             h2data['STOCapacity'] = 0
         units.loc[h2index,:] = h2data    
-        if h2data['PowerCapacity'].item() ==0 and h2data['STOMaxChargingPower'].item() ==0:
+        if (h2data['PowerCapacity'].item() ==0 and h2data['STOMaxChargingPower'].item() ==0) or P2GS_UNITS==False:
             units.drop(c+'_P2GS_HYD', inplace=True)
     else:
         sys.exit('Too many P2G units!')
