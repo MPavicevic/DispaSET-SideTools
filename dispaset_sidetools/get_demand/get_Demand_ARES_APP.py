@@ -22,7 +22,7 @@ output_folder = commons['OutputFolder']
 # File names
 input_file_hourly_data = 'Estimated hourly load profiles (for 2010 and 2015).xlsx'
 sheet_hourly_data = 'Hourly load profiles'
-input_file_annual_data = 'Anual_Demand_Statistics.xlsx'
+input_file_annual_data = 'Annual_Demand_Statistics.xlsx'
 sheet_annual_data = 'Inputs'
 
 # Other options

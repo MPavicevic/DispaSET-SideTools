@@ -533,3 +533,15 @@ def invert_dic_df(dic, tablename=''):
                                                                                                         'will be assumed')
         dic_out[item] = panel[item].fillna(0)
     return dic_out
+
+
+def get_ktoe_to_mwh(data, keys):
+    """
+    Function that converts ktoe to mwh
+    :param data:    pd.DataFrame
+    :param keys:    Column names where conversion should occur
+    :return:        Data in MWh
+    """
+    for key in keys:
+        data[key] = data[key] * 11630
+    return data

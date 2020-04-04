@@ -3,6 +3,7 @@ import logging.config
 import os
 
 from .common import commons
+from .get_capacities.get_Capacities_ARES_APP import get_hydro_units
 
 _LOGCONFIG = {
      "version": 1,
@@ -19,7 +20,7 @@ _LOGCONFIG = {
      },
      "handlers": {
          "console": {
-            "class": "dispaset.misc.colorstreamhandler.ColorStreamHandler",
+            "class": "dispaset_sidetools.misc.colorstreamhandler.ColorStreamHandler",
              "stream": "ext://sys.stderr",
 #             "stream": "sys.stdout",
              "level": "INFO",
@@ -74,11 +75,11 @@ __version__ = version
 # if somebody does "from dispaset_sidetools import *", this is what they will
 # be able to access:
 __all__ = [
-    'commons',
+    'commons','get_hydro_units',
 ]
 
 # Remove old log file:
-for filename in (f for f in os.listdir('.') if f.endswith('.dispa.log')):
+for filename in (f for f in os.listdir('.') if f.endswith('.dispa_sidetools.log')):
     try:
         os.remove(filename)
     except OSError:
