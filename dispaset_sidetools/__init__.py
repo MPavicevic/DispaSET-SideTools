@@ -17,4 +17,6 @@ __gitversion__ = get_git_revision_tag()
 # be able to access:
 __all__ = [
     'commons',
+    'search',
+    'constants',
 ]
