@@ -35,6 +35,7 @@ input_file_Solar_AF = 'Solar_PV_AF.csv'
 input_file_dams = 'African_hydro_dams.xlsx'
 input_file_inflows = 'AfricaDamsInFlows'
 input_file_generation = 'Annual_Generation_Statistics.xlsx'
+input_file_CF = 'CF_IRENA.csv'
 
 # Other options
 STO_HOURS = 5
@@ -56,6 +57,8 @@ all_files = glob.glob(path + "/*.csv")
 # Annual generation per fuel type
 generation = pd.read_excel(input_folder + source_folder + input_file_generation, sheet_name=0, index_col=0)
 generation.fillna(0, inplace=True)
+# IRENA Capacity factors for wind and PV
+capacity_factors = pd.read_csv(input_folder + source_folder + input_file_CF,index_col=0, header=0)
 
 # Select active zones
 countries_EAPP = ['Burundi', 'Djibouti', 'Egypt', 'Ethiopia', 'Eritrea', 'Kenya', 'Rwanda', 'Somalia', 'Sudan',
@@ -156,6 +159,37 @@ def get_hror_cf(data, CF, generation):
     CF.fillna(0, inplace=True)
     return CF, flow_HROR, tmp_flow_HROR
 
+
+def get_res_cf(availability, CF, total):
+    """
+    Iterative method for adjusting annual generation based on RES
+    :param generation:  RES timeseries
+    :param CF:          Correction factor
+    :param total:       Total generation with new CF
+    :return:            Updated availability timeseries
+    """
+    tmp_res = availability * (1 + CF)
+    spill_res = tmp_res - 1
+    spill_res[spill_res < 0] = 0
+    res = tmp_res - spill_res
+    CF = (total - res.sum()) / res.sum()
+    CF.fillna(0,inplace=True)
+    return CF, res, tmp_res
+
+# Initial correction factors for wind and sun
+cor_res = pd.DataFrame(index = list(wind_AF.columns))
+cor_res['Wind'],cor_res['PV'] = 0.5, 0.5
+# Iterations
+for i in range(100):
+    tmp_win = get_res_cf(wind_AF,cor_res['Wind'],capacity_factors['CF_Wind']*wind_AF.count(axis=0))
+    tmp_sun = get_res_cf(solar_AF, cor_res['PV'], capacity_factors['CF_PV'] * solar_AF.count(axis=0))
+    cor_res['Wind'] = tmp_win[0]
+    cor_res['PV'] = tmp_sun[0]
+    wind_AF = tmp_win[1]
+    solar_AF = tmp_sun[1]
+    if i % 10 == 0:
+        logging.info('iteration #' + str(i) + ' max correction for wind: ' + str(tmp_win[0].max()))
+        logging.info('iteration #' + str(i) + ' max correction for solar PV: ' + str(tmp_sun[0].max()))
 
 # Get generation for HROR units
 generation = tmp_flow.loc[:, data['Technology'] == 'HROR'] * 9.81 / 1e6 * 1000 * \
