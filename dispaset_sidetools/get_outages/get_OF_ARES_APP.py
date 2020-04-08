@@ -22,6 +22,7 @@ input_folder = commons['InputFolder']
 source_folder = 'ARES_Africa/'
 output_folder = commons['OutputFolder']
 input_file_generation = 'Annual_Generation_Statistics.xlsx'
+input_file_CF = 'CF_IRENA.csv'
 
 # Local files
 # Typical units
@@ -31,6 +32,8 @@ pp_data = pd.read_excel(input_folder + source_folder + 'Power plants Africa.xlsx
 # Annual generation per fuel type
 generation = pd.read_excel(input_folder + source_folder + input_file_generation, sheet_name=0, index_col=0)
 generation.fillna(0, inplace=True)
+# Capacity factor for CSP
+capacity_factors = pd.read_csv(input_folder + source_folder + input_file_CF, index_col=0, header=0)
 
 # Other options
 WRITE_CSV = True
@@ -94,17 +97,41 @@ for fuel in commons['Fuels']:
 # Annual generation in MWh
 generation = get_ktoe_to_mwh(generation, ['Biofuels', 'Fosil', 'Hydro', 'Geothermal', 'RES'])
 
+# Identify specific units for outages
+bio_units = list(data.loc[data['Fuel'] == 'BIO']['Unit'])
+geo_units = list(data.loc[data['Fuel'] == 'GEO']['Unit'])
+csp_units = list(data.loc[(data['Fuel'] == 'SUN') & (data['Technology'] == 'STUR')]['Unit'])
 # Predefined all 0 DataFrame. Used to fill missing OF
-geo_units = list(data.loc[data['Fuel']=='GEO']['Unit'])
-zero_df = pd.DataFrame(index=date_range('1/1/'+str(YEAR), '1/1/'+str(YEAR+1), freq='H'), columns=geo_units).fillna(0)
-ones_df = pd.DataFrame(index=date_range('1/1/'+str(YEAR), '1/1/'+str(YEAR+1), freq='H'), columns=geo_units).fillna(1)
+zero_df = pd.DataFrame(index=date_range('1/1/' + str(YEAR), '1/1/' + str(YEAR + 1), freq='H'),
+                       columns=geo_units).fillna(0)
+ones_df_bio = pd.DataFrame(index=date_range('1/1/' + str(YEAR), '1/1/' + str(YEAR + 1), freq='H'),
+                           columns=bio_units).fillna(1)
+ones_df_geo = pd.DataFrame(index=date_range('1/1/' + str(YEAR), '1/1/' + str(YEAR + 1), freq='H'),
+                           columns=geo_units).fillna(1)
+ones_df_csp = pd.DataFrame(index=date_range('1/1/' + str(YEAR), '1/1/' + str(YEAR + 1), freq='H'),
+                           columns=csp_units).fillna(1)
 
-geo_data = data.loc[data['Fuel']=='GEO']
+bio_data = data.loc[data['Fuel'] == 'BIO']
+# Identify annual generation per zone and share of installed capacity
+for c in list(bio_data['Zone'].unique()):
+    if c in list(generation.index):
+        bio_data.loc[bio_data['Zone'] == c, 'Share'] = bio_data['PowerCapacity'].loc[bio_data['Zone'] == c] / \
+                                                       bio_data['PowerCapacity'].loc[bio_data['Zone'] == c].sum()
+        bio_data.loc[bio_data['Zone'] == c, 'Generation_Historic'] = generation['Biofuels'][c]
+    else:
+        bio_data.loc[bio_data['Zone'] == c, 'Generation_Historic'] = 0
+# Assign annual generation for each individual unit based on shares
+bio_data['Generation_Historic'] = bio_data['Generation_Historic'] * bio_data['Share']
+# Identify capacity factors
+bio_data['CF'] = bio_data['Generation_Historic'] / bio_data['PowerCapacity'] / 8760
+bio_data.set_index('Unit', inplace=True)
+
+geo_data = data.loc[data['Fuel'] == 'GEO']
 # Identify annual generation per zone and share of installed capacity
 for c in list(geo_data['Zone'].unique()):
     if c in list(generation.index):
         geo_data.loc[geo_data['Zone'] == c, 'Share'] = geo_data['PowerCapacity'].loc[geo_data['Zone'] == c] / \
-                                               geo_data['PowerCapacity'].loc[geo_data['Zone'] == c].sum()
+                                                       geo_data['PowerCapacity'].loc[geo_data['Zone'] == c].sum()
         geo_data.loc[geo_data['Zone'] == c, 'Generation_Historic'] = generation['Geothermal'][c]
     else:
         geo_data.loc[geo_data['Zone'] == c, 'Generation_Historic'] = 0
@@ -114,10 +141,27 @@ geo_data['Generation_Historic'] = geo_data['Generation_Historic'] * geo_data['Sh
 geo_data['CF'] = geo_data['Generation_Historic'] / geo_data['PowerCapacity'] / 8760
 geo_data.set_index('Unit', inplace=True)
 
-geo_outage = ones_df - ones_df * geo_data['CF']
+# Identify zones where units are selected
+csp_data = data.loc[(data['Fuel'] == 'SUN') & (data['Technology'] == 'STUR')]
+# Asign CF for each unit
+for c in list(csp_data['Zone'].unique()):
+    if c in list(generation.index):
+        csp_data.loc[csp_data['Zone'] == c, 'CF'] = capacity_factors.loc[c]['CF_CSP']
+    else:
+        csp_data.loc[csp_data['Zone'] == c, 'CF'] = 0
+csp_data.set_index('Unit', inplace=True)
+
+bio_outage = ones_df_bio - ones_df_bio * bio_data['CF']
+geo_outage = ones_df_geo - ones_df_geo * geo_data['CF']
+csp_outage = ones_df_csp - ones_df_csp * csp_data['CF']
+
+outage = pd.concat([bio_outage, geo_outage, csp_outage], axis=1, sort=False, join='inner')
+units_with_outage = pd.concat([bio_data, geo_data, csp_data], axis=0, sort=False)
+units_with_outage = units_with_outage.loc[units_with_outage['Zone'].isin(list(generation.index))]
 
 tmp_out = {}
-for c in geo_data['Zone'].unique():
-    tmp_out[c] = geo_outage.loc[:,geo_data['Zone'] == c]
+for c in list(units_with_outage['Zone'].unique()):
+    units = units_with_outage.loc[units_with_outage['Zone'] == c].index
+    tmp_out[c] = outage.loc[:, units]
 
 write_csv_files(tmp_out, 'ARES_APP', SOURCE, 'OutageFactors', str(YEAR), WRITE_CSV, 'Zonal')

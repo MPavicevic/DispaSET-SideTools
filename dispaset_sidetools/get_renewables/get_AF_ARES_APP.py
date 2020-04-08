@@ -11,11 +11,8 @@ import pandas as pd
 import logging
 import os
 import sys
-import pycountry
 import glob
 import matplotlib.pyplot as plt
-from eto import ETo, datasets
-import math
 import enlopy as el
 
 # Local source tree imports
@@ -58,7 +55,7 @@ all_files = glob.glob(path + "/*.csv")
 generation = pd.read_excel(input_folder + source_folder + input_file_generation, sheet_name=0, index_col=0)
 generation.fillna(0, inplace=True)
 # IRENA Capacity factors for wind and PV
-capacity_factors = pd.read_csv(input_folder + source_folder + input_file_CF,index_col=0, header=0)
+capacity_factors = pd.read_csv(input_folder + source_folder + input_file_CF, index_col=0, header=0)
 
 # Select active zones
 countries_EAPP = ['Burundi', 'Djibouti', 'Egypt', 'Ethiopia', 'Eritrea', 'Kenya', 'Rwanda', 'Somalia', 'Sudan',
@@ -101,7 +98,8 @@ river_in_flows = river_in_flows.resample('H').interpolate(method='linear')
 # Analyze inflows for specific year
 start_date = str(YEAR_InFlow) + '-1-1'
 end_date = str(YEAR_InFlow) + '-12-31'
-tmp_flow = pd.DataFrame(river_in_flows.loc[start_date:end_date])
+# tmp_flow = pd.DataFrame(river_in_flows.loc[start_date:end_date])
+tmp_flow = pd.DataFrame(river_in_flows)
 
 # Gather unit specific data for further analysis
 data = pd.DataFrame(hydro_dam_data['Dam height (m)']).fillna(1)
@@ -128,7 +126,8 @@ for c in list(data['Zone'].unique()):
 # Assign annual generation for each individual unit based on shares
 data['Generation_Historic'] = data['Generation_Historic'] * data['Share']
 # Compute annual generation for proposed inflows
-data['Generation_From_Flows'] = tmp_flow.sum() * 9.81 / 1e6 * 1000 * data['Dam height (m)'] * 0.8
+data['Generation_From_Flows'] = tmp_flow.loc[start_date:end_date].sum() * 9.81 / 1e6 * 1000 * data[
+    'Dam height (m)'] * 0.8
 # Identify capacity factors
 data['CF'] = data['Generation_Historic'] / data['PowerCapacity'] / 8760
 
@@ -155,7 +154,8 @@ def get_hror_cf(data, CF, generation):
     spill_HROR[spill_HROR < 0] = 0
     flow_HROR = tmp_flow_HROR - spill_HROR
     flow_HROR.fillna(4, inplace=True)
-    CF = (data['Generation_Historic'].loc[data['Technology'] == 'HROR'] - flow_HROR.sum()) / flow_HROR.sum()
+    CF = (data['Generation_Historic'].loc[data['Technology'] == 'HROR'] - flow_HROR.loc[start_date:end_date].sum()) / \
+         flow_HROR.loc[start_date:end_date].sum()
     CF.fillna(0, inplace=True)
     return CF, flow_HROR, tmp_flow_HROR
 
@@ -173,22 +173,35 @@ def get_res_cf(availability, CF, total):
     spill_res[spill_res < 0] = 0
     res = tmp_res - spill_res
     CF = (total - res.sum()) / res.sum()
-    CF.fillna(0,inplace=True)
+    CF.fillna(0, inplace=True)
     return CF, res, tmp_res
 
+
+def get_wind_AF(start_date, end_date, CF):
+    """
+    Wind CF from enlopy module
+    :param start_date:  Start date for the timeseries
+    :param end_date:    End date for the time series
+    :param CF:          List of Capacity factors in diferent zones
+    :return:            Availability for selected regions
+    """
+    for c in list(capacity_factors.index):
+        tmp[c] = pd.DataFrame(el.gen_load_from_LDC(el.generate.gen_analytical_LDC((1, CF[c], 0, 8760), bins=8760)),
+                              columns=[c], index=date_range(start_date, end_date, freq='H'))
+    return tmp
+
+
+# Create new wind timeseries
+wind_AF = get_wind_AF(start_date, str(YEAR_InFlow + 1) + '-01-01', capacity_factors['CF_Wind'])
 # Initial correction factors for wind and sun
-cor_res = pd.DataFrame(index = list(wind_AF.columns))
-cor_res['Wind'],cor_res['PV'] = 0.5, 0.5
+cor_res = pd.DataFrame(index=list(solar_AF.columns))
+cor_res['PV'] = 0.5
 # Iterations
-for i in range(100):
-    tmp_win = get_res_cf(wind_AF,cor_res['Wind'],capacity_factors['CF_Wind']*wind_AF.count(axis=0))
+for i in range(20):
     tmp_sun = get_res_cf(solar_AF, cor_res['PV'], capacity_factors['CF_PV'] * solar_AF.count(axis=0))
-    cor_res['Wind'] = tmp_win[0]
     cor_res['PV'] = tmp_sun[0]
-    wind_AF = tmp_win[1]
     solar_AF = tmp_sun[1]
     if i % 10 == 0:
-        logging.info('iteration #' + str(i) + ' max correction for wind: ' + str(tmp_win[0].max()))
         logging.info('iteration #' + str(i) + ' max correction for solar PV: ' + str(tmp_sun[0].max()))
 
 # Get generation for HROR units
@@ -244,16 +257,16 @@ for region in codes_CEN:
     # Hydro run-of-river
     tmp_HROR = zero_df
     if region in unit_hror:
-        tmp_HROR = tmp_af.loc[:, list(hydro_units['Unit'].loc[(hydro_units['Zone'] == region) &
-                                                              (hydro_units['Technology'] == 'HROR')])]
+        tmp_HROR = tmp_af.loc[start_date:end_date, list(hydro_units['Unit'].loc[(hydro_units['Zone'] == region) &
+                                                                                (hydro_units['Technology'] == 'HROR')])]
     else:
         logging.warning(region + ' there is no HROR timeseries present in the availability factors')
         tmp_HROR = pd.DataFrame(zero_df['HROR'].loc[start_date:end_date])
     # Hydro dam
     tmp_HDAM = zero_df
     if region in unit_hdam:
-        tmp_HDAM = tmp_af.loc[:, list(hydro_units['Unit'].loc[(hydro_units['Zone'] == region) &
-                                                              (hydro_units['Technology'] == 'HDAM')])]
+        tmp_HDAM = tmp_af.loc[start_date:end_date, list(hydro_units['Unit'].loc[(hydro_units['Zone'] == region) &
+                                                                                (hydro_units['Technology'] == 'HDAM')])]
     else:
         logging.warning(region + ' there is no HDAM timeseries present in the availability factors')
         tmp_HDAM = pd.DataFrame(zero_df['HDAM'].loc[start_date:end_date])

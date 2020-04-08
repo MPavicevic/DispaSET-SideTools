@@ -26,12 +26,12 @@ input_file_annual_data = 'Annual_Demand_Statistics.xlsx'
 sheet_annual_data = 'Inputs'
 
 # Other options
-WRITE_CSV = False
-YEAR = 2016
+WRITE_CSV = True
+YEAR = 2015
 
 # Source for demand projections
 # TEMBA, IEA, JRC, World Bank, CIA: World Fact Book, Indexmundi
-SOURCE = 'TEMBA'
+SOURCE = 'JRC'
 
 # %% Data preprocessing
 xls = pd.ExcelFile(input_folder + source_folder + input_file_hourly_data)
@@ -51,8 +51,6 @@ data[str(2015)].drop(columns=['Year', 'Hour'], inplace=True)
 country_codes = get_country_codes(list(data[str(2015)].columns))
 data[str(2010)].columns = country_codes
 data[str(2015)].columns = country_codes
-data[str(2010)].drop(columns=['Unknown code'], inplace=True)
-data[str(2015)].drop(columns=['Unknown code'], inplace=True)
 
 # South Sudan profile scaled from Sudan
 ss_annual = 391800  # MWh
@@ -64,8 +62,9 @@ tmp_data = data_annual.loc[(data_annual['Source'] == SOURCE) & (data_annual['Yea
 tmp_data.index = tmp_data['Country']
 
 # Scaling to desired year according to source
-anual_scaling_factor = data['2015'] / data['2015'].sum()
-data[str(YEAR)] = anual_scaling_factor * tmp_data['Energy'] * 1e3
+annual_scaling_factor = data['2015'] / data['2015'].sum()
+data[str(YEAR)] = annual_scaling_factor * tmp_data['Energy'] * 1e3
+data[str(YEAR)].dropna(axis=1,inplace=True)
 
 # Generate database
 write_csv_files(data[str(YEAR)], 'ARES_APP', SOURCE, 'TotalLoadValue', str(YEAR), WRITE_CSV, 'Zonal')
