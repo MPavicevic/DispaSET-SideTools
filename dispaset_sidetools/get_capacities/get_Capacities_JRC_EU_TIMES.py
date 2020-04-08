@@ -25,14 +25,14 @@ from dispaset_sidetools.common import make_dir
 YEAR = 2050  # considered year
 WRITE_CSV_FILES = True  # Write csv database
 SCENARIO = 'NearZeroCarbon'  # Scenario name, used for data and naming the files. ProRes1 or NearZeroCarbon
-CASE = 'NOFLEX'  # Case name, used for naming csv files
+CASE = 'ALLFLEX'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 
 # Technology definition
 TECHNOLOGY_THRESHOLD = 0  # threshold (%) below which a technology is considered negligible and no unit is created
 # Define Power to Energy ratio [MWh / MW]
 CHP_TES_CAPACITY = 12  # No of storage hours in TES
-CSP_TES_CAPACITY = 15  # No of storage hours in CSP units (usually 7.5 hours)
+CSP_TES_CAPACITY = 15  # No of storage hours in CSP units (usually 15 hours)
 P2G_TES_CAPACITY = 5  # No of storage hours in P2H units (500l tank = 5h of storage)
 HYDRO_CAPACITY = 5 # No of storage hours in HPHS and HDAM
 BATS_Liion_CAPACITY = 1 # No of storage hours for batteries
@@ -42,7 +42,7 @@ H2_STORAGE = True
 P2GS_UNITS = True # False if we want to remove P2G sector
 
 CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
-V2G_SHARE = 0  # Define how many EV's are V2G
+V2G_SHARE = 0.5  # Define how many EV's are V2G
 
 # Clustering options (reduce the number of units - healthy number of units should be <300)
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
@@ -134,7 +134,7 @@ dispaset_rename_fuels= {'Biogas' : 'Biogas',
 
 dispaset_rename_tech= {'Int Combust' : 'ICEN',
                        ' PV ':'PHOT',
-                       ' CSP ': 'STUR',
+                       ' CSP ': 'SCSP',
                        ' onshore ': 'WTON',
                        ' offshore ': 'WTOF',
                        'CCGT' : 'COMC',
@@ -568,13 +568,13 @@ if OCEAN == 'WAT':
     typical_tech_input.drop(columns=['Ocean_WAVE', 'Ocean_TIDAL'], inplace=True)
 
 if CSP is False:
-    typical_tech_input['SUN_PHOT'] = typical_tech_input['SUN_PHOT'] + typical_tech_input['SUN_STUR']
-    typical_tech_input['SUN_STUR'] = 0
-    typical_tech_sun = pd.DataFrame([typical_tech_input['SUN_PHOT'], typical_tech_input['SUN_STUR']],
-                                    index=['PHOT', 'STUR']).T
+    typical_tech_input['SUN_PHOT'] = typical_tech_input['SUN_PHOT'] + typical_tech_input['SUN_SCSP']
+    typical_tech_input['SUN_SCSP'] = 0
+    typical_tech_sun = pd.DataFrame([typical_tech_input['SUN_PHOT'], typical_tech_input['SUN_SCSP']],
+                                    index=['PHOT', 'SCSP']).T
 else:
-    typical_tech_sun = pd.DataFrame([typical_tech_input['SUN_PHOT'], typical_tech_input['SUN_STUR']],
-                                    index=['PHOT', 'STUR']).T
+    typical_tech_sun = pd.DataFrame([typical_tech_input['SUN_PHOT'], typical_tech_input['SUN_SCSP']],
+                                    index=['PHOT', 'SCSP']).T
 
 typical_tech_gas = pd.DataFrame([typical_tech_input['GAS_COMC'], typical_tech_input['GAS_GTUR'],
                                  typical_tech_input['GAS_ICEN'], typical_tech_input['GAS_STUR']],
@@ -649,9 +649,9 @@ typical_oil['STUR'].fillna(1, inplace=True)
 typical_oil.fillna(0, inplace=True)
 
 # %% SUN
-typical_sun = pd.DataFrame([typical_tech_sun['PHOT'], typical_tech_sun['STUR']]).T
+typical_sun = pd.DataFrame([typical_tech_sun['PHOT'], typical_tech_sun['SCSP']]).T
 typical_sun['sum'] = typical_sun.sum(axis=1)
-typical_sun = (typical_sun.loc[:, 'PHOT':'STUR'].div(typical_sun['sum'], axis=0))
+typical_sun = (typical_sun.loc[:, 'PHOT':'SCSP'].div(typical_sun['sum'], axis=0))
 typical_sun['PHOT'].fillna(1, inplace=True)
 typical_sun.fillna(0, inplace=True)
 
@@ -811,7 +811,7 @@ for c in cap:
             if CSP_TES_CAPACITY == 0:
                 print('[INFO    ]: ' + 'Country ' + c + ' (' + name + '): no TES unit')
             else:
-                if (i == 'STUR') and (j == 'SUN'):
+                if (i == 'SCSP') and (j == 'SUN'):
                     tmp_tes = pd.DataFrame(units.loc[:, name], columns=[name]).T
                     tmp_tes['STOCapacity'] = tmp_tes['PowerCapacity'] * CSP_TES_CAPACITY
                     tmp_tes['STOSelfDischarge'] = STOSELFDISCHARGE_SUN

@@ -29,7 +29,7 @@ from dispaset_sidetools.common import make_dir
 WRITE_CSV_FILES = True  # Write csv database
 
 #Output File name
-scenario = 'ProRes1'
+scenario = 'NearZeroCarbon'
 year = '2050'
 
 filename = 'ScaledInflows_%s_%s' %(scenario, year)
@@ -49,6 +49,7 @@ inputfile_cap = input_folder + "/JRC_EU_TIMES/" + scenario + "/TIMES_Capacities_
 
 #Provide the path for the TIMES Energy production for the HROR units
 inputfile_en_hdam = input_folder + "/JRC_EU_TIMES/" + scenario +"/TIMES_Energy_HDAM.xlsx"
+
 
 #%% Scaled Inflows
 
@@ -85,15 +86,19 @@ af_multiplier_hdam = en_times_hdam / en_cf_hdam.iloc[:,0]
 af_multiplier_hdam.replace([np.inf, -np.inf], np.nan, inplace = True)
 af_multiplier_hdam.fillna(1, inplace = True)
 
+
+
 scaled_inflows_scaled = {}
 
-#Extend the values for HDAM also to HPHS
-
+#Extend the values for HDAM also to HPHS    
 for c in countries: 
     if c in available_countries:
-        scaled_inflows_scaled[c] = pd.DataFrame(columns = ['HDAM', 'HPHS'])
+        input_file_AF = input_folder + source_folder + 'AvailabilityFactors/' + c + '/1h/2016.csv'
+        AF_c = pd.read_csv(input_file_AF, index_col = 0, header = 0)
+        scaled_inflows_scaled[c] = pd.DataFrame(columns = ['HDAM', 'HPHS','SCSP'])
         scaled_inflows_scaled[c]['HDAM'] = scaled_inflows[c]['HDAM']*af_multiplier_hdam[c]
         scaled_inflows_scaled[c]['HPHS'] = scaled_inflows_scaled[c]['HDAM']
+        scaled_inflows_scaled[c]['SCSP'] = AF_c['PHOT'].values
         
 #%% Export the scaled ScaledInflows
 
