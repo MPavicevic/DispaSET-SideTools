@@ -498,10 +498,21 @@ def write_csv_files(data, model_folder, source_name, variable_name, year=None, w
                     logging.info(variable_name + ' database was created for zone: ' + c + '.')
         elif agg_type == 'Aggregated':
             data.to_csv(folder + acronym + '_' + source_name + '_' + str(year) + '.csv', header=True)
-            logging.info(type + ' Database was created for the following input: ' + variable_name + '.')
+            logging.info(agg_type + ' Database was created for the following input: ' + variable_name + '.')
         else:
             logging.critical('Wrong type name. Should be: Zonal, Aggregated or None!')
             sys.exit(0)
+
+
+def leap_year(y):
+    if int(y) % 400 == 0:
+        return True
+    if int(y) % 100 == 0:
+        return False
+    if int(y) % 4 == 0:
+        return True
+    else:
+        return False
 
 
 def invert_dic_df(dic, tablename=''):

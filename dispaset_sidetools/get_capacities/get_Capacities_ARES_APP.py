@@ -29,11 +29,16 @@ typical_units = pd.read_csv(input_folder + source_folder + 'Typical_Units_ARES.c
 pp_data = pd.read_excel(input_folder + source_folder + 'Power plants Africa.xlsx', int=0, header=1)
 # Historic hydro units
 data_hydro = pd.read_excel(input_folder + source_folder + 'African_hydro_dams.xlsx', int=0, header=0)
+# TEMBA Projections
+temba_inputs = pd.read_csv(input_folder + source_folder + 'TEMBA_Results.csv',header=0,index_col=0)
 
 # Other options
 WRITE_CSV = False
 YEAR = 2018
 EFFICIENCY = 0.8
+TEMBA = True
+scenario = 'Reference' # Reference, 1.5deg, 2.0deg
+end_year = 2025
 
 # Source for demand projections
 SOURCE = 'JRC'
@@ -138,9 +143,70 @@ def get_hydro_units(data_hydro):
 
 hydro_units = get_hydro_units(data_hydro)
 
+share = {}
+for c in hydro_units['Zone']:
+    share[c] = hydro_units['PowerCapacity'].loc[(hydro_units['Zone'] == c) & (hydro_units['Technology']=='HDAM')].sum() / \
+        hydro_units['PowerCapacity'].loc[(hydro_units['Zone'] == c)].sum()
+
+
 # Merge two series
 data = data.append(hydro_units, ignore_index=True)
 data['PowerCapacity'] = data['PowerCapacity'].astype(float)
+
+#%% TEMBA Processing
+temba_fuels = {'Biomass': 'BIO', 'Biomass with ccs': 'BIO', 'Coal': 'HRD', 'Coal with ccs': 'HRD', 'Gas': 'GAS',
+               'Gas with ccs': 'GAS', 'Geothermal': 'GEO', 'Hydro': 'WAT', 'Nuclear': 'NUC', 'Oil': 'OIL',
+               'Solar CSP': 'SUN', 'Solar PV': 'SUN', 'Wind': 'WIN'}
+temba_techs = {'Biomass': 'GTUR', 'Biomass with ccs': 'STUR', 'Coal': 'STUR', 'Coal with ccs': 'STUR', 'Gas': 'GTUR',
+               'Gas with ccs': 'COMC', 'Geothermal': 'STUR', 'Hydro': 'WAT', 'Nuclear': 'STUR', 'Oil': 'ICEN',
+               'Solar CSP': 'STUR', 'Solar PV': 'PHOT', 'Wind': 'WTON'}
+
+if TEMBA is True:
+    aa = temba_inputs[temba_inputs['parameter'].str.contains("New power generation capacity")]
+    aa = aa[aa['scenario'].str.contains(scenario)]
+    aa.fillna(0, inplace=True)
+    selected_years = list(range(2015, end_year + 1))
+    selected_years = [str(i) for i in selected_years]
+    col_names = ['variable', 'scenario', 'country', 'parameter'] + selected_years
+    bb = aa[selected_years].sum(axis=1)
+    aa['Total'] = bb
+    aa['Fuel'] = aa['variable']
+    aa['Technology'] = aa['variable']
+    aa['Fuel'] = aa['Fuel'].replace(temba_fuels)
+    aa['Technology'] = aa['Technology'].replace(temba_techs)
+    aa['New'] = 'New'
+    temba_fosil = aa[~aa['Fuel'].str.contains("WAT")]
+    temba_hydro = aa[aa['Fuel'].str.contains("WAT")]
+    temba_fosil['Name'] = temba_fosil[['country', 'Fuel', 'Technology', 'New']].apply(lambda x: '_'.join(x), axis=1)
+    temba_hydro['Name'] = temba_hydro[['country', 'Fuel', 'Technology', 'New']].apply(lambda x: '_'.join(x), axis=1)
+    temba = pd.DataFrame(columns=commons['ColumnNames'])
+    temba['Unit'] = temba_fosil['Name']
+    temba['Zone'] = temba_fosil['country']
+    temba['Fuel'] = temba_fosil['Fuel']
+    temba['Technology'] = temba_fosil['Technology']
+    temba['PowerCapacity'] = temba_fosil['Total'] * 1e3
+    temba = temba[(temba[['PowerCapacity']] != 0).all(axis=1)]
+    # Historic units assign only 1 per unit
+    temba['Nunits'] = 1
+
+    # Assign missing data from typical units
+    cols = ['Efficiency', 'MinUpTime', 'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu',
+            'RampingCost', 'PartLoadMin', 'MinEfficiency', 'StartUpTime', 'CO2Intensity', 'COP', 'Tnominal', 'coef_COP_a',
+            'coef_COP_b', 'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency']
+
+    for fuel in commons['Fuels']:
+        for technology in commons['Technologies']:
+            if temba.loc[(temba['Technology'] == technology) & (temba['Fuel'] == fuel)].empty:
+                # logging.info(fuel + ' and ' + technology + ' combination not present in this database.')
+                continue
+            else:
+                temba.loc[(temba['Technology'] == technology) & (temba['Fuel'] == fuel), cols] = \
+                    typical_units.loc[
+                        (typical_units['Technology'] == technology) & (typical_units['Fuel'] == fuel), cols].values
+                logging.info('Typical units assigned to: ' + fuel + ' and ' + technology + ' combination.')
+
+data = data.append(temba_fosil, ignore_index=True)
+
 
 # Countries used in the analysis
 countries_EAPP = ['Burundi', 'Djibouti', 'Egypt', 'Ethiopia', 'Eritrea', 'Kenya', 'Rwanda', 'Somalia', 'Sudan',
@@ -156,7 +222,14 @@ countries = get_country_codes(countries)
 
 # Generation of allunits
 allunits = {}
+unique_fuel = {}
+unique_tech = {}
 for c in countries:
     allunits[c] = data.loc[data['Zone'] == c]
+    unique_fuel[c] = list(allunits[c]['Fuel'].unique())
+    unique_tech[c] = list(allunits[c]['Technology'].unique())
 
 write_csv_files(allunits, 'ARES_APP', SOURCE, 'PowerPlants', str(YEAR), WRITE_CSV, 'Zonal')
+
+aa = data_hydro
+aa['Head'] = data_hydro['Dam height (m)']

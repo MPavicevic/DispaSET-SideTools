@@ -51,10 +51,10 @@ price_gas = pd.DataFrame(
     data_fingerprints['GAS - Import'] * data_fingerprints['Inland'] * data_costs.loc['GAS', 'Imported'],
     columns=['GAS'])
 price_hrd = pd.DataFrame(
-    data_fingerprints['HRD - Domestic'] * data_fingerprints['Coastal'] * data_costs.loc['GAS', 'Domestic'] + \
-    data_fingerprints['HRD - Domestic'] * data_fingerprints['Inland'] * data_costs.loc['GAS', 'Domestic'] + \
-    data_fingerprints['HRD - Import'] * data_fingerprints['Coastal'] * data_costs.loc['GAS', 'Imported'] + \
-    data_fingerprints['HRD - Import'] * data_fingerprints['Inland'] * data_costs.loc['GAS', 'Imported'],
+    data_fingerprints['HRD - Domestic'] * data_fingerprints['Coastal'] * data_costs.loc['HRD', 'Domestic'] + \
+    data_fingerprints['HRD - Domestic'] * data_fingerprints['Inland'] * data_costs.loc['HRD', 'Domestic'] + \
+    data_fingerprints['HRD - Import'] * data_fingerprints['Coastal'] * data_costs.loc['HRD', 'Imported'] + \
+    data_fingerprints['HRD - Import'] * data_fingerprints['Inland'] * data_costs.loc['HRD', 'Imported'],
     columns=['HRD'])
 price_lig = pd.DataFrame(
     data_fingerprints['LIG - Import'] * data_fingerprints['Coastal'] * data_costs.loc['LIG', 'Imported'] * 0.87 + \
