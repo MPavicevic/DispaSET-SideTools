@@ -21,12 +21,12 @@ output_folder = commons['OutputFolder']
 
 # Input file
 input_file = 'NTCs.xlsx'
-sheet_name = '2018'
+sheet_name = '2025'
 SOURCE = 'JRC'
 
 # Other options
 WRITE_CSV = True
-YEAR = 2018
+YEAR = 2025
 
 # %% Model
 # Load data

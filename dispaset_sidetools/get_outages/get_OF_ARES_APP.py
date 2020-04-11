@@ -35,8 +35,13 @@ generation.fillna(0, inplace=True)
 # Capacity factor for CSP
 capacity_factors = pd.read_csv(input_folder + source_folder + input_file_CF, index_col=0, header=0)
 
+import pickle
+
+with open(input_folder + source_folder + 'Units_from_get_Capacities.p', 'rb') as handle:
+    allunits = pickle.load(handle)
+
 # Other options
-WRITE_CSV = True
+WRITE_CSV = False
 YEAR = 2015
 EFFICIENCY = 0.8
 
