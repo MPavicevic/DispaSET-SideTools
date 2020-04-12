@@ -813,7 +813,7 @@ for c in cap:
             else:
                 if (i == 'SCSP') and (j == 'SUN'):
                     tmp_tes = pd.DataFrame(units.loc[:, name], columns=[name]).T
-                    tmp_tes['STOCapacity'] = tmp_tes['PowerCapacity'] * CSP_TES_CAPACITY * tmp_tes['Nunits']
+                    tmp_tes['STOCapacity'] = tmp_tes['PowerCapacity'] * CSP_TES_CAPACITY 
                     tmp_tes['STOSelfDischarge'] = STOSELFDISCHARGE_SUN
                     tmp_tes = tmp_tes.T
                     units.update(tmp_tes)
