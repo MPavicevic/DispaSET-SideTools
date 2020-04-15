@@ -73,10 +73,20 @@ commons['Fuels'] = ['BIO', 'GAS', 'HRD', 'LIG', 'NUC', 'OIL', 'PEA', 'SUN', 'WAT
 commons['MeritOrder'] = ['Storage', 'FlowOut', 'NUC', 'LIG', 'HRD', 'BIO', 'GAS', 'OIL', 'PEA', 'WST', 'SUN', 'WIN',
                          'FlowIn', 'WAT']
 # Colors associated with each fuel:
-commons['colors'] = {'NUC': 'orange', 'LIG': 'brown', 'HRD': 'grey', 'BIO': 'darkgreen', 'GAS': 'lightcoral',
-                     'OIL': 'chocolate', 'PEA': 'green', 'WST': 'dodgerblue', 'SUN': 'yellow', 'WIN': 'red',
-                     'FlowIn': 'green', 'WAT': 'blue',
-                     'Storage': 'blue', 'FlowOut': 'green'}
+commons['colors'] = {'LIG': '#af4b9180', 'PEA': '#af4b9199', 'HRD': 'darkviolet', 'OIL': 'magenta',
+                     'GAS': '#d7642dff',
+                     'NUC': '#466eb4ff',
+                     'SUN': '#e6a532ff',
+                     'WIN': '#41afaaff',
+                     'WAT': '#00a0e1ff',
+                     'BIO': '#7daf4bff', 'GEO': '#7daf4bbf',
+                     'Storage': '#b93c46ff', 'FlowIn': '#b93c46b2', 'FlowOut': '#b93c4666',
+                     'OTH': '#b9c33799', 'WST': '#b9c337ff',
+                     'HDAM': '#00a0e1ff',
+                     'HPHS': 'blue',
+                     'THMS': '#C04000ff',
+                     'BATS': '#41A317ff',
+                     'BEVS': '#b9c33799'}
 # Hatches associated with each fuel (random):
 hatches = itertools.cycle(['x', '//', '\\', '/'])
 commons['hatches'] = {}

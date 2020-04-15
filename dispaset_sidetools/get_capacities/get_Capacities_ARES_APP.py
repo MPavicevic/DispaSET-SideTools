@@ -36,7 +36,7 @@ temba_inputs = pd.read_csv(input_folder + source_folder + 'TEMBA_Results.csv', h
 WRITE_CSV = False
 YEAR = 2025
 EFFICIENCY = 0.8
-TEMBA = True
+TEMBA = False
 scenario = 'Reference'  # Reference, 1.5deg, 2.0deg
 
 # Source for demand projections
@@ -240,9 +240,9 @@ else:
     logging.info('TEMBA model not selected')
 
 # Countries used in the analysis
-countries_EAPP = ['Burundi', 'Djibouti', 'Egypt', 'Ethiopia', 'Eritrea', 'Kenya', 'Rwanda', 'Somalia', 'Sudan',
+countries_EAPP = ['Burundi', 'Djibouti', 'Ethiopia', 'Eritrea', 'Kenya', 'Rwanda', 'Somalia', 'Sudan',
                   'South Sudan', 'Tanzania', 'Uganda']
-countries_NAPP = ['Algeria', 'Libya', 'Morocco', 'Mauritania', 'Tunisia']
+countries_NAPP = ['Algeria', 'Libya', 'Morocco', 'Mauritania', 'Tunisia','Egypt']
 countries_CAPP = ['Angola', 'Cameroon', 'Central African Republic', 'Republic of the Congo', 'Chad', 'Gabon',
                   'Equatorial Guinea', 'Democratic Republic of the Congo']
 
@@ -269,3 +269,20 @@ with open(input_folder + source_folder + 'Units_from_get_Capacities.p', 'wb') as
 
 with open(input_folder + source_folder + 'Units_from_get_Capacities.p', 'rb') as handle:
     allunits = pickle.load(handle)
+
+tmp = {}
+for p in ['NAPP', 'EAPP', 'CAPP']:
+    if p == 'NAPP':
+        zones = get_country_codes(countries_NAPP)
+    elif p == 'CAPP':
+        zones = get_country_codes(countries_CAPP)
+    else:
+        zones = get_country_codes(countries_EAPP)
+    aa = {}
+    for fuel in data['Fuel'].unique():
+        aa[fuel] = data.loc[(data['Zone'].isin(zones)) & (data['Fuel'] == fuel)]['PowerCapacity'].sum()
+    tmp[p] = aa
+
+bb = pd.DataFrame.from_dict(tmp)
+
+bb.to_csv('jrc_capacites.csv')
