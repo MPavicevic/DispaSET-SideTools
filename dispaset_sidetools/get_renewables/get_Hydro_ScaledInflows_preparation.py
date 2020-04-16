@@ -97,7 +97,7 @@ for c in countries:
         AF_c = pd.read_csv(input_file_AF, index_col = 0, header = 0)
         scaled_inflows_scaled[c] = pd.DataFrame(columns = ['HDAM', 'HPHS','SCSP'])
         scaled_inflows_scaled[c]['HDAM'] = scaled_inflows[c]['HDAM']*af_multiplier_hdam[c]
-        scaled_inflows_scaled[c]['HPHS'] = scaled_inflows_scaled[c]['HDAM']
+        scaled_inflows_scaled[c]['HPHS'] = 0
         scaled_inflows_scaled[c]['SCSP'] = AF_c['PHOT'].values
         
 #%% Export the scaled ScaledInflows
