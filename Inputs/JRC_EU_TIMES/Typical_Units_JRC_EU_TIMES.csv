@@ -28,4 +28,4 @@ PowerCapacity,Unit,Year,Zone,Technology,Fuel,Efficiency,MinUpTime,MinDownTime,Ra
 0,,,,HPHS,WAT,0.89,0,0,1,1,0,0,0,0,1,0,0,,,,,,,,0,0,0,0.89
 45,Icen Zgb,1970,HR,ICEN,WST,0.42,1,1,0.04,0.04,24,0,0.63,0.25,0.49,1,0.2691,back-pressure,0.81,0.14,,,,,,,,
 48, llheizkraftwerk Essen-Karnap,1987,DE,STUR,WST,0.2,5,5,0.02,0.02,65,0,1.8,0.4,0.2,1,0,Extraction,0.4,0.23,,,,,,,,
-0,Eva_new,,,P2GS,HYD,0.46,0,0,1,1,0,0,0,0.15,0.47,0,0,,,,,,,,0,0,0,0.72
+0,Eva_new,,,P2GS,HYD,0.46,0,0,1,1,0,0,0,0,0.47,0,0,,,,,,,,0,0,0,0.72
