@@ -34,7 +34,7 @@ TECHNOLOGY_THRESHOLD = 0  # threshold (%) below which a technology is considered
 CHP_TES_CAPACITY = 12  # No of storage hours in TES
 CSP_TES_CAPACITY = 15  # No of storage hours in CSP units (usually 15 hours)
 P2G_TES_CAPACITY = 5  # No of storage hours in P2H units (500l tank = 5h of storage)
-HYDRO_CAPACITY = 5 # No of storage hours in HPHS and HDAM
+HPHS_CAPACITY = 6 # No of storage hours for HPHS units (given from TIMES) and in HDAM if not in reservoirs
 BATS_Liion_CAPACITY = 1 # No of storage hours for batteries
 BATS_Lead_CAPACITY = 4
 V2G_CAPACITY = 4.487 # No of storage for vehicles 2 grid 
@@ -48,7 +48,7 @@ V2G_SHARE = 0.5  # Define how many EV's are V2G
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
 OCEAN = 'WAT'  # Define what ocean fuel equals to (WAT or OTH)
 CSP = True  # Turn Concentrated solar power on/off (when False grouped with PHOT)
-HYDRO_CLUSTERING = 'OFF'  # Define type of hydro clustering (OFF, HPHS, HROR)
+HYDRO_STORAGE = 'True'  # True if hydro storage included, otherwise False (remove HPHS and cluster HDAM and HROR as HROR)
 TECH_CLUSTERING = True  # Clusters technologies by treshold (efficient way to reduce total number of units)
 CLUSTER_TRESHOLD = 0.3  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
 
@@ -104,6 +104,9 @@ bats_capacities_raw_h= pd.read_excel(
 bats_capacities_raw= pd.read_excel(
     input_folder + source_folder + scenario + 'TIMES_BATS_Capacities_2050.xlsx',
     header = None, skiprows = 2, index_col=0)
+hphs_capacities = pd.read_excel(
+    input_folder + source_folder + scenario + 'TIMES_Capacities_HPHS.xlsx',
+    header = 0, skiprows = 1, index_col=0)
 
 # Hydro reservoirs
 reservoirs = pd.read_csv(input_folder + 'Default/' + 'Hydro_Reservoirs.csv', index_col=0, header=None)
@@ -157,7 +160,7 @@ dispaset_rename_tech= {'Int Combust' : 'ICEN',
                        'SOFC': 'SOFC',
                        'PEM fuel cell':'PEMFC',
                        'Dams':'HDAM',
-                       'Lake large scale':'HPHS',
+                       'Lake large scale':'HDAM',
                        'COMC_CCS': 'COMC_CCS',
                        'STUR_CCS': 'STUR_CCS',
                        'Electrolyzer': 'P2GS',
@@ -174,8 +177,34 @@ capacities_raw.rename(columns=dispaset_rename_fuels, inplace = True)
 
 capacities = capacities_raw.groupby(capacities_raw.columns, axis=1).sum()
 
-# Pre-process the technologies 
+# Function to insert row in the dataframe df
+def Insert_row_(row_number, df, row_value):
+    if row_number==0:
+        df1=row_value
+      #  df1.index=[idx]
+        df2=df
+    else:# Slice the upper half of the dataframe 
+        df1 = df[0:row_number]   
+        # Store the result of lower half of the dataframe 
+        df2 = df[row_number:]   
+        # Insert the row in the upper half dataframe 
+        df1 = df1.append(row_value)  
+     #   df1.index[row_number] = [idx]
+    # Concat the two dataframes 
+    df_result = pd.concat([df1, df2])    
+    # Return the updated dataframe 
+    return df_result
 
+# Pre-process the technologies 
+# Check that all countries are in hphs_capacities and otherwise add missing rows
+for c in range(len(typical_tech_input_raw.index)):
+    if typical_tech_input_raw.index[c] not in hphs_capacities.index:
+       hphs_capacities =  Insert_row_(c,hphs_capacities, pd.DataFrame([0],index=[typical_tech_input_raw.index[c]]))
+
+# Add HPHS capacities in WAT capacities 
+if HYDRO_STORAGE == 'True':
+    capacities['WAT'] += hphs_capacities.iloc[:,0]*1000
+            
 # Extend the fuels that were as merged cells in excel 
 for c in range(len(typical_tech_input_raw_h.iloc[0,:])):
     if pd.isna(typical_tech_input_raw_h.iloc[0, c]): 
@@ -184,6 +213,7 @@ for c in range(len(typical_tech_input_raw_h.iloc[0,:])):
 for c in range(len(typical_tech_input_raw_h.iloc[0,:])):
     if 'lignite' in typical_tech_input_raw_h.iloc[1, c]:
             typical_tech_input_raw_h.iloc[0, c] = 'LIG'
+
 # Rename all the fuels as before
 typical_tech_input_raw_h.iloc[0,:].replace(dispaset_rename_fuels, inplace = True)
 # First specify all the CCS units  
@@ -210,7 +240,9 @@ for c in range(len(typical_tech_input_raw_h.iloc[0,:])):
             typical_tech_input_raw_h.iloc[1,c] = dispaset_rename_tech[key]    
 # Create a row as FUEL_TECH
 typical_tech_input_raw_h.loc['index', :] = typical_tech_input_raw_h.iloc[0, :] + '_' + typical_tech_input_raw_h.iloc[1, :]
-typical_tech_input_raw = typical_tech_input_raw.rename(columns=typical_tech_input_raw_h.loc['index', :], copy=False)  
+typical_tech_input_raw = typical_tech_input_raw.rename(columns=typical_tech_input_raw_h.loc['index', :], copy=False) 
+# add hphs in capacities
+typical_tech_input_raw=typical_tech_input_raw.assign(WAT_HPHS = hphs_capacities.iloc[:,0]) 
 typical_tech_input_raw.fillna(0, inplace = True)
 typical_tech_input_raw = typical_tech_input_raw*1000  #Convert to MW
 
@@ -273,24 +305,8 @@ p2g_capacities_raw = p2g_capacities_raw*1000  #Convert to MW
 p2g_capacities = p2g_capacities_raw.groupby(p2g_capacities_raw.columns, axis=1).sum() 
 
 # Pre-process the batteries
-# Function to insert row in the dataframe 
-def Insert_row_(row_number, df, row_value): 
-    if row_number==0:
-        df1=row_value
-      #  df1.index=[idx]
-        df2=df
-    else:# Slice the upper half of the dataframe 
-        df1 = df[0:row_number]   
-        # Store the result of lower half of the dataframe 
-        df2 = df[row_number:]   
-        # Insert the row in the upper half dataframe 
-        df1 = df1.append(row_value)  
-     #   df1.index[row_number] = [idx]
-    # Concat the two dataframes 
-    df_result = pd.concat([df1, df2])    
-    # Return the updated dataframe 
-    return df_result
 
+# Pre-processing of batteries
 countries = list(capacities.index)
 for c in range(len(countries)):
     if countries[c] not in bats_capacities_raw.index:
@@ -659,20 +675,20 @@ typical_sun.fillna(0, inplace=True)
 # Make a function with three statements, hydro can either HROR only, HDAM+HPHS, or each technology individually
 def get_typical_hydro(typical_hydro, clustering=None):
     """
-    Function that loads typical hydro units from the typical_tech and assigns one of several clustering options:
-        - HROR only
-        - HROR & HPHS (HPHS + HDAM)
-        - HROR, HPHS & HDAM individually
+    Function that loads typical hydro units from the typical_tech and assign capacities
+    depending on clustering option:
+        - True: hydro storage units are available. HROR, HDAM and HPHS are defined as usual
+        - False: no hydro storage. HPHS is simply removed and HDAM and HROR are clustered
+                 as HROR
     """
 
-    if clustering == 'HROR':
+    if clustering == 'False':
         typical_wat = typical_hydro.copy()
-        typical_wat['HROR'] = typical_wat['HDAM'] + typical_wat['HPHS'] + typical_wat['HROR']
+        typical_wat['HROR'] = typical_wat['HDAM'] + typical_wat['HROR']
         typical_wat.drop(['HDAM', 'HPHS'], axis=1, inplace=True)
         typical_wat = (typical_wat.loc[:, ['HROR']].div(typical_wat['HROR'], axis=0))
         typical_wat.fillna(0, inplace=True)
     else:
-        # elif clustering == 'OFF':
         typical_wat = typical_hydro.copy()
         typical_wat['sum'] = typical_wat.sum(axis=1)
         typical_wat = (typical_wat.loc[:, ['HDAM', 'HROR', 'HPHS']].div(typical_wat['sum'], axis=0))
@@ -681,7 +697,7 @@ def get_typical_hydro(typical_hydro, clustering=None):
 
 
 typical_wat = get_typical_hydro(typical_hydro=pd.DataFrame([typical_tech['HDAM'], typical_tech['HROR'],
-                                                            typical_tech['HPHS']]).T, clustering=HYDRO_CLUSTERING)
+                                                            typical_tech['HPHS']]).T, clustering=HYDRO_STORAGE)
 
 # %% SOLAR
 # typical_sun = pd.DataFrame(typical_tech['PHOT'])
@@ -896,67 +912,36 @@ for c in cap:
 
     # %%
     # Avoid merging units at this stage, just assign units as they were before
-    # Special treatment for the hydro data.
-    # HDAM and HPHS are merged into a single unit with the total reservoir capacity
-    # Find if there are HPHS units:
-    if HYDRO_CLUSTERING == 'HPHS':
-        tmp = units[units.Technology == 'HPHS']
-        if len(tmp) == 1:
-            hphsdata = tmp.iloc[0, :]
-            hphsindex = tmp.index[0]
-            # The pumped hydro power is also the chargin power:
-            hphsdata['STOMaxChargingPower'] = hphsdata['PowerCapacity']
-            tmp = units[units.Technology == 'HDAM']
-            if len(tmp) == 1:
-                damdata = tmp.iloc[0, :]
-                # adding the dam power to the pumpe hydro:
-                hphsdata['PowerCapacity'] += damdata['PowerCapacity']
-                # delte the hdam row:
-                units = units[units.Technology != 'HDAM']
-            if c in reservoirs.index:
-                hphsdata['STOCapacity'] = reservoirs[c]
-            else:
-                print('[INFO    ]: ' + 'Country ' + c + ' No Reservoir Capacity data for country ' + c +
-                      '. Assuming a conservative 5 hours of storage')
-                hphsdata['STOCapacity'] = hphsdata['PowerCapacity'] * HYDRO_CAPACITY
-            units.loc[hphsindex, :] = hphsdata
-        elif len(tmp) == 0:
-            tmp = units[units.Technology == 'HDAM']
-            if len(tmp) == 1:
-                if c in reservoirs.index:
-                    units.loc[tmp.index[0], 'STOCapacity'] = reservoirs[c]
-                else:
-                    print('[INFO    ]: ' + 'Country ' + c + ' No Reservoir Capacity data for country ' + c +
-                          '. Assuming a conservative 5 hours of storage')
-                    units.loc[tmp.index[0], 'STOCapacity'] = units.loc[tmp.index[0], 'PowerCapacity'] * HYDRO_CAPACITY
+    # Special treatment for the hydro data in case storage is available.
+    if HYDRO_STORAGE == 'True':
+        tmp_hphs=units[units.Technology == 'HPHS']
+        tmp_hdam=units[units.Technology == 'HDAM']
+        if len(tmp_hphs)==0:
+            print('[INFO    ]: ' + 'Country ' + c + ' (HPHS) is not present')
+        elif len(tmp_hphs)==1:
+            # The pumped hydro power is also the charging power:
+            tmp_hphs['STOMaxChargingPower'] = tmp_hphs['PowerCapacity']
+            tmp_hphs['STOCapacity'] = tmp_hphs['PowerCapacity']*HPHS_CAPACITY
+            print('[INFO    ]: ' + 'Country ' + c + ' (HPHS): Assuming ' 
+                  + str(HPHS_CAPACITY) + ' hours of storage')
+            units.update(tmp_hphs)
         else:
             sys.exit('Various HPHS units!')
-    else:
-        tmp = units[units.Technology == 'HPHS']
-        if len(tmp) == 1:
-            hphsdata = tmp.iloc[0, :]
-            hphsindex = tmp.index[0]
-            # The pumped hydro power is also the chargin power:
-            hphsdata['STOMaxChargingPower'] = hphsdata['PowerCapacity']
-            print(
-                '[INFO    ]: ' + 'Country ' + c + ' (HPHS,WAT) No Reservoir Capacity data for country ' + c + '. Assuming a conservative' + str(HYDRO_CAPACITY) + 'hours of storage')
-            hphsdata['STOCapacity'] = hphsdata['PowerCapacity'] * HYDRO_CAPACITY
-            units.loc[hphsindex, :] = hphsdata
-        else:
-            print('[INFO    ]: ' + 'Country ' + c + ' No HPHS for country ' + c)
-
-        tmp = units[units.Technology == 'HDAM']
-        if len(tmp) == 1:
-            hphsdata = tmp.iloc[0, :]
-            hphsindex = tmp.index[0]
+        if len(tmp_hdam)==0:
+            print('[INFO    ]: ' + 'Country ' + c + ' (HDAM) is not present')
+        elif len(tmp_hphs)==1:
+            # HDAM charging power is 0
+            # HDAM storage capacity is defined from reservoirs
             if c in reservoirs.index:
-                units.loc[tmp.index[0], 'STOCapacity'] = reservoirs[c]
+                tmp_hdam['STOCapacity'] = reservoirs[c]
             else:
-                print(
-                    '[INFO    ]: ' + 'Country ' + c + ' (HDAM,WAT) No Reservoir Capacity data for country ' + c + '. Assuming a conservative'+ str(HYDRO_CAPACITY) + 'hours of storage')
-                units.loc[tmp.index[0], 'STOCapacity'] = units.loc[tmp.index[0], 'PowerCapacity'] * HYDRO_CAPACITY
+                # Otherwise assign same nb hours of storage capacity as HPHS
+                tmp_hdam['STOCapacity'] = tmp_hdam['PowerCapacity']*HPHS_CAPACITY
+                print('[INFO    ]: ' + 'Country ' + c + ' (HDAM): No Reservoir Capacity data for country ' + c + 
+                      '. Assuming ' + str(HPHS_CAPACITY) + ' hours of storage')
+            units.update(tmp_hdam)
         else:
-            print('[INFO    ]: ' + 'Country ' + c + ' No HDAM for country ' + c)
+            sys.exit('Various HDAM units!')            
 
     # Special treatment for BEVS
     if units[units.Technology == 'BEVS'].empty is True:
