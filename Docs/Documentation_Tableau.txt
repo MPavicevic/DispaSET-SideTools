@@ -16,6 +16,10 @@ o TIMES_Capacities_fuel_2050_times_names.xlsx
 		 * Scenario, period
 		 * Unit Capacity: GW
 	COLUMNS: * Technology Main input
+o TIMES_Capacities_HPHS.xslx:
+	FILTERS: * Attribute: Var_CAP
+		 * Main Activity: Storage of electricity
+		 * Process Description1: Pumped Hydro ELC storage: Daynite (accompaying tech to represent power)
 o TIMES_CHP_Capacities_2050_times_names.xlsx
 	FILTERS: * Attribute: VAR_Cap
 		 * Main activity: CHP
@@ -81,7 +85,7 @@ o TIMES_DH_Demand_2050.xlsx
 		 * Commodity subtype Fin: District heat
 		 * Technology main input: Biogas, coal, gas, heat, other biomass
 o TIMES_Electricity_generation_2050.csv
-	FILTERS: * Attribute: VAR_FOut, Var_FOut
+	FILTERS: * Attribute: VAR_FOut
 		 * Period
 		 * Unit - activity1: PJ
 		 * Commodity subtype: electricity
