@@ -312,10 +312,6 @@ def get_res_for_year(zones, start_date, end_date):
     return res_timeseries, hdam_timeseries
 
 
-selected_year = get_res_for_year(codes_CEN, start_date, end_date)
-write_csv_files(selected_year[0], 'ARES_APP', SOURCE, 'AvailabilityFactors', str(YEAR_InFlow), WRITE_CSV, 'Zonal')
-
-
 def write_csv_hydro(file_name_IF=None, inflow_timeseries=None, write_csv=None):
     """
     Specific function for hydro inflows
@@ -341,7 +337,15 @@ def write_csv_hydro(file_name_IF=None, inflow_timeseries=None, write_csv=None):
         logging.warning('[WARNING ]: ' + 'WRITE_CSV_FILES = False, unable to write .csv files')
 
 
-write_csv_hydro('IF_' + SOURCE_Hydro + '_' + str(YEAR_InFlow), selected_year[1], WRITE_CSV)
+for year in list(af_hror.index.year.unique()):
+    if year < 2019:
+        start_date = str(year) + '-01-01'
+        end_date = str(year) + '-12-31'
+        selected_year = get_res_for_year(codes_CEN, start_date, end_date)
+        write_csv_files(selected_year[0], 'ARES_APP', SOURCE, 'AvailabilityFactors', str(year), WRITE_CSV, 'Zonal')
+        write_csv_hydro('IF_' + SOURCE_Hydro + '_' + str(year), selected_year[1], WRITE_CSV)
+    else:
+        logging.info(str(year) + ' is out of bounds')
 
 el.plot_percentiles(river_in_flows['Erraguene'], x='dayofyear', zz='year', color='green')
 plt.show()
