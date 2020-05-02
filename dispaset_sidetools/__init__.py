@@ -2,8 +2,7 @@
 import logging.config
 import os
 
-from .common import commons
-from .get_capacities.get_Capacities_ARES_APP import get_hydro_units
+from .common import date_range, get_country_codes, write_csv_files, commons
 
 _LOGCONFIG = {
      "version": 1,
@@ -75,7 +74,7 @@ __version__ = version
 # if somebody does "from dispaset_sidetools import *", this is what they will
 # be able to access:
 __all__ = [
-    'commons','get_hydro_units',
+    'commons','get_country_codes',
 ]
 
 # Remove old log file:
@@ -84,3 +83,7 @@ for filename in (f for f in os.listdir('.') if f.endswith('.dispa_sidetools.log'
         os.remove(filename)
     except OSError:
         print ('Could not erase previous log file ' + filename)
+
+# Import main function that can be called from dsst.function
+from .get_capacities.get_Capacities_ARES_APP import get_allunits, get_hydro_units, powerplant_data_preprocessing, \
+    get_temba_plants, assign_typical_units
