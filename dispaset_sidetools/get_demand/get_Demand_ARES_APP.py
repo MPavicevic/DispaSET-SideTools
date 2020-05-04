@@ -27,11 +27,11 @@ sheet_annual_data = 'Inputs'
 
 # Other options
 WRITE_CSV = True
-YEAR = 2015
+YEAR = 2045
 
 # Source for demand projections
 # TEMBA, IEA, JRC, World Bank, CIA: World Fact Book, Indexmundi
-SOURCE = 'JRC'
+SOURCE = 'TEMBA'
 
 # %% Data preprocessing
 xls = pd.ExcelFile(input_folder + source_folder + input_file_hourly_data)

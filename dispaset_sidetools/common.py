@@ -338,7 +338,7 @@ commons['ColumnNames'] = list(
      'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu', 'RampingCost', 'PartLoadMin',
      'MinEfficiency', 'StartUpTime', 'CO2Intensity', 'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor',
      'COP', 'Tnominal', 'coef_COP_a', 'coef_COP_b', 'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower',
-     'STOChargingEfficiency', 'CHPMaxHeat'])
+     'STOChargingEfficiency', 'CHPMaxHeat', 'WaterWithdrawal', 'WaterConsumption'])
 
 # inverting dictionary (list of subzones for each zone):
 mapping['iso2entsoe'] = {}

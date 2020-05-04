@@ -342,10 +342,18 @@ for year in list(af_hror.index.year.unique()):
         start_date = str(year) + '-01-01'
         end_date = str(year) + '-12-31'
         selected_year = get_res_for_year(codes_CEN, start_date, end_date)
+        tmp = {}
+        for k in selected_year[1]:
+            if not selected_year[1][k].empty:
+                tmp[k] = selected_year[1][k]
         write_csv_files(selected_year[0], 'ARES_APP', SOURCE, 'AvailabilityFactors', str(year), WRITE_CSV, 'Zonal')
-        write_csv_hydro('IF_' + SOURCE_Hydro + '_' + str(year), selected_year[1], WRITE_CSV)
+        write_csv_hydro('IF_' + SOURCE_Hydro + '_' + str(year), tmp, WRITE_CSV)
     else:
         logging.info(str(year) + ' is out of bounds')
+
+
+
+
 
 el.plot_percentiles(river_in_flows['Erraguene'], x='dayofyear', zz='year', color='green')
 plt.show()

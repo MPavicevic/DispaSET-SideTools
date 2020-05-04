@@ -35,18 +35,19 @@ generation.fillna(0, inplace=True)
 # Capacity factor for CSP
 capacity_factors = pd.read_csv(input_folder + source_folder + input_file_CF, index_col=0, header=0)
 
-import pickle
-
-with open(input_folder + source_folder + 'Units_from_get_Capacities.p', 'rb') as handle:
-    allunits = pickle.load(handle)
-
 # Other options
-WRITE_CSV = False
-YEAR = 2015
+WRITE_CSV = True
+YEAR = 2055
 EFFICIENCY = 0.8
 
 # Source for demand projections
-SOURCE = 'JRC'
+SOURCE = 'TEMBA'
+scenario = '2.0deg'
+
+if SOURCE == 'TEMBA':
+    import pickle
+    with open(input_folder + source_folder + 'TEMBA_capacities_' + scenario + '_' + str(YEAR) + '.p', 'rb') as handle:
+        allunits = pickle.load(handle)
 
 # Input data preprocessing
 pp_data['Country'] = pp_data['Country'].str.title()
@@ -57,14 +58,24 @@ pp_data = pp_data[~pp_data['Fuel'].str.contains("WAT")]
 pp_data = pp_data[~pp_data['Fuel'].str.contains("WSTH")]
 
 # Convert Fuels and Technologies to Dispa-SET readable format
-fuels = {'AGAS': 'GAS', 'BAG': 'BIO', 'BGAS': 'GAS', 'BIOMASS': 'BIO', 'BL': 'BIO', 'CGAS': 'GAS', 'COAL': 'HRD',
-         'CSGAS': 'GAS', 'DGAS': 'GAS', 'FGAS': 'GAS', 'KERO': 'OIL', 'LGAS': 'GAS', 'LIQ': 'OIL', 'LNG': 'GAS',
-         'LPG': 'GAS', 'NAP': 'OIL', 'PEAT': 'PEA', 'REF': 'WST', 'REFGAS': 'GAS', 'SHALE': 'OIL', 'UNK': 'OTH',
-         'UR': 'NUC', 'WIND': 'WIN', 'WOOD': 'BIO', 'WOODGAS': 'GAS'}
-technologies = {'CC': 'COMC', 'CCSS': 'COMC', 'GT': 'GTUR', 'GT/C': 'GTUR', 'GT/CP': 'GTUR', 'GT/D': 'GTUR',
-                'GT/H': 'GTUR', 'GT/S': 'GTUR', 'IC': 'ICEN', 'IC/CD': 'ICEN', 'IC/CP': 'ICEN', 'IC/H': 'ICEN',
-                'ORC': 'GTUR', 'PV': 'PHOT', 'RSE': 'STUR', 'ST': 'STUR', 'ST/D': 'STUR', 'ST/S': 'STUR',
-                'ST/G': 'STUR', 'WTG': 'WTON', 'WTG/O': 'WTOF'}
+fuels = {'AGAS': 'GAS', 'BGAS': 'GAS', 'CGAS': 'GAS', 'CSGAS': 'GAS', 'DGAS': 'GAS', 'FGAS': 'GAS', 'LGAS': 'GAS',
+         'LNG': 'GAS', 'LPG': 'GAS', 'REFGAS': 'GAS', 'WOODGAS': 'GAS',
+         'BAG': 'BIO', 'BIOMASS': 'BIO', 'BL': 'BIO', 'WOOD': 'BIO',
+         'COAL': 'HRD',
+         'KERO': 'OIL', 'LIQ': 'OIL', 'SHALE': 'OIL',
+         'NAP': 'OIL',
+         'PEAT': 'PEA',
+         'REF': 'WST', 'UNK': 'OTH',
+         'UR': 'NUC',
+         'WIND': 'WIN'}
+
+technologies = {'CC/D': 'COMC', 'CC': 'COMC', 'CCSS': 'COMC', 'GT/C': 'COMC', 'GT/CP': 'COMC',
+                'GT': 'GTUR', 'GT/D': 'GTUR', 'GT/H': 'GTUR', 'GT/S': 'GTUR', 'ORC': 'GTUR',
+                'IC': 'ICEN', 'IC/CD': 'ICEN', 'IC/CP': 'ICEN', 'IC/H': 'ICEN',
+                'RSE': 'STUR', 'ST': 'STUR', 'ST/D': 'STUR', 'ST/S': 'STUR', 'ST/G': 'STUR',
+                'PV': 'PHOT',
+                'WTG': 'WTON', 'WTG/O': 'WTOF'}
+
 pp_data['Fuel'] = pp_data['Fuel'].replace(fuels)
 pp_data['Technology'] = pp_data['Technology'].replace(technologies)
 
@@ -103,20 +114,13 @@ for fuel in commons['Fuels']:
 generation = get_ktoe_to_mwh(generation, ['Biofuels', 'Fosil', 'Hydro', 'Geothermal', 'RES'])
 
 # Identify specific units for outages
-bio_units = list(data.loc[data['Fuel'] == 'BIO']['Unit'])
-geo_units = list(data.loc[data['Fuel'] == 'GEO']['Unit'])
-csp_units = list(data.loc[(data['Fuel'] == 'SUN') & (data['Technology'] == 'STUR')]['Unit'])
-# Predefined all 0 DataFrame. Used to fill missing OF
-zero_df = pd.DataFrame(index=date_range('1/1/' + str(YEAR), '1/1/' + str(YEAR + 1), freq='H'),
-                       columns=geo_units).fillna(0)
-ones_df_bio = pd.DataFrame(index=date_range('1/1/' + str(YEAR), '1/1/' + str(YEAR + 1), freq='H'),
-                           columns=bio_units).fillna(1)
-ones_df_geo = pd.DataFrame(index=date_range('1/1/' + str(YEAR), '1/1/' + str(YEAR + 1), freq='H'),
-                           columns=geo_units).fillna(1)
-ones_df_csp = pd.DataFrame(index=date_range('1/1/' + str(YEAR), '1/1/' + str(YEAR + 1), freq='H'),
-                           columns=csp_units).fillna(1)
-
-bio_data = data.loc[data['Fuel'] == 'BIO']
+if SOURCE == 'TEMBA':
+    aa = pd.concat(allunits, ignore_index=True)
+    bio_units = list(aa.loc[aa['Fuel'] == 'BIO']['Unit'])
+    bio_data = aa.loc[aa['Fuel'] == 'BIO']
+else:
+    bio_units = list(data.loc[data['Fuel'] == 'BIO']['Unit'])
+    bio_data = data.loc[data['Fuel'] == 'BIO']
 # Identify annual generation per zone and share of installed capacity
 for c in list(bio_data['Zone'].unique()):
     if c in list(generation.index):
@@ -131,7 +135,19 @@ bio_data['Generation_Historic'] = bio_data['Generation_Historic'] * bio_data['Sh
 bio_data['CF'] = bio_data['Generation_Historic'] / bio_data['PowerCapacity'] / 8760
 bio_data.set_index('Unit', inplace=True)
 
-geo_data = data.loc[data['Fuel'] == 'GEO']
+ones_df_bio = pd.DataFrame(index=date_range('1/1/' + str(YEAR), '1/1/' + str(YEAR + 1), freq='H'),
+                           columns=bio_units).fillna(1)
+if SOURCE == 'TEMBA':
+    bio_outage = ones_df_bio - ones_df_bio * 0.8
+else:
+    bio_outage = ones_df_bio - ones_df_bio * bio_data['CF']
+
+if SOURCE == 'TEMBA':
+    geo_units = list(aa.loc[aa['Fuel'] == 'GEO']['Unit'])
+    geo_data = aa.loc[aa['Fuel'] == 'GEO']
+else:
+    geo_units = list(data.loc[data['Fuel'] == 'GEO']['Unit'])
+    geo_data = data.loc[data['Fuel'] == 'GEO']
 # Identify annual generation per zone and share of installed capacity
 for c in list(geo_data['Zone'].unique()):
     if c in list(generation.index):
@@ -146,8 +162,20 @@ geo_data['Generation_Historic'] = geo_data['Generation_Historic'] * geo_data['Sh
 geo_data['CF'] = geo_data['Generation_Historic'] / geo_data['PowerCapacity'] / 8760
 geo_data.set_index('Unit', inplace=True)
 
+ones_df_geo = pd.DataFrame(index=date_range('1/1/' + str(YEAR), '1/1/' + str(YEAR + 1), freq='H'),
+                           columns=geo_units).fillna(1)
+if SOURCE == 'TEMBA':
+    geo_outage = ones_df_geo - ones_df_geo * 0.65
+else:
+    geo_outage = ones_df_geo - ones_df_geo * geo_data['CF']
+
 # Identify zones where units are selected
-csp_data = data.loc[(data['Fuel'] == 'SUN') & (data['Technology'] == 'STUR')]
+if SOURCE == 'TEMBA':
+    csp_units = list(aa.loc[(aa['Fuel'] == 'SUN') & (aa['Technology'] == 'STUR')]['Unit'])
+    csp_data = aa.loc[(aa['Fuel'] == 'SUN') & (aa['Technology'] == 'STUR')]
+else:
+    csp_units = list(data.loc[(data['Fuel'] == 'SUN') & (data['Technology'] == 'STUR')]['Unit'])
+    csp_data = data.loc[(data['Fuel'] == 'SUN') & (data['Technology'] == 'STUR')]
 # Asign CF for each unit
 for c in list(csp_data['Zone'].unique()):
     if c in list(generation.index):
@@ -155,9 +183,9 @@ for c in list(csp_data['Zone'].unique()):
     else:
         csp_data.loc[csp_data['Zone'] == c, 'CF'] = 0
 csp_data.set_index('Unit', inplace=True)
+ones_df_csp = pd.DataFrame(index=date_range('1/1/' + str(YEAR), '1/1/' + str(YEAR + 1), freq='H'),
+                           columns=csp_units).fillna(1)
 
-bio_outage = ones_df_bio - ones_df_bio * bio_data['CF']
-geo_outage = ones_df_geo - ones_df_geo * geo_data['CF']
 csp_outage = ones_df_csp - ones_df_csp * csp_data['CF']
 
 outage = pd.concat([bio_outage, geo_outage, csp_outage], axis=1, sort=False, join='inner')
@@ -169,4 +197,7 @@ for c in list(units_with_outage['Zone'].unique()):
     units = units_with_outage.loc[units_with_outage['Zone'] == c].index
     tmp_out[c] = outage.loc[:, units]
 
-write_csv_files(tmp_out, 'ARES_APP', SOURCE, 'OutageFactors', str(YEAR), WRITE_CSV, 'Zonal')
+if SOURCE == 'TEMBA':
+    write_csv_files(tmp_out, 'ARES_APP', SOURCE + '_' + scenario, 'OutageFactors', str(YEAR), WRITE_CSV, 'Zonal')
+else:
+    write_csv_files(tmp_out, 'ARES_APP', SOURCE, 'OutageFactors', str(YEAR), WRITE_CSV, 'Zonal')
