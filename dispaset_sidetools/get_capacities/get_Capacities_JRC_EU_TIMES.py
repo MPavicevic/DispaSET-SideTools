@@ -57,7 +57,7 @@ STOSELFDISCHARGE_P2H = 0.03
 STOSELFDISCHARGE_TES = 0.03
 
 # TODO:
-CCS = False  # Turn Carbon capture and sotrage on/off  (When false grouped by same Fuel type)
+CCS = True  # Turn Carbon capture and sotrage on/off  (When false grouped by same Fuel type)
 
 # %% Inputs
 # Folder destinations
@@ -502,7 +502,6 @@ def get_above_tech_treshold(typical_tech, treshold):
     tmp.columns = ['COMC', 'ICEN', 'GTUR', 'STUR']
     return tmp
 
-
 def get_below_tech_treshold(typical_tech, treshold):
     tmp = pd.DataFrame(typical_tech, columns=['COMC', 'ICEN', 'GTUR', 'STUR']).fillna(0)
     tmp['sum'] = typical_tech.sum(axis=1)
@@ -592,24 +591,70 @@ else:
     typical_tech_sun = pd.DataFrame([typical_tech_input['SUN_PHOT'], typical_tech_input['SUN_SCSP']],
                                     index=['PHOT', 'SCSP']).T
 
-typical_tech_gas = pd.DataFrame([typical_tech_input['GAS_COMC'], typical_tech_input['GAS_GTUR'],
-                                 typical_tech_input['GAS_ICEN'], typical_tech_input['GAS_STUR']],
-                                index=['COMC', 'GTUR', 'ICEN', 'STUR']).T
-typical_tech_bio = pd.DataFrame([typical_tech_input['BIO_COMC'], typical_tech_input['BIO_GTUR'],
-                                 typical_tech_input['BIO_ICEN'], typical_tech_input['BIO_STUR']],
-                                index=['COMC', 'GTUR', 'ICEN', 'STUR']).T
-typical_tech_hrd = pd.DataFrame([typical_tech_input['HRD_COMC'], typical_tech_input['HRD_STUR']],
-                                index=['COMC', 'STUR']).T
+if CCS is False or 'GAS_COMC_CCS' not in typical_tech_input.columns:
+    typical_tech_gas = pd.DataFrame([typical_tech_input['GAS_COMC'], typical_tech_input['GAS_GTUR'],
+                                     typical_tech_input['GAS_ICEN'], typical_tech_input['GAS_STUR']],
+                                    index=['COMC', 'GTUR', 'ICEN', 'STUR']).T
+else:
+    typical_tech_gas = pd.DataFrame([typical_tech_input['GAS_COMC'],typical_tech_input['GAS_COMC_CCS'],
+                                    typical_tech_input['GAS_GTUR'],
+                                    typical_tech_input['GAS_ICEN'], typical_tech_input['GAS_STUR']],
+                                    index=['COMC', 'COMC_CCS', 'GTUR', 'ICEN', 'STUR']).T
+if CCS is False or 'BIO_COMC_CCS' not in typical_tech_input.columns or 'BIO_STUR_CCS' not in typical_tech_input.columns:                                     
+    typical_tech_bio = pd.DataFrame([typical_tech_input['BIO_COMC'], typical_tech_input['BIO_GTUR'],
+                                     typical_tech_input['BIO_ICEN'], typical_tech_input['BIO_STUR']],
+                                     index=['COMC', 'GTUR', 'ICEN', 'STUR']).T
+elif CCS is True and 'BIO_COMC_CCS' in typical_tech_input.columns and 'BIO_STUR_CCS' not in typical_tech_input.columns: 
+    typical_tech_bio = pd.DataFrame([typical_tech_input['BIO_COMC'], typical_tech_input['BIO_COMC_CCS'], 
+                                     typical_tech_input['BIO_GTUR'],
+                                     typical_tech_input['BIO_ICEN'], typical_tech_input['BIO_STUR']],
+                                     index=['COMC', 'COMC_CCS', 'GTUR', 'ICEN', 'STUR']).T 
+elif CCS is True and 'BIO_COMC_CCS' not in typical_tech_input.columns and 'BIO_STUR_CCS' in typical_tech_input.columns:
+    typical_tech_bio = pd.DataFrame([typical_tech_input['BIO_COMC'], 
+                                     typical_tech_input['BIO_GTUR'], typical_tech_input['BIO_STUR_CCS'],
+                                     typical_tech_input['BIO_ICEN'], typical_tech_input['BIO_STUR']],
+                                     index=['COMC', 'GTUR', 'STUR_CCS', 'ICEN', 'STUR']).T                                     
+else:
+    typical_tech_bio = pd.DataFrame([typical_tech_input['BIO_COMC'], typical_tech_input['BIO_COMC_CCS'], 
+                                     typical_tech_input['BIO_GTUR'], typical_tech_input['BIO_STUR_CCS'],
+                                     typical_tech_input['BIO_ICEN'], typical_tech_input['BIO_STUR']],
+                                     index=['COMC', 'COMC_CCS', 'GTUR', 'STUR_CCS', 'ICEN', 'STUR']).T
+if CCS is False or 'HRD_COMC_CCS' not in typical_tech_input.columns:                                     
+    typical_tech_hrd = pd.DataFrame([typical_tech_input['HRD_COMC'], typical_tech_input['HRD_STUR']],
+                                    index=['COMC', 'STUR']).T
+else: 
+    typical_tech_hrd = pd.DataFrame([typical_tech_input['HRD_COMC'], typical_tech_input['HRD_COMC_CCS'],
+                                     typical_tech_input['HRD_STUR']], index=['COMC', 'COMC_CCS', 'STUR']).T   
+                                     
 typical_tech_oil = pd.DataFrame([typical_tech_input['OIL_COMC'], typical_tech_input['BIO_GTUR'],
                                  typical_tech_input['OIL_STUR']], index=['COMC', 'GTUR', 'STUR']).T
-
+        
+if CCS is True and TECH_CLUSTERING is True:
+    # Make a copy of typical_techs to keep CCS technologies
+    # /!\ This should be replaced by modifying get_threshold instead!   
+    typical_tech_bio_copy = typical_tech_bio.copy()
+    typical_tech_gas_copy = typical_tech_gas.copy()
+    typical_tech_hrd_copy = typical_tech_hrd.copy()
+    typical_tech_oil_copy = typical_tech_oil.copy()
+    
 if TECH_CLUSTERING is True:
     typical_tech_bio = get_tech_treshold(typical_tech_bio, CLUSTER_TRESHOLD)
     typical_tech_gas = get_tech_treshold(typical_tech_gas, CLUSTER_TRESHOLD)
     typical_tech_hrd = get_tech_treshold(typical_tech_hrd, CLUSTER_TRESHOLD)
     typical_tech_oil = get_tech_treshold(typical_tech_oil, CLUSTER_TRESHOLD)
-
-typical_tech_input.drop(columns=['GAS_Autoproducers', 'OIL_Autoproducers'], inplace=True)
+    
+if CCS is True and TECH_CLUSTERING is True:
+    # CCS techno have desappeared with get_tech_threshold
+    if 'COMC_CCS' in typical_tech_gas_copy.columns:
+        typical_tech_gas['COMC_CCS'] = typical_tech_gas_copy['COMC_CCS']
+    if 'COMC_CCS' in typical_tech_bio_copy.columns:
+        typical_tech_bio['COMC_CCS'] = typical_tech_bio_copy['COMC_CCS']
+    if 'STUR_CCS' in typical_tech_bio_copy.columns:
+        typical_tech_bio['STUR_CCS'] = typical_tech_bio_copy['STUR_CCS']
+    if 'COMC_CCS' in typical_tech_hrd_copy.columns:
+        typical_tech_hrd['COMC_CCS'] = typical_tech_hrd_copy['COMC_CCS']        
+    
+#typical_tech_input.drop(columns=['GAS_Autoproducers', 'OIL_Autoproducers'], inplace=True)
 technology_types = ['HDAM', 'HROR', 'HPHS', 'PHOT', 'WTOF', 'WTON', 'CAES', 'BATS', 'BEVS', 'THMS']
 typical_tech = pd.DataFrame([typical_tech_input['WAT_HDAM'], typical_tech_input['WAT_HPHS'],
                              typical_tech_input['WAT_HROR'], typical_tech_input['WIN_WTOF'],
@@ -635,25 +680,26 @@ typical_win['WTON'].fillna(1, inplace=True)
 typical_win.fillna(0, inplace=True)
 
 # %% GAS
-typical_gas = pd.DataFrame([typical_tech_gas['COMC'], typical_tech_gas['GTUR'],
-                            typical_tech_gas['ICEN'], typical_tech_gas['STUR']]).T
+typical_gas = typical_tech_gas.copy()
 typical_gas['sum'] = typical_gas.sum(axis=1)
-typical_gas = (typical_gas.loc[:, 'COMC':'STUR'].div(typical_gas['sum'], axis=0))
+typical_gas = (typical_gas.div(typical_gas['sum'], axis=0))
+typical_gas.drop('sum', axis=1, inplace=True)
 typical_gas['COMC'].fillna(1, inplace=True)
 typical_gas.fillna(0, inplace=True)
 
 # %% BIO
-typical_bio = pd.DataFrame([typical_tech_bio['COMC'], typical_tech_bio['GTUR'],
-                            typical_tech_bio['ICEN'], typical_tech_bio['STUR']]).T
+typical_bio = typical_tech_bio.copy()
 typical_bio['sum'] = typical_bio.sum(axis=1)
-typical_bio = (typical_bio.loc[:, 'COMC':'STUR'].div(typical_bio['sum'], axis=0))
+typical_bio = (typical_bio.div(typical_bio['sum'], axis=0))
+typical_bio.drop('sum', axis=1, inplace=True)
 typical_bio['STUR'].fillna(1, inplace=True)
 typical_bio.fillna(0, inplace=True)
 
 # %% HRD
-typical_hrd = pd.DataFrame([typical_tech_hrd['COMC'], typical_tech_hrd['STUR']]).T
+typical_hrd = typical_tech_hrd.copy()
 typical_hrd['sum'] = typical_hrd.sum(axis=1)
-typical_hrd = (typical_hrd.loc[:, 'COMC':'STUR'].div(typical_hrd['sum'], axis=0))
+typical_hrd = (typical_hrd.div(typical_hrd['sum'], axis=0))
+typical_hrd.drop('sum', axis=1, inplace=True)
 typical_hrd['STUR'].fillna(1, inplace=True)
 typical_hrd.fillna(0, inplace=True)
 
@@ -698,10 +744,6 @@ def get_typical_hydro(typical_hydro, clustering=None):
 
 typical_wat = get_typical_hydro(typical_hydro=pd.DataFrame([typical_tech['HDAM'], typical_tech['HROR'],
                                                             typical_tech['HPHS']]).T, clustering=HYDRO_STORAGE)
-
-# %% SOLAR
-# typical_sun = pd.DataFrame(typical_tech['PHOT'])
-
 
 # %% CHP and NON-CHP total power capacities
 fuels = ['BIO', 'GAS', 'HRD', 'LIG', 'PEA', 'WST', 'OIL', 'GEO']
