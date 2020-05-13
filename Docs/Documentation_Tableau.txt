@@ -5,7 +5,7 @@ inputs coming from TIMES with the help of TABLEAU
 
 o TIMES_Capacities_technology_2050_times_names.xlsx:
 	FILTERS: * Attribute: VAR_Cap
-		 * Main Activity: CHP, Electricity generation
+		 * Main Activity: Electricity generation
 		 * Scenario, period
 	COLUMNS: * Technology main input
 		 * Process Description 1
@@ -112,3 +112,10 @@ o TIMES_H2_Demand_PtL_2015.xslx
 	FILTERS: * Attribute: Var_FOut
 		 * Main activity: Power to liquid
 		 * Unit activity1: PJ
+		 * Process description 1: not the one finishing with "low AF"
+o TIMES_PtL_Capacities.xslx
+	FILTERS: * Attribute: VAR_Cap
+		 * Main Activity: Power to Liquid
+		 * scenario
+		 * Process Description 1: not if finishes by "low AF"
+
