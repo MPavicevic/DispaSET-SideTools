@@ -806,7 +806,7 @@ for c in countries:
     cap[c].fillna(0, inplace=True)
     # CHP
     tmp_cap_chp = pd.DataFrame(chp_power_capacities[c]).transpose()
-    tmp_GAS_chp = pd.DataFrame(typical_gas.loc[c]) * tmp_cap_chp['GAS']
+    tmp_GAS_chp = pd.DataFrame(chp_gas.loc[c]) 
     tmp_GAS_chp.rename(columns={c: 'GAS'}, inplace=True)
     tmp_other_chp = pd.DataFrame([tmp_cap_chp['GEO'], tmp_cap_chp['BIO'], tmp_cap_chp['HRD'], tmp_cap_chp['LIG'],
                                   tmp_cap_chp['OIL'], tmp_cap_chp['PEA'], tmp_cap_chp['WST']]).transpose()
