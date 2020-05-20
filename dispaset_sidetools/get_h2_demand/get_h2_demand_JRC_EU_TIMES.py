@@ -103,9 +103,9 @@ def write_csv_files(h2_rigid, h2_PtL, PtL_cap, write_csv=None):
         make_dir(output_folder + source_folder + 'Database')
         folder = output_folder + source_folder + 'Database/' + scenario + 'H2_demand/'
         make_dir(folder)
-        h2_rigid.to_csv(folder +  '/' + 'H2_rigid_Demand_2050.csv')
-        h2_PtL.to_csv(folder+ '/' + 'H2_PtL_Demand_2050.csv')
-        PtL_cap.to_csv(folder + '/' + 'PtL_capacities.csv')
+        h2_rigid.to_csv(folder +  '/' + 'H2_rigid_Demand_2050_' + CASE + '.csv')
+        h2_PtL.to_csv(folder+ '/' + 'H2_PtL_Demand_2050_' + CASE +'.csv')
+        PtL_cap.to_csv(folder + '/' + 'PtL_capacities_2050_' + CASE + '.csv')
     else:
         print('[WARNING ]: ' + 'WRITE_CSV_FILES = False, unable to write .csv files')
 
