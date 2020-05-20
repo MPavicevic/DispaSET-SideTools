@@ -85,7 +85,7 @@ o TIMES_DH_Demand_2050.xlsx
 		 * Commodity subtype Fin: District heat
 		 * Technology main input: Biogas, coal, gas, heat, other biomass
 o TIMES_Electricity_generation_2050.csv
-	FILTERS: * Attribute: VAR_FOut
+	FILTERS: * Attribute: VAR_FOut, VAR_FIn
 		 * Period
 		 * Unit - activity1: PJ
 		 * Commodity subtype: electricity
@@ -107,7 +107,7 @@ o TIMES_H2_Demand_2050.xlsx
 		 * Unit-activity1: PJ
 		 * Technology main input: Hydrogen
 		 * Process description: Everything BUT the last one (PEM fuel cell), District heating & Convert H2 to commodity...
-		 * Commodity: SYNH2CT, SYNH2CU, SYNH2DT
+		 * Commodity: SYNH2CT, SYNH2CU
 o TIMES_H2_Demand_PtL_2015.xslx
 	FILTERS: * Attribute: Var_FOut
 		 * Main activity: Power to liquid
