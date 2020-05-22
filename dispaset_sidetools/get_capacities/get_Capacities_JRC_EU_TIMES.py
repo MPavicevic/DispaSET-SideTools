@@ -1032,7 +1032,7 @@ for c in cap:
         h2data['STOMaxChargingPower'] = h2data['PowerCapacity']
         h2data['PowerCapacity']=typical_tech_input.loc[c,'HYD_PEMFC']
         if H2_STORAGE:
-            h2data['STOCapacity'] = h2_storage_capacities.loc[c,1]/(3.6e-6) #convert from PJ to MWh
+            h2data['STOCapacity'] = h2_storage_capacities.loc[c,1]*1000 #convert from GWh to MWh
         else:
             h2data['STOCapacity'] = 0
         units.loc[h2index,:] = h2data    
