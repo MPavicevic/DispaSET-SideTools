@@ -23,9 +23,9 @@ from dispaset_sidetools.common import make_dir
 # Scenario definition
 """ output file: SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE """
 YEAR = 2050  # considered year
-WRITE_CSV_FILES = True  # Write csv database
-SCENARIO = 'NearZeroCarbon'  # Scenario name, used for data and naming the files. ProRes1 or NearZeroCarbon
-CASE = 'ALLFLEX'  # Case name, used for naming csv files
+WRITE_CSV_FILES = False  # Write csv database
+SCENARIO = 'ProRes1'  # Scenario name, used for data and naming the files. ProRes1 or NearZeroCarbon
+CASE = 'NOFLEX'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 
 # Technology definition
@@ -42,7 +42,7 @@ H2_STORAGE = True
 P2GS_UNITS = True # False if we want to remove P2G sector
 
 CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
-V2G_SHARE = 0.5  # Define how many EV's are V2G
+V2G = True  # Define how many EV's are V2G
 
 # Clustering options (reduce the number of units - healthy number of units should be <300)
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
@@ -57,7 +57,7 @@ STOSELFDISCHARGE_P2H = 0.03
 STOSELFDISCHARGE_TES = 0.03
 
 # TODO:
-CCS = True  # Turn Carbon capture and sotrage on/off  (When false grouped by same Fuel type)
+CCS = False  # Turn Carbon capture and sotrage on/off  (When false grouped by same Fuel type)
 
 # %% Inputs
 # Folder destinations
@@ -113,6 +113,7 @@ reservoirs = pd.read_csv(input_folder + 'Default/' + 'Hydro_Reservoirs.csv', ind
 
 # Electric wehicles
 ev_batteries = pd.read_excel(input_folder + source_folder + scenario + 'TIMES_EV_Capacities.xlsx', index_col=0)
+ev_storage = pd.read_excel(input_folder + source_folder + scenario + 'TIMES_EV_Storage.xlsx', index_col=0)
 
 # Power to heat
 power2heat_capacities = pd.read_excel(input_folder + source_folder + scenario + 'TIMES_P2H_Capacities_2050.xlsx', index_col=0)
@@ -199,7 +200,8 @@ def Insert_row_(row_number, df, row_value):
 # Check that all countries are in hphs_capacities and otherwise add missing rows
 for c in range(len(typical_tech_input_raw.index)):
     if typical_tech_input_raw.index[c] not in hphs_capacities.index:
-       hphs_capacities =  Insert_row_(c,hphs_capacities, pd.DataFrame([0],index=[typical_tech_input_raw.index[c]]))
+       hphs_capacities.loc[c, : ]= 0
+       # Insert_row_(c,hphs_capacities, pd.DataFrame([0],index=[typical_tech_input_raw.index[c]]))
 
 # Add HPHS capacities in WAT capacities 
 if HYDRO_STORAGE == 'True':
@@ -431,7 +433,7 @@ reservoirs = get_reservoir_capacities(reservoirs)
 
 # %% BATS and BEVS data
 bevs_cap = pd.DataFrame()
-bevs_cap['BEVS'] = ev_batteries[str(YEAR)] * 1000
+bevs_cap['BEVS'] = ev_batteries.iloc[:,0] * 1000
 
 # %% P2H data
 power2heat_capacities = pd.DataFrame(power2heat_capacities)
@@ -971,7 +973,7 @@ for c in cap:
             sys.exit('Various HPHS units!')
         if len(tmp_hdam)==0:
             print('[INFO    ]: ' + 'Country ' + c + ' (HDAM) is not present')
-        elif len(tmp_hphs)==1:
+        elif len(tmp_hdam)==1:
             # HDAM charging power is 0
             # HDAM storage capacity is defined from reservoirs
             if c in reservoirs.index:
@@ -991,9 +993,13 @@ for c in cap:
     else:
         tmp_bev = units[units.Technology == 'BEVS']
         bevsindex = tmp_bev.index[0]
-        tmp_bev['PowerCapacity'] = tmp_bev['PowerCapacity'] * V2G_SHARE
+        tmp_bev['PowerCapacity'] = tmp_bev['PowerCapacity']
         tmp_bev['STOMaxChargingPower'] = tmp_bev['PowerCapacity']
-        tmp_bev['STOCapacity'] = tmp_bev['PowerCapacity'] * V2G_CAPACITY
+        if V2G is True:
+            tmp_bev['STOCapacity'] = ev_storage.loc[c,:].values*1000
+        else:
+            tmp_bev['STOCapacity'] = 0
+        # tmp_bev['STOCapacity'] = tmp_bev['PowerCapacity'] * V2G_CAPACITY
         # tmp_bev['PowerCapacity'] = tmp_bev['STOMaxChargingPower']
         units.update(tmp_bev)
         if units[units.Technology == 'BEVS'].PowerCapacity.values == 0:
@@ -1045,9 +1051,12 @@ for c in cap:
         if BATS_Lead_CAPACITY == 0:
             units.drop(c+'_BATS_OTH', inplace=True)
         else:
-            batsdata['PowerCapacity'] = batsdata['PowerCapacity'].values/(3.6e-6) # From PJ/h to MW
+            batsdata['PowerCapacity'] = (batsdata['PowerCapacity'].values)*1000 # From GW to MW
+            # batsdata['PowerCapacity'] = batsdata['PowerCapacity'].values/(3.6e-6) # From PJ/h to MW
             batsdata['STOCapacity'] = BATS_Liion_CAPACITY * bats_capacities_copy.loc[c,'Li-ion'] + BATS_Lead_CAPACITY * bats_capacities_copy.loc[c,'Lead-acid']
-            batsdata['STOCapacity'] = batsdata['STOCapacity'].values/(3.6e-6) # From PJ to MWh
+            batsdata['STOCapacity'] = batsdata['STOCapacity'].values*1000 # From PJ to MWh
+            # batsdata['STOCapacity'] = batsdata['STOCapacity'].values/(3.6e-6) # From PJ to MWh
+
             batsdata['STOMaxChargingPower'] = batsdata['PowerCapacity'].copy()
             units.loc[batsindex,:] = batsdata
     else:
