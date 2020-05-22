@@ -37,12 +37,12 @@ P2G_TES_CAPACITY = 5  # No of storage hours in P2H units (500l tank = 5h of stor
 HPHS_CAPACITY = 6 # No of storage hours for HPHS units (given from TIMES) and in HDAM if not in reservoirs
 BATS_Liion_CAPACITY = 1 # No of storage hours for batteries
 BATS_Lead_CAPACITY = 4
-V2G_CAPACITY = 4.487 # No of storage for vehicles 2 grid 
+V2G_CAPACITY = 60 # Average EV battery capacity [kWh]
 H2_STORAGE = True
 P2GS_UNITS = True # False if we want to remove P2G sector
 
 CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
-V2G = True  # Define how many EV's are V2G
+V2G_SHARE = 0.5  # Define how many EV's are V2G
 
 # Clustering options (reduce the number of units - healthy number of units should be <300)
 BIOGAS = 'GAS'  # Define what biogas fuel equals to (BIO or GAS)
@@ -113,7 +113,9 @@ reservoirs = pd.read_csv(input_folder + 'Default/' + 'Hydro_Reservoirs.csv', ind
 
 # Electric wehicles
 ev_batteries = pd.read_excel(input_folder + source_folder + scenario + 'TIMES_EV_Capacities.xlsx', index_col=0)
-ev_storage = pd.read_excel(input_folder + source_folder + scenario + 'TIMES_EV_Storage.xlsx', index_col=0)
+ev_number = pd.read_excel(input_folder + source_folder + scenario + 'TIMES_EV_Number.xlsx', index_col=0, skiprows = 1)
+ev_number['EV'] = ev_number * 1000 # To pass from 1000vehicles to vehicles
+ev_number = ev_number.iloc[:,-1]
 
 # Power to heat
 power2heat_capacities = pd.read_excel(input_folder + source_folder + scenario + 'TIMES_P2H_Capacities_2050.xlsx', index_col=0)
@@ -995,10 +997,7 @@ for c in cap:
         bevsindex = tmp_bev.index[0]
         tmp_bev['PowerCapacity'] = tmp_bev['PowerCapacity']
         tmp_bev['STOMaxChargingPower'] = tmp_bev['PowerCapacity']
-        if V2G is True:
-            tmp_bev['STOCapacity'] = ev_storage.loc[c,:].values*1000
-        else:
-            tmp_bev['STOCapacity'] = 0
+        tmp_bev['STOCapacity'] = ev_number.loc[c]*V2G_CAPACITY*V2G_SHARE/1000 #divided because the V2G capacity is in kWh but we want MWh
         # tmp_bev['STOCapacity'] = tmp_bev['PowerCapacity'] * V2G_CAPACITY
         # tmp_bev['PowerCapacity'] = tmp_bev['STOMaxChargingPower']
         units.update(tmp_bev)
