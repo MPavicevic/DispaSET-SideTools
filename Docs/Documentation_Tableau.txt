@@ -41,7 +41,8 @@ o TIMES_H2STO_Capacities_2050.xlsx
 	LINES:   * Main activity
 o TIMES_BATS_Capacities_2050.xlsx
 	FILTERS: * Attribute: VAR_Cap
-		 * Unit -activity1: PJ
+		 * Scenario, period
+		 * Main Activity: storage of electricity
 		 * Process description 1: COM - Battery (Lead-acid) ELC storage: Daynite (accompanying tech to represent power),
 					  COM - Battery (Li-ion) ELC storage: Daynite (accompanying tech to represent power),
  					  RSD - Battery (Lead-acid) ELC storage: Daynite (accompying tech to represent power),

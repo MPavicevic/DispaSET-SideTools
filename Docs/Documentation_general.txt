@@ -38,7 +38,7 @@ o Run get_heat_demand_JRC_EU_TIMES in dispaset_sidetools/JRC_EU_TIMES/scenario
 	INPUTS: * TIMES_P2H_Demand_tech_2050.xlsx
 		* TIMES_DH_Demand_2050.xlsx
 		* Default/Heating_Demands/When2Heat/...
-o Run get_power_curves_scaling.py in dispaset_sidetools/get_demand
+o Run get_Demand_JRC_EU_TIMES.py in dispaset_sidetools/get_demand
 	INPUTS: * TIMES_Electricity_generation_2050.csv
 		* TIMES_Electricity_generation_2020.csv
 		* TIMES_Delta_P2H_2050-2020.csv

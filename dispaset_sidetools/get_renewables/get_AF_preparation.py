@@ -127,7 +127,7 @@ cf_sun = pd.DataFrame(index = [0])
 for c in countries: 
     cf_sun[c] = af[c]['PHOT'].mean()
 
-pmax_sun = pmax["SUN_STUR"] + pmax["SUN_PHOT"]  #MW
+pmax_sun = pmax["SUN_SCSP"] + pmax["SUN_PHOT"]  #MW
 pmax_phot = pmax["SUN_PHOT"]  #MW
 
 en_times_sun = pd.read_excel(inputfile_en_sun, index_col = 0, skiprows = 3, header = 0) #PJ
