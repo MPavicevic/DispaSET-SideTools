@@ -24,10 +24,10 @@ os.chdir(dispaset_sidetools_path)
 
 from dispaset_sidetools.common import make_dir
 
-WRITE_CSV_FILES = True  # Write csv database
+WRITE_CSV_FILES = False  # Write csv database
 
 #Output File name
-scenario = 'NearZeroCarbon'
+scenario = 'ProRes1'
 year = '2050'
 filename = 'AF_%s_%s' %(scenario, year)
 
@@ -49,12 +49,17 @@ inputfile_en_hror = input_folder + "/JRC_EU_TIMES/" + scenario + "/TIMES_Energy_
 #Provide the path for the TIMES Energy production for the SUN units
 inputfile_en_sun = input_folder + "/JRC_EU_TIMES/" + scenario + "/TIMES_Energy_SUN.xlsx"
 
+#File with the BEVS AF 
+inputfile_ev_af_curve = input_folder + "RAMP-mobility\RAMP-mobility_AF.csv"
+
 #%% ################### AF #######################
 
 #Loading the availability factors from Dispa-SET
 
 import pandas as pd
-countries = ['AT', 'BE', 'BG', 'CZ', 'DE','DK', 'EE', 'IE', 'EL', 'ES', 'FR', 'HR', 'IT', 'LV', 'LT', 'LU', 'HU', 'NL', 'PL', 'PT', 'RO', 'SI', 'SK', 'FI', 'SE', 'UK', 'NO', 'CH', 'CY', 'MT']
+countries = ['AT', 'BE', 'BG', 'CZ', 'DE','DK', 'EE', 'IE', 'EL', 'ES', 'FR', 
+             'HR', 'IT', 'LV', 'LT', 'LU', 'HU', 'NL', 'PL', 'PT', 'RO', 'SI',
+             'SK', 'FI', 'SE', 'UK', 'NO', 'CH', 'CY', 'MT']
 
 af = {}
 #year = 2050
@@ -106,7 +111,7 @@ en_times_hror = en_times_hror.rename(columns = {'2050' : "0"})
 en_cf_hror = (pmax_hror * cf_hror *8784/1000).T #GWh
 
 #Calculates the updated AF in order to meet the target of energy production 
-af_multiplier_hror = en_times_hror['0'] / en_cf_hror.iloc[:,0]
+af_multiplier_hror = en_times_hror.iloc[:,0] / en_cf_hror.iloc[:,0]
 af_multiplier_hror.fillna(1, inplace = True)
 af_multiplier_hror['EE'] = 1
 
@@ -158,11 +163,15 @@ for c in countries:
 
 #%% Fix af_scaled for BEVS
     
+af_ev = pd.read_csv(inputfile_ev_af_curve, index_col = 0)
+
+af_ev['CY'] = af_ev['EL']
+af_ev['MT'] = af_ev['EL']
+
 for c in countries: 
-    af_scaled[c]['BEVS'] = af[c]['BEVS']
+    af_scaled[c]['BEVS'] = af_ev[c].values
     af_scaled[c]['WTON'] = af[c]['WTON']
     af_scaled[c]['WTOF'] = af[c]['WTOF']
-    
     
 #%% Save to csv
 

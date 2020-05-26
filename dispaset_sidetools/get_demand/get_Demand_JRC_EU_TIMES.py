@@ -36,7 +36,7 @@ os.chdir(dispaset_sidetools_path)
 
 from dispaset_sidetools.common import make_dir
 
-WRITE_CSV_FILES = True  # Write csv database
+WRITE_CSV_FILES = False  # Write csv database
 
 #Output File name
 scenario = 'ProRes1'
@@ -65,8 +65,8 @@ inputfile_ev =  input_folder + source_folder + '/' + scenario + "/TIMES_EV_Deman
 # File with power curves from dispaset (%s stands for the country code)
 inputfile_power = input_folder + 'Default/' + "TotalLoadValue/%s/1h/2016.csv"
 
-#File with the demand curve for EV (Currently from PyPSA, we are working to generate better curves)
-inputfile_ev_curve =input_folder + "PyPSA/PyPSA_EV_Demand_Profiles.csv"
+#File with the demand curve for EV 
+inputfile_ev_curve = input_folder + "RAMP-mobility\RAMP-mobility_EV_Demand_Profiles.csv"
 
 #%% Input demands
 
@@ -159,32 +159,15 @@ p_curve_scaled = p_curve * country_coeff.T
 
 ev_demand = pd.read_csv(inputfile_ev_curve, header = 0, index_col = 0)
 
-ev_demand_ad = ev_demand/(ev_demand.sum(axis = 0)/10**6)
-ev_demand_ad['UK']  = ev_demand_ad.pop('GB')
+ev_demand_ad = ev_demand/ev_demand.sum(axis = 0) # [W/Wh] 
 
-ev_demand_ad['CY']  = ev_demand_ad['EL']
-ev_demand_ad['MT']  = ev_demand_ad['EL']
-
-ev_demand_ad.drop(columns = ['BA', 'RS'], inplace = True)
-
-
-ev_demand_scaled = ev_demand_ad * ev_demand_times
-
-for h in ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']:
-    ev_demand_scaled.loc['2011-02-29 ' + h + ':00:00',:] = (ev_demand_scaled.loc['2011-02-28 ' + h + ':00:00',:] + ev_demand_scaled.loc['2011-03-01 ' + h + ':00:00',:])/2
-    ev_demand_scaled.sort_index(inplace = True)
-
-temp_friday = ev_demand_scaled.loc['2011-12-31 00:00:00':'2011-12-31 23:00:00',:]
-ev_demand_scaled = ev_demand_scaled.loc[:'2011-12-31', :]
-ev_demand_scaled = pd.concat([temp_friday, ev_demand_scaled], axis=0, join='inner')
+ev_demand_scaled = ev_demand_ad * (ev_demand_times * 1e6) # Scaled demand in MW
 
 yr = 2016
 hour = pd.date_range(start=str(yr) + '-01-01', end= str(yr) + '-12-31 23:00', freq='H')
 ev_demand_scaled.set_index(hour, inplace= True)
 
 p_curve_scaled_ev = p_curve_scaled + ev_demand_scaled
-p_curve_scaled_ev.drop(columns = ['CY', 'MT'], inplace = True)
-
 
 #%% Export scaled power curves
     
