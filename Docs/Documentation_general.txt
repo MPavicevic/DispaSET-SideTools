@@ -19,6 +19,7 @@ o Run get_Capacities_JRC_EU_TIMES.py in dispaset_sidetools/get_capacities
 		* TIMES_BATS_Capacities_2050.xlsx
 		* Defaults/Hydro_Reservoirs.csv
 		* TIMES_EV_Capacities.xlsx
+		* TIMES_EV_Number.xlsx
 		* TIMES_P2H_Capacities_2050.xlsx
 		* TIMES_P2H_COP_Parameters_2050.xlsx
 o Run get_AF_preparation.py in dispaset_sidetools/get_renewables
@@ -28,6 +29,7 @@ o Run get_AF_preparation.py in dispaset_sidetools/get_renewables
 			   get_capacities_JRC_EU_TIMES.py
 		* TIMES_Energy_HROR.xlsx in Inputs/model/scenario 
 		* TIMES_Energy_SUN.xlsx in Inputs/model/scenario
+		* RAMP-mobility/RAMP-mobility_AF.csv
 o Run get_Hydro_ScaledInflows_preparation.py in dispaset_sidetools/get_renewables
 	INPUTS: * TIMES_Capacities_technology_2050.csv
 		* TIMES_Energy_HDAM.xlsx
@@ -38,13 +40,13 @@ o Run get_heat_demand_JRC_EU_TIMES in dispaset_sidetools/JRC_EU_TIMES/scenario
 	INPUTS: * TIMES_P2H_Demand_tech_2050.xlsx
 		* TIMES_DH_Demand_2050.xlsx
 		* Default/Heating_Demands/When2Heat/...
-o Run get_power_curves_scaling.py in dispaset_sidetools/get_demand
+o Run get_Demand_JRC_EU_TIMES.py in dispaset_sidetools/get_demand
 	INPUTS: * TIMES_Electricity_generation_2050.csv
 		* TIMES_Electricity_generation_2020.csv
 		* TIMES_Delta_P2H_2050-2020.csv
 		* TIMES_EV_Demand_2050.csv
 		* Default/TotalLoadValue/..
-		* PyPSA/PyPSA_EV_Demand_Profiles.csv
+		* RAMP-mobility/RAMP-mobility_EV_Demand_Profiles.csv
 o Run get_h2_demand_JRC_EU_TIMES.py in dispaset_sidetools/get_h2_demand
 	INPUTS: * TIMES_H2_Demand_2050.xlsx
 		
