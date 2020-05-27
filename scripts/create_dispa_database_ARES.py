@@ -24,11 +24,11 @@ source_folder = 'ARES_Africa/'
 output_folder = '../Outputs/'
 
 # Other options
-WRITE_CSV = True
-YEAR = 2055
+WRITE_CSV = False
+YEAR = 2045
 EFFICIENCY = 0.8
 TEMBA = True
-scenario = '2.0deg'  # Reference, 1.5deg, 2.0deg
+scenario = 'Reference'  # Reference, 1.5deg, 2.0deg
 
 # Source for demand projections
 SOURCE = 'TEMBA'
@@ -46,9 +46,9 @@ data_hydro = pd.read_excel(input_folder + source_folder + 'African_hydro_dams.xl
 temba_inputs = pd.read_csv(input_folder + source_folder + 'TEMBA_Results.csv', header=0, index_col=0)
 
 # Countries used in the analysis
-countries_EAPP = ['Burundi', 'Djibouti', 'Ethiopia', 'Eritrea', 'Kenya', 'Rwanda', 'Somalia', 'Sudan',
+countries_EAPP = ['Burundi', 'Djibouti', 'Egypt', 'Ethiopia', 'Eritrea', 'Kenya', 'Rwanda', 'Somalia', 'Sudan',
                   'South Sudan', 'Tanzania', 'Uganda']
-countries_NAPP = ['Algeria', 'Libya', 'Morocco', 'Mauritania', 'Tunisia', 'Egypt']
+countries_NAPP = ['Algeria', 'Libya', 'Morocco', 'Mauritania', 'Tunisia']
 countries_CAPP = ['Angola', 'Cameroon', 'Central African Republic', 'Republic of the Congo', 'Chad', 'Gabon',
                   'Equatorial Guinea', 'Democratic Republic of the Congo']
 
@@ -78,3 +78,32 @@ if SOURCE == 'TEMBA':
     #     allunits = pickle.load(handle)
 else:
     ds.write_csv_files(allunits, 'ARES_APP', SOURCE, 'PowerPlants', str(YEAR), WRITE_CSV, 'Zonal')
+
+
+tmp = {}
+aa = ds.get_temba_plants(temba_inputs,
+                        ds.assign_typical_units(ds.powerplant_data_preprocessing(pp_data),
+                                                typical_units,
+                                                typical_cooling),
+                        ds.get_hydro_units(data_hydro, EFFICIENCY),
+                        typical_units,
+                        typical_cooling,
+                        YEAR,
+                        TEMBA=TEMBA,
+                        scenario=scenario)
+tmp = {}
+for p in ['NAPP', 'EAPP', 'CAPP']:
+    if p == 'NAPP':
+        zones = ds.get_country_codes(countries_NAPP)
+    elif p == 'CAPP':
+        zones = ds.get_country_codes(countries_CAPP)
+    else:
+        zones = ds.get_country_codes(countries_EAPP)
+    bb = {}
+    for fuel in aa['Fuel'].unique():
+        bb[fuel] = aa.loc[(aa['Zone'].isin(zones)) & (aa['Fuel'] == fuel)]['PowerCapacity'].sum()
+    tmp[p] = bb
+
+bb = pd.DataFrame.from_dict(tmp)
+
+bb.to_csv('Ares_capacites' + str(YEAR) + '.csv')

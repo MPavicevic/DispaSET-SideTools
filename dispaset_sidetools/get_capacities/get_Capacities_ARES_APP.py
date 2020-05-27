@@ -260,8 +260,7 @@ def get_temba_plants(temba_inputs, old_units, hydro_units, typical_units, typica
                        'Solar CSP': 'SUN', 'Solar PV': 'SUN',
                        'Wind': 'WIN'}
 
-        temba_techs = {'Biomass': 'STUR',
-                       'Biomass with ccs': 'STUR',
+        temba_techs = {'Biomass': 'STUR', 'Biomass with ccs': 'STUR',
                        'Coal': 'STUR', 'Coal with ccs': 'STUR',
                        'Gas': 'COMC', 'Gas with ccs': 'COMC',
                        'Geothermal': 'STUR',
@@ -299,7 +298,8 @@ def get_temba_plants(temba_inputs, old_units, hydro_units, typical_units, typica
         aa['New'] = 'New'
         temba_fosil = aa[~aa['Fuel'].str.contains("WAT")]
         temba_hydro = aa[aa['Fuel'].str.contains("WAT")]
-        temba_fosil['Name'] = temba_fosil[['country', 'Fuel', 'Technology', 'New']].apply(lambda x: '_'.join(x), axis=1)
+        temba_fosil['variable'].replace(' ', '_', regex=True, inplace=True)
+        temba_fosil['Name'] = temba_fosil[['country', 'variable', 'New']].apply(lambda x: '_'.join(x), axis=1)
         temba_HROR = temba_hydro.copy()
         temba_HDAM = temba_hydro.copy()
         temba_HROR.set_index('country', inplace=True, drop=False)
@@ -444,7 +444,7 @@ def get_allunits(data, countries):
 #     for fuel in data['Fuel'].unique():
 #         aa[fuel] = data.loc[(data['Zone'].isin(zones)) & (data['Fuel'] == fuel)]['PowerCapacity'].sum()
 #     tmp[p] = aa
-
+#
 # bb = pd.DataFrame.from_dict(tmp)
 #
 # bb.to_csv('Ares_capacites.csv')
