@@ -7,16 +7,19 @@ This script generates the PowerPlant Dispa-SET data for the JRC-EU-TIMES runs
 """
 from __future__ import division
 
-import pandas as pd
-import numpy as np
 import logging
+
+import numpy as np
+import pandas as pd
+
 # Local source tree imports
-from ..common import date_range, get_country_codes, write_csv_files, commons
+from ...common import get_country_codes, commons
+
 
 # Assing cooling based on wighted average
-def assign_cooling(pp_data, TEMBA = None):
+def assign_cooling(pp_data, TEMBA=None):
     if TEMBA == True:
-        rename = {'PowerCapacity':'Power'}
+        rename = {'PowerCapacity': 'Power'}
         pp_data['Capacity'] = pp_data['PowerCapacity']
     for f in ['BIO', 'GAS', 'OIL', 'WST', 'HRD', 'PEA', 'GEO', 'OTH', 'WIN', 'SUN']:
         if f == 'WIN':
@@ -46,40 +49,40 @@ def assign_cooling(pp_data, TEMBA = None):
             for t in ['STUR', 'COMC', 'GTUR', 'ICEN']:
                 if t == 'ICEN':
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) & (pp_data['Capacity'] < 15) &
-                                (pp_data['Cooling'].isna()),'Cooling'] = 'AIR'
+                                (pp_data['Cooling'].isna()), 'Cooling'] = 'AIR'
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) & (pp_data['Capacity'] >= 15) &
-                                (pp_data['Cooling'].isna()),'Cooling'] = 'OTF'
+                                (pp_data['Cooling'].isna()), 'Cooling'] = 'OTF'
                 if t == 'STUR':
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) &
-                                (pp_data['Capacity'] < 20) & (pp_data['Cooling'].isna()),'Cooling'] = 'MDT'
+                                (pp_data['Capacity'] < 20) & (pp_data['Cooling'].isna()), 'Cooling'] = 'MDT'
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) &
-                                (pp_data['Capacity'] >= 20) & (pp_data['Cooling'].isna()),'Cooling'] = 'OTF'
+                                (pp_data['Capacity'] >= 20) & (pp_data['Cooling'].isna()), 'Cooling'] = 'OTF'
                 if t == 'COMC':
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) &
                                 (pp_data['Capacity'] >= 200) & (pp_data['Capacity'] < 250) &
-                                (pp_data['Cooling'].isna()),'Cooling'] = 'AIR'
+                                (pp_data['Cooling'].isna()), 'Cooling'] = 'AIR'
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) &
                                 (pp_data['Capacity'] >= 180) & (pp_data['Capacity'] < 720) &
-                                (pp_data['Cooling'].isna()),'Cooling'] = 'OTF'
+                                (pp_data['Cooling'].isna()), 'Cooling'] = 'OTF'
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) &
-                                (pp_data['Cooling'].isna()),'Cooling'] = 'MDT'
+                                (pp_data['Cooling'].isna()), 'Cooling'] = 'MDT'
                 if t == 'GTUR':
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) & (pp_data['Capacity'] < 15) &
-                                (pp_data['Cooling'].isna()),'Cooling'] = 'AIR'
+                                (pp_data['Cooling'].isna()), 'Cooling'] = 'AIR'
             pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Cooling'].isna()), 'Cooling'] = 'OTF'
         if (f == 'OIL') or (f == 'OTH'):
             for t in ['STUR', 'COMC', 'GTUR', 'ICEN']:
                 if (t == 'COMC') or (t == 'STUR'):
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) & (pp_data['Capacity'] < 15) &
-                                (pp_data['Cooling'].isna()),'Cooling'] = 'AIR'
+                                (pp_data['Cooling'].isna()), 'Cooling'] = 'AIR'
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) &
                                 (pp_data['Capacity'] >= 15) & (pp_data['Capacity'] < 720) &
-                                (pp_data['Cooling'].isna()),'Cooling'] = 'OTF'
+                                (pp_data['Cooling'].isna()), 'Cooling'] = 'OTF'
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) &
-                                (pp_data['Cooling'].isna()),'Cooling'] = 'MDT'
+                                (pp_data['Cooling'].isna()), 'Cooling'] = 'MDT'
                 if (t == 'ICEN') or (t == 'GTUR'):
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) & (pp_data['Capacity'] > 0) &
-                                (pp_data['Cooling'].isna()),'Cooling'] = 'AIR'
+                                (pp_data['Cooling'].isna()), 'Cooling'] = 'AIR'
             pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Cooling'].isna()), 'Cooling'] = 'OTF'
     return pp_data
 
@@ -131,6 +134,7 @@ def assign_typical_units(pp_data, typical_units, typical_cooling):
     Function to assign typical units
     :param pp_data:         Preprocessed powerplant data
     :param typical_units    Typical units from csv files
+    :param typical_cooling  Typical cooling systems
     :return:                Data in dispaset readable format
     """
     # Assign data to Dispa-SET readable format
@@ -176,7 +180,8 @@ def assign_typical_units(pp_data, typical_units, typical_cooling):
                             logging.info('Typical cooling assigned to: ' + fuel + ' + ' + technology + ' + ' + cooling +
                                          ' combination.')
                 else:
-                    logging.warning('Typical cooling was not assigned to ' + fuel + '. No typical data available for OTH!')
+                    logging.warning(
+                        'Typical cooling was not assigned to ' + fuel + '. No typical data available for OTH!')
 
     return data
 
@@ -185,6 +190,7 @@ def assign_typical_units(pp_data, typical_units, typical_cooling):
 def get_hydro_units(data_hydro, EFFICIENCY):
     """
     :param data_hydro:      Raw hydro data from xlsx files
+    :param EFFICIENCY:      Efficiency of hydro units
     :return hydro_units:    Hydro units in dispaset format
     """
     # Identify and assign ISO_2 country code
@@ -240,13 +246,18 @@ def merge_power_plants(data_1, data_2):
 
 
 # %% TEMBA Processing
-def get_temba_plants(temba_inputs, old_units, hydro_units, typical_units, typical_cooling, YEAR, TEMBA=False, scenario=False):
+def get_temba_plants(temba_inputs, old_units, hydro_units, typical_units, typical_cooling, YEAR, TEMBA=False,
+                     scenario=False):
     """
     Function that adds temba capacities to the existing ones
     :param temba_inputs:    TEMBA projections
     :param hydro_units:     Hydro units
-    :param old_units        Old units
-    :param typical_units    Typical units
+    :param old_units:        Old units
+    :param typical_units:    Typical units
+    :param typical_cooling:  Typical cooling systems
+    :param YEAR:            Year from TEMBA scenarios
+    :param TEMBA:           TEMBA is true or false
+    :param scenario:        TEMBA scenario
     :return:                Database of power plants
     """
     if TEMBA is True:
@@ -355,8 +366,8 @@ def get_temba_plants(temba_inputs, old_units, hydro_units, typical_units, typica
                             (temba['Technology'] == technology) & (temba['Fuel'] == fuel), 'PowerCapacity']
                     temba.loc[(temba['Technology'] == technology) & (temba['Fuel'] == fuel) &
                               (temba['PartLoadMin'] >= 1), 'PartLoadMin'] = typical_units.loc[
-                            (typical_units['Technology'] == technology) &
-                            (typical_units['Fuel'] == fuel), 'PartLoadMin'].values
+                        (typical_units['Technology'] == technology) &
+                        (typical_units['Fuel'] == fuel), 'PartLoadMin'].values
                     logging.info('Typical units assigned to: ' + fuel + ' and ' + technology + ' combination.')
 
         temba['Cooling'] = np.nan
@@ -377,11 +388,11 @@ def get_temba_plants(temba_inputs, old_units, hydro_units, typical_units, typica
                     if fuel != 'OTH':
                         for cooling in ['AIR', 'WIN', 'PV', 'CSP', 'OTF/OTS', 'MDT/NDT']:
                             if temba.loc[(temba['Technology'] == technology) & (temba['Fuel'] == fuel) &
-                                        (temba['Cooling'] == cooling)].empty:
+                                         (temba['Cooling'] == cooling)].empty:
                                 continue
                             else:
                                 temba.loc[(temba['Technology'] == technology) & (temba['Fuel'] == fuel) &
-                                         (temba['Cooling'] == cooling), cool_cols] = typical_cooling.loc[
+                                          (temba['Cooling'] == cooling), cool_cols] = typical_cooling.loc[
                                     (typical_cooling['Technology'] == technology) & (typical_cooling['Fuel'] == fuel) &
                                     (typical_cooling['Process'] == cooling), cool_cols].values
                                 logging.info(
@@ -421,30 +432,33 @@ def get_allunits(data, countries):
         unique_tech[c] = list(allunits[c]['Technology'].unique())
     return allunits
 
-# write_csv_files(allunits, 'ARES_APP', SOURCE, 'PowerPlants', str(YEAR), WRITE_CSV, 'Zonal')
-#
-# if WRITE_CSV is True:
-#     import pickle
-#
-#     with open(input_folder + source_folder + 'TEMBA_capacities_' + str(YEAR) + '.p', 'wb') as handle:
-#         pickle.dump(allunits, handle, protocol=pickle.HIGHEST_PROTOCOL)
-#
-#     with open(input_folder + source_folder + 'Units_from_get_Capacities.p', 'rb') as handle:
-#         allunits = pickle.load(handle)
-#
-# tmp = {}
-# for p in ['NAPP', 'EAPP', 'CAPP']:
-#     if p == 'NAPP':
-#         zones = get_country_codes(countries_NAPP)
-#     elif p == 'CAPP':
-#         zones = get_country_codes(countries_CAPP)
-#     else:
-#         zones = get_country_codes(countries_EAPP)
-#     aa = {}
-#     for fuel in data['Fuel'].unique():
-#         aa[fuel] = data.loc[(data['Zone'].isin(zones)) & (data['Fuel'] == fuel)]['PowerCapacity'].sum()
-#     tmp[p] = aa
-#
-# bb = pd.DataFrame.from_dict(tmp)
-#
-# bb.to_csv('Ares_capacites.csv')
+
+def create_database(temba_inputs, pp_data, hydro_data, typical_units, typical_cooling, countries, YEAR, EFFICIENCY,
+                    TEMBA=False, scenario=False):
+    """
+    Function for creating power plant database
+    :param temba_inputs:
+    :param pp_data:
+    :param hydro_data:
+    :param typical_units:
+    :param typical_cooling:
+    :param countries:
+    :param YEAR:
+    :param EFFICIENCY:
+    :param TEMBA:
+    :param scenario:
+    :return:
+    """
+    allunits = get_allunits(
+        get_temba_plants(temba_inputs,
+                         assign_typical_units(powerplant_data_preprocessing(pp_data),
+                                              typical_units,
+                                              typical_cooling),
+                         get_hydro_units(hydro_data, EFFICIENCY),
+                         typical_units,
+                         typical_cooling,
+                         YEAR,
+                         TEMBA=TEMBA,
+                         scenario=scenario),
+        countries)
+    return allunits

@@ -85,5 +85,6 @@ for filename in (f for f in os.listdir('.') if f.endswith('.dispa_sidetools.log'
         print ('Could not erase previous log file ' + filename)
 
 # Import main function that can be called from dsst.function
-from .get_capacities.get_Capacities_ARES_APP import get_allunits, get_hydro_units, powerplant_data_preprocessing, \
-    get_temba_plants, assign_typical_units
+# from .preprocessing.get_capacities.get_Capacities_ARES_APP import get_allunits, get_hydro_units, \
+#     powerplant_data_preprocessing, get_temba_plants, assign_typical_units
+from .preprocessing.build import create_powerplants, create_demand, create_fuel_prices
