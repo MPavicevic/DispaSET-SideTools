@@ -11,6 +11,7 @@ from .get_demand.get_Demand_ARES_APP import get_demands
 from .get_fuel_prices.get_FP_ARES_APP import get_fuel_prices
 from .get_NTCs.get_NTC_ARES_APP import get_NTCs
 from .get_outages.get_OF_ARES_APP import get_outages
+from .get_renewables.get_AF_ARES_APP import get_renewables
 from ..common import write_csv_files
 
 
@@ -97,3 +98,6 @@ def create_outages(allunits, generation, capacity_factors, SOURCE, scenario, YEA
     else:
         write_csv_files(outages, 'ARES_APP', SOURCE, 'OutageFactors', str(YEAR), write_csv, 'Zonal')
     return outages
+
+def create_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, path, YEAR_InFlow, generation, capacity_factors):
+    get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, path, YEAR_InFlow, generation, capacity_factors)

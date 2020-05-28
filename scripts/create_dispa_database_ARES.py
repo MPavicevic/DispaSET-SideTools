@@ -15,6 +15,7 @@ sys.path.append(os.path.abspath('..'))
 # Import Dispa-SET
 import dispaset_sidetools as ds
 import pandas as pd
+import glob
 
 # %% Inputs
 # Folder destinations
@@ -67,6 +68,19 @@ generation = pd.read_excel(input_folder + source_folder + 'Annual_Generation_Sta
 generation.fillna(0, inplace=True)
 # Capacity factor for CSP
 capacity_factors = pd.read_csv(input_folder + source_folder + 'CF_IRENA.csv', index_col=0, header=0)
+# Renewables data
+solar_AF = pd.read_csv(input_folder + source_folder + 'Solar_PV_AF.csv')
+wind_AF = pd.read_csv(input_folder + source_folder + 'Wind_OnShore_AF.csv')
+# Hydro dam data and InfLows from xlsx and csv
+hydro_dam_data = pd.read_excel(input_folder + source_folder + 'African_hydro_dams.xlsx', int=0, header=0)
+path = input_folder + source_folder + 'AfricaDamsInFlows'  # use your path
+
+# Other options
+STO_HOURS = 5
+EFFICIENCY = 0.8
+YEAR_InFlow = 2015
+YEAR_Generation = 2015
+SOURCE_Hydro = 'LISFLOOD'
 
 
 #%% Countries used in the analysis
@@ -95,30 +109,4 @@ ntcs = ds.create_ntcs(ntc_data,YEAR,'JRC')
 
 outages = ds.create_outages(allunits, generation, capacity_factors, SOURCE, scenario, YEAR)
 
-# tmp = {}
-# aa = ds.get_temba_plants(temba_inputs,
-#                          ds.assign_typical_units(ds.powerplant_data_preprocessing(pp_data),
-#                                                  typical_units,
-#                                                  typical_cooling),
-#                          ds.get_hydro_units(data_hydro, EFFICIENCY),
-#                          typical_units,
-#                          typical_cooling,
-#                          YEAR,
-#                          TEMBA=TEMBA,
-#                          scenario=scenario)
-# tmp = {}
-# for p in ['NAPP', 'EAPP', 'CAPP']:
-#     if p == 'NAPP':
-#         zones = ds.get_country_codes(countries_NAPP)
-#     elif p == 'CAPP':
-#         zones = ds.get_country_codes(countries_CAPP)
-#     else:
-#         zones = ds.get_country_codes(countries_EAPP)
-#     bb = {}
-#     for fuel in aa['Fuel'].unique():
-#         bb[fuel] = aa.loc[(aa['Zone'].isin(zones)) & (aa['Fuel'] == fuel)]['PowerCapacity'].sum()
-#     tmp[p] = bb
-#
-# bb = pd.DataFrame.from_dict(tmp)
-#
-# bb.to_csv('Ares_capacites' + str(YEAR) + '.csv')
+ds.create_renewables(countries, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, path, YEAR_InFlow, generation, capacity_factors)
