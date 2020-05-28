@@ -696,3 +696,6 @@ def reshape_timeseries(Load, x='dayofyear', y=None, aggfunc='sum'):
     return a.pivot_table(index=x, columns=y,
                          values=a.columns[0],
                          aggfunc=aggfunc).T
+
+def round_down(num, divisor):
+    return num - (num%divisor)

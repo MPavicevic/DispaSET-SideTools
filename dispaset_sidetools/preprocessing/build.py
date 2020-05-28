@@ -9,6 +9,8 @@ from .get_capacities.get_Capacities_ARES_APP import get_allunits, get_hydro_unit
     get_temba_plants, assign_typical_units
 from .get_demand.get_Demand_ARES_APP import get_demands
 from .get_fuel_prices.get_FP_ARES_APP import get_fuel_prices
+from .get_NTCs.get_NTC_ARES_APP import get_NTCs
+from .get_outages.get_OF_ARES_APP import get_outages
 from ..common import write_csv_files
 
 
@@ -80,3 +82,18 @@ def create_fuel_prices(data_costs, data_fingerprints, data_distance, YEAR, SOURC
 
     write_csv_files(fuel_prices, 'ARES_APP', SOURCE, 'FuelPrices', str(YEAR), write_csv, 'Zonal')
     return fuel_prices
+
+def create_ntcs(data, YEAR, SOURCE, write_csv=False):
+    ntcs = get_NTCs(data,YEAR)
+
+    write_csv_files(ntcs, 'ARES_APP', SOURCE, 'DayAheadNTC', str(YEAR), write_csv, 'Aggregated')
+    return ntcs
+
+def create_outages(allunits, generation, capacity_factors, SOURCE, scenario, YEAR, write_csv=False):
+    outages = get_outages(allunits, generation, capacity_factors, SOURCE, YEAR)
+
+    if SOURCE == 'TEMBA':
+        write_csv_files(outages, 'ARES_APP', SOURCE + '_' + scenario, 'OutageFactors', str(YEAR), write_csv, 'Zonal')
+    else:
+        write_csv_files(outages, 'ARES_APP', SOURCE, 'OutageFactors', str(YEAR), write_csv, 'Zonal')
+    return outages

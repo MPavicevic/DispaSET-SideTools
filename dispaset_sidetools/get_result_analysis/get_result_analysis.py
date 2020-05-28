@@ -457,7 +457,7 @@ def plot_heatmap(Load, x='dayofyear', y='hour', aggfunc='sum', bins=8, figsize=(
     fig.savefig(folder_figures + '/' + png_name + '.png')
     plt.show()
 
-plot_heatmap(results['1985']['ShadowPrice'], bins=30, figsize=(10,9), cmap='RdBu_r', colorbar=True, columns = 5,
+plot_heatmap(results['Reference_2025']['ShadowPrice'], bins=30, figsize=(10,9), cmap='RdBu_r', colorbar=True, columns = 5,
              x_ax_label = [20,21,22,23,24], y_ax_label = [0,5,10,15,20], png_name='Shadow Price Wet')
 # plot_heatmap(results['2009']['ShadowPrice'], bins=30, figsize=(10,9), cmap='RdBu_r', colorbar=True, columns = 5,
 #              x_ax_label = [20,21,22,23,24], y_ax_label = [0,5,10,15,20], png_name='Shadow Price Dry')

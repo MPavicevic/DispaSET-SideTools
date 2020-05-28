@@ -58,6 +58,16 @@ xls_fuel = pd.ExcelFile(input_folder + source_folder + 'Fuel_Prices.xlsx')
 data_costs = pd.read_excel(xls_fuel, 0, header=0, index_col=0)
 data_fingerprints = pd.read_excel(xls_fuel, 1, header=0, index_col=0)
 data_distance = pd.read_excel(xls_fuel, 2, header=0, index_col=0)
+# NTC data
+xls = pd.ExcelFile(input_folder + source_folder + 'NTCs.xlsx')
+ntc_data = pd.read_excel(xls, sheet_name=str(ds.round_down(YEAR, 10)), header=2, index_col=2)
+ntc_data = ntc_data.loc[:, ~ntc_data.columns.str.contains('^Unnamed')]
+# Annual generation per fuel type
+generation = pd.read_excel(input_folder + source_folder + 'Annual_Generation_Statistics.xlsx', sheet_name=0, index_col=0)
+generation.fillna(0, inplace=True)
+# Capacity factor for CSP
+capacity_factors = pd.read_csv(input_folder + source_folder + 'CF_IRENA.csv', index_col=0, header=0)
+
 
 #%% Countries used in the analysis
 countries_EAPP = ['Burundi', 'Djibouti', 'Egypt', 'Ethiopia', 'Eritrea', 'Kenya', 'Rwanda', 'Somalia', 'Sudan',
@@ -79,36 +89,36 @@ SOURCE = 'TEMBA' # TEMBA, IEA, JRC, World Bank, CIA: World Fact Book, Indexmundi
 
 demand = ds.create_demand(data_full, data_annual,YEAR, SOURCE=SOURCE)
 
-
-
-
 fuel_price = ds.create_fuel_prices(data_costs, data_fingerprints, data_distance, YEAR, SOURCE = 'JRC')
 
+ntcs = ds.create_ntcs(ntc_data,YEAR,'JRC')
 
-tmp = {}
-aa = ds.get_temba_plants(temba_inputs,
-                         ds.assign_typical_units(ds.powerplant_data_preprocessing(pp_data),
-                                                 typical_units,
-                                                 typical_cooling),
-                         ds.get_hydro_units(data_hydro, EFFICIENCY),
-                         typical_units,
-                         typical_cooling,
-                         YEAR,
-                         TEMBA=TEMBA,
-                         scenario=scenario)
-tmp = {}
-for p in ['NAPP', 'EAPP', 'CAPP']:
-    if p == 'NAPP':
-        zones = ds.get_country_codes(countries_NAPP)
-    elif p == 'CAPP':
-        zones = ds.get_country_codes(countries_CAPP)
-    else:
-        zones = ds.get_country_codes(countries_EAPP)
-    bb = {}
-    for fuel in aa['Fuel'].unique():
-        bb[fuel] = aa.loc[(aa['Zone'].isin(zones)) & (aa['Fuel'] == fuel)]['PowerCapacity'].sum()
-    tmp[p] = bb
+outages = ds.create_outages(allunits, generation, capacity_factors, SOURCE, scenario, YEAR)
 
-bb = pd.DataFrame.from_dict(tmp)
-
-bb.to_csv('Ares_capacites' + str(YEAR) + '.csv')
+# tmp = {}
+# aa = ds.get_temba_plants(temba_inputs,
+#                          ds.assign_typical_units(ds.powerplant_data_preprocessing(pp_data),
+#                                                  typical_units,
+#                                                  typical_cooling),
+#                          ds.get_hydro_units(data_hydro, EFFICIENCY),
+#                          typical_units,
+#                          typical_cooling,
+#                          YEAR,
+#                          TEMBA=TEMBA,
+#                          scenario=scenario)
+# tmp = {}
+# for p in ['NAPP', 'EAPP', 'CAPP']:
+#     if p == 'NAPP':
+#         zones = ds.get_country_codes(countries_NAPP)
+#     elif p == 'CAPP':
+#         zones = ds.get_country_codes(countries_CAPP)
+#     else:
+#         zones = ds.get_country_codes(countries_EAPP)
+#     bb = {}
+#     for fuel in aa['Fuel'].unique():
+#         bb[fuel] = aa.loc[(aa['Zone'].isin(zones)) & (aa['Fuel'] == fuel)]['PowerCapacity'].sum()
+#     tmp[p] = bb
+#
+# bb = pd.DataFrame.from_dict(tmp)
+#
+# bb.to_csv('Ares_capacites' + str(YEAR) + '.csv')
