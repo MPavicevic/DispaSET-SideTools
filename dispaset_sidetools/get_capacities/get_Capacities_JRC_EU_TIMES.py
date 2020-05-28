@@ -23,9 +23,9 @@ from dispaset_sidetools.common import make_dir
 # Scenario definition
 """ output file: SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE """
 YEAR = 2050  # considered year
-WRITE_CSV_FILES = False  # Write csv database
+WRITE_CSV_FILES = True  # Write csv database
 SCENARIO = 'ProRes1'  # Scenario name, used for data and naming the files. ProRes1 or NearZeroCarbon
-CASE = 'NOFLEX'  # Case name, used for naming csv files
+CASE = 'ALLFLEX'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 
 # Technology definition
@@ -50,7 +50,7 @@ OCEAN = 'WAT'  # Define what ocean fuel equals to (WAT or OTH)
 CSP = True  # Turn Concentrated solar power on/off (when False grouped with PHOT)
 HYDRO_STORAGE = 'True'  # True if hydro storage included, otherwise False (remove HPHS and cluster HDAM and HROR as HROR)
 TECH_CLUSTERING = True  # Clusters technologies by treshold (efficient way to reduce total number of units)
-CLUSTER_TRESHOLD = 0.3  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
+CLUSTER_TRESHOLD = 0.5  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
 
 STOSELFDISCHARGE_SUN = 0.03
 STOSELFDISCHARGE_P2H = 0.03
@@ -1001,7 +1001,8 @@ for c in cap:
         # tmp_bev['STOCapacity'] = tmp_bev['PowerCapacity'] * V2G_CAPACITY
         # tmp_bev['PowerCapacity'] = tmp_bev['STOMaxChargingPower']
         units.update(tmp_bev)
-        if units[units.Technology == 'BEVS'].PowerCapacity.values == 0:
+        if ((units[units.Technology == 'BEVS'].PowerCapacity.values == 0) 
+        or (units[units.Technology == 'BEVS'].STOCapacity.values == 0)):
             units = units[units.Technology != 'BEVS']
 
     # Special treatment for P2H

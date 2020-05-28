@@ -15,7 +15,7 @@ from dispaset_sidetools.common import make_dir
 # %% Adjustable inputs that should be modified
 # Scenario definition
 WRITE_CSV_FILES = True  # Write csv database
-SCENARIO = 'NearZeroCarbon'  # Scenario name, used for naming csv files
+SCENARIO = 'ProRes1'  # Scenario name, used for naming csv files
 CASE = 'ALLFLEX'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 EFF_DIESEL = 0.78 # Efficiency of hydrogenation to diesel
@@ -77,6 +77,9 @@ allunits = pickle.load(pickle_off)
 h2_rigid_demand_final=pd.DataFrame(index=h2_rigid_demand_time_series.index)
 h2_PtL_demand_final=pd.DataFrame(index=h2_PtL_demand_time_series.index)
 a=1
+
+for c in list(set(allunits.keys()) - set(h2_rigid_demand_time_series.columns)):
+    h2_rigid_demand_time_series.loc[:,c] = 0
 
 for c in allunits.keys():
     a=0

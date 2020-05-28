@@ -3,7 +3,7 @@
 Created on Sun Apr  7 18:53:45 2019
 
 @author: Matija Pavičević
-@author: Andrea
+@author: Andrea Mangipinto
 """
 
 import pickle
@@ -16,8 +16,8 @@ from dispaset_sidetools.common import make_dir
 # Scenario definition
 """ output file: SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE """
 WRITE_CSV_FILES = True  # Write csv database
-SCENARIO = 'NearZeroCarbon'  # Scenario name, used for naming csv files
-CASE = 'ALLFLEX'  # Case name, used for naming csv files
+SCENARIO = 'ProRes1'  # Scenario name, used for naming csv files
+CASE = 'NOFLEX'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 YEAR = 2016
 
@@ -104,6 +104,9 @@ for y in years:
 demand_heat_ad_2016 = pd.concat(
     [demand_heat_ad['2008'], demand_heat_ad['2009'], demand_heat_ad['2010'], demand_heat_ad['2011'],
      demand_heat_ad['2012'], demand_heat_ad['2013']], axis=1, join='inner')
+
+for c in list(set(demand_heat_ad_2016.columns) - set(times_dh_demand.index)):
+    times_dh_demand.loc[c, 'District heating'] = 0
 
 curve_p2h = {}
 curve_chp = {}
