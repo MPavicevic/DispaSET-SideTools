@@ -30,7 +30,7 @@ input_folder = commons['InputFolder']
 source_folder = 'ARES_Africa/'
 results_folder = 'Results/'
 # Select one of the folowing pickle files:
-# 'JRC_Reference_results.p', 'JRC_Connected_results.p', JRC_WaterValue_results.p, 'TEMBA_results.p'
+# 'JRC_Reference_results.p', 'JRC_Connected_results.p', 'JRC_WaterValue_results.p', 'TEMBA_results.p'
 results_pickle = 'JRC_Connected_results.p'
 output_folder = commons['OutputFolder']
 make_dir(output_folder + source_folder)
@@ -45,7 +45,7 @@ if results_pickle == 'TEMBA_results.p':
     flag = 'TEMBA'
     make_dir(folder_figures + 'TEMBA/')
     folder_figures = folder_figures + 'TEMBA/'
-elif results_pickle in ['JRC_Reference_results.p', 'JRC_Connected_results.p']:
+elif results_pickle in ['JRC_Reference_results.p', 'JRC_Connected_results.p', 'JRC_WaterValue_results.p']:
     flag = 'Baseline'
     make_dir(folder_figures + 'Baseline/')
     folder_figures = folder_figures + 'Baseline/'
@@ -518,6 +518,7 @@ def plot_heatmap(Load, x='dayofyear', y='hour', aggfunc='sum', bins=8, figsize=(
                 ax.set_xlim(right=len(x_y.columns))
                 ax.set_ylim(top=len(x_y.index))
                 ax.set_xticks([0,90,180,270,365])
+                ax.set_yticks([0, 8, 16, 24])
                 if i in x_ax_label:
                     ax.set_xlabel(x)
                 if i in y_ax_label:
@@ -536,6 +537,8 @@ def plot_heatmap(Load, x='dayofyear', y='hour', aggfunc='sum', bins=8, figsize=(
                         for spine in ax.spines.values():
                             spine.set_edgecolor('orange')
                             spine.set_linewidth(4)
+            if i >= len(Load.columns):
+                fig.delaxes(ax)
             i = i + 1
     if colorbar:
         ax2 = fig.add_subplot(spec[:, columns])
@@ -712,11 +715,11 @@ def plot_water_stress():
 
 # %% Execute plot scripts
 if flag == 'WaterWalue':
-    plot_heatmap(results['1985']['StorageShadowPrice'], bins=30, figsize=(20, 9), cmap='RdBu_r', colorbar=True,
-                 columns=3,
+    plot_heatmap(results['1985']['StorageShadowPrice'], bins=30, figsize=(15, 12), cmap='RdBu_r', colorbar=True,
+                 columns=2,
                  x_ax_label=[10, 11, 12], y_ax_label=[0, 3, 6, 9, 12], png_name='Storage Shadow Price Wet')
-    plot_heatmap(results['2009']['StorageShadowPrice'], bins=30, figsize=(20, 9), cmap='RdBu_r', colorbar=True,
-                 columns=3,
+    plot_heatmap(results['2009']['StorageShadowPrice'], bins=30, figsize=(15, 12), cmap='RdBu_r', colorbar=True,
+                 columns=2,
                  x_ax_label=[10, 11, 12], y_ax_label=[0, 3, 6, 9, 12], png_name='Storage Shadow Price Dry')
 else:
     plot_curtailment_shedding()
@@ -731,7 +734,8 @@ else:
                   title='Water Consumption', sci_limits=(0, 0), png_name='Water Consumption')
 
     # %% Plots for Individual power pools
-    aa = get_startups(inputs, results)
+    if (flag == 'Baseline') and (results_pickle != 'JRC_Connected_results.p'):
+        aa = get_startups(inputs, results)
     i = 0
     for z in power_pools:
         if i == 0:
