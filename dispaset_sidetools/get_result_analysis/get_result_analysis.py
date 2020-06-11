@@ -31,7 +31,7 @@ source_folder = 'ARES_Africa/'
 results_folder = 'Results/'
 # Select one of the folowing pickle files:
 # 'JRC_Reference_results.p', 'JRC_Connected_results.p', 'JRC_WaterValue_results.p', 'TEMBA_results.p'
-results_pickle = 'JRC_Connected_results.p'
+results_pickle = 'TEMBA_results.p'
 output_folder = commons['OutputFolder']
 make_dir(output_folder + source_folder)
 make_dir(output_folder + source_folder + 'Figures/')
@@ -267,7 +267,10 @@ def plot_curtailment_shedding():
 
         ax.set_ylabel('Percentage Total VRES', fontsize=15)
         ax2.set_ylabel('Percentage Peak VRES', fontsize=15)
-        ax.set_xlabel('Weather year', fontsize=15)
+        if flag == 'TEMBA':
+            ax.set_xlabel('Scenario', fontsize=15)
+        else:
+            ax.set_xlabel('Weather year', fontsize=15)
         ax2.set_title("Curtailment " + pp, fontsize=15)
 
         ax.yaxis.set_major_formatter(mtick.PercentFormatter(decimals=0))
@@ -292,7 +295,10 @@ def plot_curtailment_shedding():
 
         ax.set_ylabel('Percentage Total Load', fontsize=15)
         ax2.set_ylabel('Percentage Peak Load', fontsize=15)
-        ax.set_xlabel('Weather year', fontsize=15)
+        if flag == 'TEMBA':
+            ax.set_xlabel('Scenario', fontsize=15)
+        else:
+            ax.set_xlabel('Weather year', fontsize=15)
         ax2.set_title("Shed Load " + pp, fontsize=15)
 
         ax.yaxis.set_major_formatter(mtick.PercentFormatter(decimals=2))
@@ -335,7 +341,10 @@ def plot_co2():
                     figsize=(14, 5), fontsize=15)
 
     ax.set_ylabel('[$CO_{2}$ [Mton]', fontsize=15)
-    ax.set_xlabel('Weather year', fontsize=15)
+    if flag == 'TEMBA':
+        ax.set_xlabel('Scenario', fontsize=15)
+    else:
+        ax.set_xlabel('Weather year', fontsize=15)
     ax.set_title("$CO_{2}$ emissions", fontsize=15)
 
     handles, labels = ax.get_legend_handles_labels()
@@ -379,7 +388,10 @@ def plot_costs():
                                 figsize=(14, 5), fontsize=15)
 
     ax.set_ylabel('Costs [Billion €]', fontsize=15)
-    ax.set_xlabel('Weather year', fontsize=15)
+    if flag == 'TEMBA':
+        ax.set_xlabel('Scenario', fontsize=15)
+    else:
+        ax.set_xlabel('Weather year', fontsize=15)
     ax.set_title("Total System Costs", fontsize=15)
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(reversed(handles), reversed(labels), loc='center left', bbox_to_anchor=(1, 0.5), ncol=1, fontsize=15)
@@ -481,7 +493,7 @@ def get_water_indicators(r, zones):
 # %% Plot heatmap
 def plot_heatmap(Load, x='dayofyear', y='hour', aggfunc='sum', bins=8, figsize=(15, 14), edgecolors='none',
                  cmap='Oranges', colorbar=True, columns=1, x_ax_label=[0, 2], y_ax_label=[0, 2], pool = False,
-                 png_name=None,
+                 png_name=None, vmin=0, vmax=400,
                  **pltargs):
     """ Returns a 2D heatmap of the reshaped timeseries based on x, y
     Arguments:
@@ -514,7 +526,7 @@ def plot_heatmap(Load, x='dayofyear', y='hour', aggfunc='sum', bins=8, figsize=(
             if i < len(Load.columns):
                 bb = Load.iloc[:, i]
                 x_y = reshape_timeseries(bb, x=x, y=y, aggfunc=aggfunc)
-                heatmap = ax.pcolor(x_y, cmap=cmap_obj, edgecolors=edgecolors, vmin=0, vmax=400)
+                heatmap = ax.pcolor(x_y, cmap=cmap_obj, edgecolors=edgecolors, vmin=vmin, vmax=vmax)
                 ax.set_xlim(right=len(x_y.columns))
                 ax.set_ylim(top=len(x_y.index))
                 ax.set_xticks([0,90,180,270,365])
@@ -527,15 +539,15 @@ def plot_heatmap(Load, x='dayofyear', y='hour', aggfunc='sum', bins=8, figsize=(
                 if pool is True:
                     if i < 12:
                         for spine in ax.spines.values():
-                            spine.set_edgecolor('purple')
+                            spine.set_edgecolor('#be64e1')
                             spine.set_linewidth(4)
                     elif (i >=12) and (i <17):
                         for spine in ax.spines.values():
-                            spine.set_edgecolor('green')
+                            spine.set_edgecolor('#b4dc00')
                             spine.set_linewidth(4)
                     elif i >=17:
                         for spine in ax.spines.values():
-                            spine.set_edgecolor('orange')
+                            spine.set_edgecolor('#ffd000')
                             spine.set_linewidth(4)
             if i >= len(Load.columns):
                 fig.delaxes(ax)
@@ -725,13 +737,20 @@ else:
     plot_curtailment_shedding()
     plot_co2()
     plot_costs()
-    plot_fuel_bar(get_generation_indicators(results, zones), y_label='Generation [TWh]', x_label='Weather year',
-                  title='Total Generation', sci_limits=(0, 0), png_name='Generation Breakdown')
-    plot_fuel_bar(get_water_indicators(r, zones)[0], y_label='Withdrawal (billion m3)', x_label='Weather year',
-                  title='Water Withdrawal', sci_limits=(0, 0), png_name='Water Withdrawal')
-
-    plot_fuel_bar(get_water_indicators(r, zones)[1], y_label='Consumption (billion m3)', x_label='Weather year',
-                  title='Water Consumption', sci_limits=(0, 0), png_name='Water Consumption')
+    if flag == 'TEMBA':
+        plot_fuel_bar(get_generation_indicators(results, zones), y_label='Generation [TWh]', x_label='Scenario',
+                      title='Total Generation', sci_limits=(0, 0), png_name='Generation Breakdown')
+        plot_fuel_bar(get_water_indicators(r, zones)[0], y_label='Withdrawal (billion m3)', x_label='Scenario',
+                      title='Water Withdrawal', sci_limits=(0, 0), png_name='Water Withdrawal')
+        plot_fuel_bar(get_water_indicators(r, zones)[1], y_label='Consumption (billion m3)', x_label='Scenario',
+                      title='Water Consumption', sci_limits=(0, 0), png_name='Water Consumption')
+    else:
+        plot_fuel_bar(get_generation_indicators(results, zones), y_label='Generation [TWh]', x_label='Weather year',
+                      title='Total Generation', sci_limits=(0, 0), png_name='Generation Breakdown')
+        plot_fuel_bar(get_water_indicators(r, zones)[0], y_label='Withdrawal (billion m3)', x_label='Weather year',
+                      title='Water Withdrawal', sci_limits=(0, 0), png_name='Water Withdrawal')
+        plot_fuel_bar(get_water_indicators(r, zones)[1], y_label='Consumption (billion m3)', x_label='Weather year',
+                      title='Water Consumption', sci_limits=(0, 0), png_name='Water Consumption')
 
     # %% Plots for Individual power pools
     if (flag == 'Baseline') and (results_pickle != 'JRC_Connected_results.p'):
@@ -744,14 +763,25 @@ else:
             png_name = 'NAPP'
         if i == 2:
             png_name = 'CAPP'
-        plot_fuel_bar(get_water_indicators(r, z)[0], y_label='Withdrawal (billion m3)', x_label='Weather year',
-                      title='Water Withdrawal ' + png_name, sci_limits=(0, 0), png_name='Water Withdrawal ' + png_name)
-        plot_fuel_bar(get_water_indicators(r, z)[1], y_label='Consumption (billion m3)', x_label='Weather year',
-                      title='Water Consumption ' + png_name, sci_limits=(0, 0),
-                      png_name='Water Consumption ' + png_name)
-        plot_fuel_bar(get_generation_indicators(results, z), y_label='Generation [TWh]', x_label='Weather year',
-                      title='Total Generation ' + png_name, sci_limits=(0, 0),
-                      png_name='Generation Breakdown ' + png_name)
+
+        if flag == 'TEMBA':
+            plot_fuel_bar(get_water_indicators(r, z)[0], y_label='Withdrawal (billion m3)', x_label='Scenario',
+                          title='Water Withdrawal ' + png_name, sci_limits=(0, 0), png_name='Water Withdrawal ' + png_name)
+            plot_fuel_bar(get_water_indicators(r, z)[1], y_label='Consumption (billion m3)', x_label='Scenario',
+                          title='Water Consumption ' + png_name, sci_limits=(0, 0),
+                          png_name='Water Consumption ' + png_name)
+            plot_fuel_bar(get_generation_indicators(results, z), y_label='Generation [TWh]', x_label='Scenario',
+                          title='Total Generation ' + png_name, sci_limits=(0, 0),
+                          png_name='Generation Breakdown ' + png_name)
+        else:
+            plot_fuel_bar(get_water_indicators(r, z)[0], y_label='Withdrawal (billion m3)', x_label='Weather year',
+                          title='Water Withdrawal ' + png_name, sci_limits=(0, 0), png_name='Water Withdrawal ' + png_name)
+            plot_fuel_bar(get_water_indicators(r, z)[1], y_label='Consumption (billion m3)', x_label='Weather year',
+                          title='Water Consumption ' + png_name, sci_limits=(0, 0),
+                          png_name='Water Consumption ' + png_name)
+            plot_fuel_bar(get_generation_indicators(results, z), y_label='Generation [TWh]', x_label='Weather year',
+                          title='Total Generation ' + png_name, sci_limits=(0, 0),
+                          png_name='Generation Breakdown ' + png_name)
         if (flag == 'Baseline') and (results_pickle != 'JRC_Connected_results.p'):
             startup = get_startup_indicators(aa[0], z)
             plot_fuel_bar(startup, y_label='Startups [-]', x_label='Weather year', title='Total Startups ' + png_name,
@@ -766,14 +796,25 @@ else:
         wet = wet[zones]
         dry = results['2009']['ShadowPrice']
         dry = dry[zones]
+        avg = results['1999']['ShadowPrice']
+        avg = avg[zones]
 
         plot_heatmap(wet, bins=30, figsize=(10, 9), cmap='RdBu_r', colorbar=True, columns=5, pool=True,
                      x_ax_label=[20, 21, 22, 23, 24], y_ax_label=[0, 5, 10, 15, 20], png_name='Shadow Price Wet')
         plot_heatmap(dry, bins=30, figsize=(10, 9), cmap='RdBu_r', colorbar=True, columns=5, pool=True,
                      x_ax_label=[20, 21, 22, 23, 24], y_ax_label=[0, 5, 10, 15, 20], png_name='Shadow Price Dry')
+        plot_heatmap(avg, bins=30, figsize=(10, 9), cmap='RdBu_r', colorbar=True, columns=5, pool=True,
+                     x_ax_label=[20, 21, 22, 23, 24], y_ax_label=[0, 5, 10, 15, 20], png_name='Shadow Price Avg')
 
         if (flag == 'Baseline') and (results_pickle != 'JRC_Connected_results.p'):
             plot_water_stress()
+            demand = inputs['1985']['param_df']['Demand']['DA']
+            demand = demand / demand.max()
+            demand = demand[zones]
+            plot_heatmap(demand, bins=30, figsize=(10, 9), cmap='Blues', colorbar=True, columns=5, pool=True,
+                         x_ax_label=[20, 21, 22, 23, 24], y_ax_label=[0, 5, 10, 15, 20], png_name='Demand',
+                         vmin=0.25, vmax=1)
+
 
 
 # startup = aa[0]
@@ -875,7 +916,7 @@ else:
 # bb = get_generation_indicators(results, zones)
 # bb.to_clipboard(sep=',')
 #
-# scenario = 'Reference'
+# scenario = '1.5deg'
 # cc = temba_inputs.loc[(temba_inputs['parameter'] == 'Water consumption aggregated') &
 #                       (temba_inputs['scenario'] == scenario) &
 #                       (temba_inputs['country'].isin(zones))]
@@ -884,7 +925,7 @@ else:
 # df2 = pd.pivot_table(cc, index=['Fuel'], values=['2025', '2035', '2045'], aggfunc=np.sum)
 # df2.to_clipboard(sep=',')
 #
-# scenario = '1.5deg'
+# scenario = 'Reference'
 # cc = temba_inputs.loc[(temba_inputs['parameter'] == 'Water Withdrawal') &
 #                       (temba_inputs['scenario'] == scenario) &
 #                       (temba_inputs['country'].isin(zones))]
