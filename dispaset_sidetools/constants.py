@@ -5,19 +5,45 @@ sys.path.append(os.path.abspath(r'..'))
 date_str = '1/1/2015'
 hourly_periods = 8760
 
+input_folder_fromPrepare = '../Inputs/Inputs_FinalCase_BE2015/'
+output_folder_fromPrepare = '../Outputs/Outputs_FinalCase_BE2015/'
+input_PP_folder_fromPrepare = '../Dispa-SET.git/Database/PowerPlants/'
+
+input_folder = '../' + input_folder_fromPrepare
+output_folder = '../' + output_folder_fromPrepare
+input_PP_folder = '../' + input_PP_folder_fromPrepare  # input file = PowerPlants.csv
+
+
 #Define constants
-n_TD = 12                   #Enter the number of TD specified in EnergyScope
-countries = list(['BE'])    #Enter countries studied
-perc_dhn = 0.37             #Percentage of LT Heat provided by DHN in EnergyScope
+n_TD = 12                                                       #Enter the number of TD specified in EnergyScope
+countries = list(['BE'])#,'CH','FR'])                              #Enter countries studied
+perc_dhn_list = list([0.02])#, 0.37, 0.37])                        #Percentage of LT Heat provided by DHN in EnergyScope
+DHN_Prod_losses_list = list([0.05])#, 0.05, 0.05])                 #Percentage of DHN LT heat production losses in EnergyScope
+DHN_Sto_losses_list = list([0.0000606])#, 0.0000606, 0.0000606])
+grid_losses_list = list([0.047])#, 0.047, 0.047])                  #Percentage of elec grid losses in EnergyScope
+
+
+#List of ES output files
+ES_txtfiles = ['Assets','Distri_E_stored','ElecLayers','H2Layers','HTLayers','YearBalance','cost_breakdown','Distri_TS','FREIGHTLayers','gwp_breakdown','losses','PASSANGERSLayers']
 
 #Lists of tech
-elec_mobi_tech = ['TRAMWAY_TROLLEY','TRAIN_PUB','TRAIN_CapitalfREIGHT']  #electro mobility technology
+elec_mobi_tech = ['TRAMWAY_TROLLEY','TRAIN_PUB','TRAIN_FREIGHT']  #electro mobility technology
 p2h_tech = ['IND_DIRECT_ELEC','DHN_HP_ELEC','DEC_HP_ELEC','DEC_DIRECT_ELEC']
-chp_tech = ['IND_COGEN_GAS','IND_COGEN_WOOD','IND_COGEN_WASTE','DHN_COGEN_GAS','DHN_COGEN_WOOD','DHN_COGEN_WASTE','DEC_COGEN_GAS','DEC_COGEN_OIL']
+chp_tech = ['IND_COGEN_GAS','IND_COGEN_WOOD','IND_COGEN_WASTE','DHN_COGEN_GAS','DHN_COGEN_WOOD','DHN_COGEN_WASTE','DEC_COGEN_GAS','DEC_COGEN_OIL','DHN_COGEN_WET_BIOMASS','DEC_COGEN_GAS']
+OtherHeat_tech = ['IND_BOILER_GAS','IND_BOILER_WASTE','IND_BOILER_COAL','IND_BOILER_WOOD','IND_BOILER_OIL','DHN_DEEP_GEO','DHN_BOILER_GAS','DHN_BOILER_OIL','DEC_BOILER_GAS','DEC_BOILER_WOOD','DEC_BOILER_OIL','DEC_SOLAR']
+power_tech = ['CCGT','PV','WIND_ONSHORE','WIND_OFFSHORE','WIND','IND_COGEN_GAS','IND_COGEN_WASTE','DHN_COGEN_GAS','DHN_COGEN_WOOD','DHN_COGEN_WET_BIOMASS','DHN_COGEN_WASTE','HYDRO_RIVER','NUCLEAR','GEOTHERMAL','COAL_US','DEC_COGEN_GAS']
+storage_tech = ['PHS','BATT_LI','TS_DHN_SEASONAL','PHES','DAM_STORAGE']
+OtherMob_tech = ['CAR_HEV','BUS_COACH_HYDIESEL','BOAT_FREIGHT_NG','TRUCK_NG','CAR_FUEL_CELL']
+H2_tech_elec = ['H2_ELECTROLYSIS']
+H2_tech = ['H2_NG','H2_ELECTROLYSIS']
+capa_margin_tech = ['CCGT','PHS','COAL_US'] #'BATT_LI','GEOTHERMAL'
+dhn_tech = ['DHN_HP_ELEC','DHN_COGEN_GAS','DHN_COGEN_WOOD','DHN_COGEN_WET_BIOMASS','DHN_COGEN_WASTE','DHN_BOILER_GAS','DHN_BOILER_OIL','DHN_DEEP_GEO','DHN_SOLAR']
+
+
 
 #Lists for AvailibilityFactors
-AvailFactors = ['WTON','WTOF','PHOT','HROR']
-AvailFactors2 = ['WIND_ONSHORE','WIND_OFFSHORE','PV','HYDRO_RIVER']
+AvailFactors = ['PHOT','WTON','WTOF','HROR']                            #Dispa-SET nomenclature
+AvailFactors2 = ['PV','WIND_ONSHORE','WIND_OFFSHORE','HYDRO_RIVER']     #EnergyScope Nomenclature
 Inflows = ['HDAM','HPHS']
 ReservoirLevels = ['HPHS']
 
@@ -67,7 +93,7 @@ mapping['SORT'] = {u'CCGT': u'ELEC',
                    u'DEC_BOILER_WOOD': u'HeatSlack',
                    u'DEC_BOILER_OIL': u'HeatSlack',
                    u'DEC_SOLAR': u'HeatSlack',
-                   u'DEC_DIRECT_ELEC': u'HeatSlack',
+                   u'DEC_DIRECT_ELEC': u'P2HT',
                    u'PHS': u'STO',
                    u'PHES': u'STO',  # Same thing than PHS ?
                    u'DAM_STORAGE': u'STO',
@@ -87,7 +113,8 @@ mapping['SORT'] = {u'CCGT': u'ELEC',
                    u'TS_DHN_DAILY': u'THMS',  # TO DO
                    u'TS_DHN_SEASONAL': u'THMS',  # TO DO
                    u'SEASONAL_NG': u'',  # TO DO
-                   u'SEASONAL_H2': u''}  # TO DO
+                   u'SEASONAL_H2': u'P2GS_STO',
+                   u'H2_ELECTROLYSIS' : u'P2GS'}  # TO DO
 
 mapping['TECH'] = {u'CCGT': u'COMC',
                    u'COAL_US': u'COMC',
@@ -135,6 +162,8 @@ mapping['TECH'] = {u'CCGT': u'COMC',
                    u'PHS': u'HPHS',
                    u'PHES': u'HPHS',
                    u'DAM_STORAGE': u'HDAM',
+                   u'HYDRO_DAM': u'HDAM',
+                   u'Hydro_dam': u'HDAM',
                    u'BATT_LI': u'BATS',
                    u'BEV_BATT': u'BEVS',
                    u'PHEV_BATT': u'BEVS',
@@ -151,7 +180,8 @@ mapping['TECH'] = {u'CCGT': u'COMC',
                    u'TS_DHN_DAILY': u'THMS',  # TO DO
                    u'TS_DHN_SEASONAL': u'THMS',  # TO DO
                    u'SEASONAL_NG': u'',  # TO DO
-                   u'SEASONAL_H2': u''}  # TO DO
+                   u'SEASONAL_H2': u'P2GS_STO',
+                   u'H2_ELECTROLYSIS' : u'P2GS'}  # TO DO
 
 mapping['FUEL'] = {u'CCGT': u'GAS',
                    u'COAL_IGCC': u'HRD',
@@ -214,7 +244,8 @@ mapping['FUEL'] = {u'CCGT': u'GAS',
                    u'TS_DHN_DAILY': u'',  # TO DO
                    u'TS_DHN_SEASONAL': u'',  # TO DO
                    u'SEASONAL_NG': u'',  # TO DO
-                   u'SEASONAL_H2': u''}  # TO DO
+                   u'SEASONAL_H2': u'',
+                   u'H2_ELECTROLYSIS' : u'HYD'}  # TO DO
 
 # DICO used to get efficiency of tech in layers_in_out
 mapping['FUEL_ES'] = {u'CCGT': u'NG',
@@ -259,9 +290,9 @@ mapping['FUEL_ES'] = {u'CCGT': u'NG',
                       u'DEC_BOILER_OIL': u'LFO',
                       u'DEC_SOLAR': u'RES_SOLAR',
                       u'DEC_DIRECT_ELEC': u'ELECTRICITY',
-                      u'PHS': u'ELECTRICITY',  # STO ? Efficiency ?
-                      u'PHES': u'ELECTRICITY',  # STO ? Efficiency ?
-                      u'DAM_STORAGE': u'ELECTRICITY',  # STO ? Efficiency ?
+                      u'PHS': u'RES_HYDRO',  # STO ? Efficiency ?
+                      u'PHES': u'RES_HYDRO',  # STO ? Efficiency ?
+                      u'DAM_STORAGE': u'RES_HYDRO',  # STO ? Efficiency ?
                       u'BATT_LI': u'ELECTRICITY',  # STO ? Efficiency ?
                       u'BEV_BATT': u'ELECTRICITY',  # STO ? Efficiency ?
                       u'PHEV_BATT': u'ELECTRICITY',  # STO ? Efficiency ?
@@ -278,23 +309,41 @@ mapping['FUEL_ES'] = {u'CCGT': u'NG',
                       u'TS_DHN_DAILY': u'',  # TO DO #STO ? Efficiency ?
                       u'TS_DHN_SEASONAL': u'',  # TO DO #STO ? Efficiency ?
                       u'SEASONAL_NG': u'',  # TO DO #STO ? Efficiency ?
-                      u'SEASONAL_H2': u''}  # TO DO #STO ? Efficiency ?
+                      u'SEASONAL_H2': u'',
+                   u'H2_ELECTROLYSIS' : u'ELECTRICITY'}  # TO DO #STO ? Efficiency ?
 
 mapping['CHP_HEAT'] = {u'IND_COGEN_GAS': u'HEAT_HIGH_T',
                        u'IND_COGEN_WOOD': u'HEAT_HIGH_T',
                        u'IND_COGEN_WASTE': u'HEAT_HIGH_T',
+                       u'IND_BOILER_GAS': u'HEAT_HIGH_T',
+                       u'IND_BOILER_WOOD': u'HEAT_HIGH_T',
+                       u'IND_BOILER_WASTE': u'HEAT_HIGH_T',
+                       u'IND_BOILER_OIL': u'HEAT_HIGH_T',
+                       u'IND_BOILER_COAL': u'HEAT_HIGH_T',
                        u'DHN_COGEN_GAS': u'HEAT_LOW_T_DHN',
                        u'DHN_COGEN_WOOD': u'HEAT_LOW_T_DHN',
                        u'DHN_COGEN_WASTE': u'HEAT_LOW_T_DHN',
                        u'DHN_COGEN_WET_BIOMASS': u'HEAT_LOW_T_DHN',
+                       u'DHN_BOILER_GAS': u'HEAT_LOW_T_DHN',
+                       u'DHN_BOILER_WOOD': u'HEAT_LOW_T_DHN',
+                       u'DHN_BOILER_WASTE': u'HEAT_LOW_T_DHN',
+                       u'DHN_BOILER_OIL': u'HEAT_LOW_T_DHN',
+                       u'DHN_DEEP_GEO': u'HEAT_LOW_T_DHN',
+                       u'DHN_SOLAR': u'HEAT_LOW_T_DHN',
+                       u'DEC_THHP_GAS': u'HEAT_LOW_T_DHN',
                        u'DEC_COGEN_GAS': u'HEAT_LOW_T_DECEN',
                        u'DEC_COGEN_OIL': u'HEAT_LOW_T_DECEN',
                        u'DEC_ADVCOGEN_GAS': u'HEAT_LOW_T_DECEN',
+                       u'DEC_BOILER_GAS': u'HEAT_LOW_T_DECEN',
+                       u'DEC_BOILER_WOOD': u'HEAT_LOW_T_DECEN',
+                       u'DEC_BOILER_OIL': u'HEAT_LOW_T_DECEN',
+                       u'DEC_SOLAR': u'HEAT_LOW_T_DECEN',
                        u'DEC_ADVCOGEN_H2': u'HEAT_LOW_T_DECEN'}
 
 mapping['P2HT_HEAT'] = {u'IND_DIRECT_ELEC': u'HEAT_HIGH_T',
                         u'DHN_HP_ELEC': u'HEAT_LOW_T_DHN',
-                        u'DEC_HP_ELEC': u'HEAT_LOW_T_DECEN'}
+                        u'DEC_HP_ELEC': u'HEAT_LOW_T_DECEN',
+                        u'DEC_DIRECT_ELEC': u'HEAT_LOW_T_DECEN'}
 # u'TS_DEC_HP_ELEC': u''} - Thermal Storage : is P2HT techno ?
 
 # That dictionary could be automatize for DEC_P2HT - IS IT BETTER THOUGH ? - TO CHECK
@@ -307,7 +356,10 @@ mapping['THERMAL_STORAGE'] = {u'DEC_DIRECT_ELEC': u'TS_DEC_DIRECT_ELEC',
                               u'DEC_ADVCOGEN_H2': u'TS_DEC_ADVCOGEN_H2',
                               u'DEC_BOILER_GAS': u'TS_DEC_BOILER_GAS',
                               u'DEC_BOILER_WOOD': u'TS_DEC_BOILER_WOOD',
-                              u'DEC_BOILER_OIL': u'TS_DEC_BOILER_OIL', }
+                              u'DEC_BOILER_OIL': u'TS_DEC_BOILER_OIL'}
+
+# That dictionary could be automatize for DEC_P2HT - IS IT BETTER THOUGH ? - TO CHECK
+mapping['P2GS_STORAGE'] = {u'H2_ELECTROLYSIS': u'SEASONAL_H2'}
 
 
 ########################################################################################################################
