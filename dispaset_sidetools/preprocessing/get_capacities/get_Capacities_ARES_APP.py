@@ -9,11 +9,88 @@ from __future__ import division
 
 import logging
 
-import numpy as np
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import geopandas as gpd
+import pycountry
+
+from random import uniform
+from concurrent.futures import ThreadPoolExecutor
+from scipy.spatial import cKDTree
+from shapely.geometry import Point
 
 # Local source tree imports
-from ...common import get_country_codes, commons
+from ...common import get_country_codes, commons, alpha3_from_alpha2, used_power_pools
+
+countries = used_power_pools(['NAPP', 'EAPP', 'CAPP', 'SAPP', 'WAPP'])
+# load world coastlines
+world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+for c in alpha3_from_alpha2(countries):
+    world.loc[(world['iso_a3'] == c) & (world['iso_a3'] != '-99') & (world['continent'] == 'Africa'), 'name'] = \
+        pycountry.countries.get(alpha_3=c).alpha_2
+
+world_coastlines = gpd.read_file('../Inputs/ARES_Africa/hz772ng0160.shp')
+area = pd.read_csv('../Inputs/ARES_Africa/API_AG.SRF.TOTL.K2_DS2_en_csv_v2_1346843.csv', error_bad_lines=False,
+                   index_col=1)
+for w in area.index:
+    world.loc[world['iso_a3'] == w, 'Area'] = area.loc[w, str(2018)]
+
+
+def distance(country, plot=False, resolution=None):
+    """
+    Create an image of points and compute the distance to the nearest coast for each one
+    :param country:     selected country
+    :param plot:        plot the image
+    :return:            GeoDataFrame with distance of each point to the nearest coast in km (approximation 1°=110.574km)
+    """
+    # single geom for a selected country
+    geometry = world[world["name"] == country].dissolve(by='name').iloc[0].geometry
+    # geometry = world[(world["continent"] == 'Africa') & (world["name"]!='Madagascar')].dissolve(by='continent').iloc[0].geometry
+
+    # single geom for the coastline
+    coastline = gpd.clip(world_coastlines.to_crs('EPSG:4326'), geometry.buffer(0)).iloc[0].geometry
+
+    def make_point(id):
+        point = None
+        while point is None or not geometry.contains(point):
+            point = Point(uniform(geometry.bounds[0], geometry.bounds[2]),
+                          uniform(geometry.bounds[1], geometry.bounds[3]))
+        return {"id": id, "geometry": point}
+
+    def compute_distance(point):
+        point['dist_to_coastline'] = point['geometry'].distance(coastline)
+        return point
+
+    if resolution is None:
+        resolution = 1000
+
+    with ThreadPoolExecutor(max_workers=12) as tpe:
+        points = list(tpe.map(make_point, range(resolution)))
+        result = list(tpe.map(compute_distance, points))
+
+    gdf = gpd.GeoDataFrame.from_records(result)
+
+    if plot is True:
+        ax = gpd.GeoDataFrame.from_records([{"geometry": coastline}]).plot(figsize=(18, 18))
+        ax = gdf.plot(ax=ax, column='dist_to_coastline', cmap='rainbow')
+        plt.show()
+    # Convert to km
+    gdf['dist_to_coastline'] = gdf['dist_to_coastline'] * 110.574
+    return gdf
+
+
+# https://gis.stackexchange.com/questions/222315/geopandas-find-nearest-point-in-other-dataframe
+
+def ckdnearest(gdA, gdB):
+    nA = np.array(list(gdA.geometry.apply(lambda x: (x.x, x.y))))
+    nB = np.array(list(gdB.geometry.apply(lambda x: (x.x, x.y))))
+    btree = cKDTree(nB)
+    dist, idx = btree.query(nA, k=1)
+    gdf = pd.concat(
+        [gdA.reset_index(drop=True), gdB.loc[idx, gdB.columns != 'geometry'].reset_index(drop=True),
+         pd.Series(dist, name='dist')], axis=1)
+    return gdf
 
 
 # Assing cooling based on wighted average
@@ -84,6 +161,23 @@ def assign_cooling(pp_data, TEMBA=None):
                     pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Technology'] == t) & (pp_data['Capacity'] > 0) &
                                 (pp_data['Cooling'].isna()), 'Cooling'] = 'AIR'
             pp_data.loc[(pp_data['Fuel'] == f) & (pp_data['Cooling'].isna()), 'Cooling'] = 'OTF'
+    # Correct cooling technology based on distance from the coast
+
+    pp_data.loc[:, 'iso2'] = get_country_codes(pp_data['Country'])
+
+    resolution = 5000
+    aa = {}
+    for c in commons['coastal_countries']['Africa']:
+        df = pp_data[pp_data['iso2'] == c]
+        gpd1 = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.Longitude, df.Latitude))
+        logging.info('Computing image of zone: ' + c + ' Depending on the resolution of the image this might take a '
+                                                       'while to complete')
+        gpd2 = distance(c, plot=True, resolution=resolution)
+        aa[c] = ckdnearest(gpd1, gpd2)
+        aa[c].loc[(aa[c]['dist_to_coastline'] <= 15) & (aa[c]['Cooling'] == 'OTF'), 'Cooling'] = 'OTS'
+        aa[c].loc[(aa[c]['dist_to_coastline'] > 15) & (aa[c]['Cooling'] == 'OTS'), 'Cooling'] = 'OTF'
+        for u in aa[c]['Plant']:
+            pp_data.loc[pp_data['Plant'] == u, 'Cooling'] = aa[c].loc[aa[c]['Plant'] == u]['Cooling'].values
     return pp_data
 
 
@@ -120,7 +214,8 @@ def powerplant_data_preprocessing(pp_data):
                     'WTG': 'WTON', 'WTG/O': 'WTOF'}
 
     cooling = {'MDT': 'MDT/NDT', 'NDT': 'MDT/NDT', 'NDT/D': 'MDT/NDT',
-               'OTF': 'OTF/OTS', 'OTB': 'OTF/OTS', 'OTS': 'OTF/OTS'}
+               'OTF': 'OTF', 'OTB': 'OTB/OTS', 'OTS': 'OTB/OTS', 'CSP': 'AIR', 'PV': 'AIR', 'WIN': 'AIR'}
+    # cooling = {'CSP': 'AIR', 'PV': 'AIR'}
 
     pp_data['Fuel'] = pp_data['Fuel'].replace(fuels)
     pp_data['Technology'] = pp_data['Technology'].replace(technologies)
@@ -144,6 +239,7 @@ def assign_typical_units(pp_data, typical_units, typical_cooling):
     data['Fuel'] = pp_data['Fuel']
     data['Technology'] = pp_data['Technology']
     data['PowerCapacity'] = pp_data['Capacity']
+    data['Cooling'] = pp_data['Cooling']
 
     # Historic units assign only 1 per unit
     data['Nunits'] = 1
@@ -168,7 +264,7 @@ def assign_typical_units(pp_data, typical_units, typical_cooling):
                         (typical_units['Technology'] == technology) & (typical_units['Fuel'] == fuel), cols].values
                 logging.info('Typical units assigned to: ' + fuel + ' and ' + technology + ' combination.')
                 if fuel != 'OTH':
-                    for cooling in ['AIR', 'WIN', 'PV', 'CSP', 'OTF/OTS', 'MDT/NDT']:
+                    for cooling in ['AIR', 'OTF', 'OTB/OTS', 'MDT/NDT']:
                         if data.loc[(data['Technology'] == technology) & (data['Fuel'] == fuel) &
                                     (pp_data['Cooling'] == cooling)].empty:
                             continue
@@ -182,6 +278,10 @@ def assign_typical_units(pp_data, typical_units, typical_cooling):
                 else:
                     logging.warning(
                         'Typical cooling was not assigned to ' + fuel + '. No typical data available for OTH!')
+    data.loc[(data['Technology'] == 'SCSP') & (data['Fuel'] == 'SUN'), ['STOCapacity']] = \
+        data.loc[(data['Technology'] == 'SCSP') & (data['Fuel'] == 'SUN'), ['PowerCapacity']].values * 15
+    data.loc[(data['Technology'] == 'SCSP') & (data['Fuel'] == 'SUN'), ['STOMaxChargingPower']] = \
+        data.loc[(data['Technology'] == 'SCSP') & (data['Fuel'] == 'SUN'), ['PowerCapacity']].values
 
     return data
 
@@ -229,6 +329,8 @@ def get_hydro_units(data_hydro, EFFICIENCY):
         'STOCapacity']
     # HROR efficiency is 1
     hydro_units.loc[hydro_units['Technology'] == 'HROR', 'Efficiency'] = 1
+    hydro_units.loc[:, 'WaterWithdrawal'] = data_hydro.loc[:, 'WaterWithdrawal (m3/MWh)']
+    hydro_units.loc[:, 'WaterConsumption'] = data_hydro.loc[:, 'WaterConsumption (m3/MWh)']
     return hydro_units
 
 

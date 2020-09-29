@@ -35,13 +35,35 @@ from ...common import date_range, write_csv_files, commons
 # SOURCE = 'JRC'
 # sensitivity = 'Avg'
 
+
+def average_costs(L_train, L_road, P_train, P_road):
+    result = L_train * P_train + L_road * P_road
+    result.fillna(0, inplace=True)
+    return result
+
+
 def get_fuel_prices(data_costs, data_fingerprints, data_distance, YEAR, sensitivity='Avg'):
     # Conversion factors
     Gj_to_MWh = 3.6
     t_to_GJ = 29.31
+    boe_to_GJ = 6.12
+    mile_to_km = 1/1.60934
     port_charges_1 = 0.74 * Gj_to_MWh
     port_charges_2 = 0.84 * Gj_to_MWh
-    transport_hrd = 0.053 / t_to_GJ * Gj_to_MWh # EUR/GJ/km
+    # transport_hrd = 0.053 / t_to_GJ * Gj_to_MWh # EUR/GJ/km
+    # https://core.ac.uk/download/pdf/7169566.pdf
+    # transport_oil_truck = 1.354 / 250 / boe_to_GJ * Gj_to_MWh
+    # https://www.cbo.gov/sites/default/files/114th-congress-2015-2016/workingpaper/50049-Freight_Transport_Working_Paper-2.pdf
+    transport_hrd_truck = 0.136 * mile_to_km / t_to_GJ * Gj_to_MWh
+    transport_hrd_train = 0.035 * mile_to_km / t_to_GJ * Gj_to_MWh
+    transport_oil_truck = 0.146 * 16.9 / 250 / boe_to_GJ * Gj_to_MWh
+    transport_oil_train = 0.047 * 16.9 / 250 / boe_to_GJ * Gj_to_MWh
+
+    transport_costs_hrd = average_costs(data_distance['Rail'], data_distance['Road'], transport_hrd_train, transport_hrd_truck)
+    transport_costs_oil = average_costs(data_distance['Rail'], data_distance['Road'], transport_oil_train, transport_oil_truck)
+
+    data_fingerprints.loc[data_fingerprints['OIL - Domestic'] == 1, ['OIL - Pipeline', 'OIL - Import']] = 0
+    data_fingerprints.loc[data_fingerprints['GAS - Domestic'] == 1, ['GAS - Pipeline', 'GAS - Import']] = 0
 
     data_costs_min = data_costs.loc[['Oil - Min', 'Gas - Min', 'Hrd - Min', 'BIO', 'PEA'], :]
     data_costs_avg = data_costs.loc[['Oil - Avg', 'Gas - Avg', 'Hrd - Avg', 'BIO', 'PEA'], :]
@@ -57,15 +79,21 @@ def get_fuel_prices(data_costs, data_fingerprints, data_distance, YEAR, sensitiv
         data_costs = data_costs_max.reset_index(drop=True)
     data_costs.index = fuels
     data_costs.loc['HRD', 'Imported'] = data_costs.loc['HRD', 'Imported'] / 29.31 * Gj_to_MWh
+    data_costs.loc['HRD', 'Domestic'] = data_costs.loc['HRD', 'Domestic'] / 29.31 * Gj_to_MWh
 
     # Data processing
     # Assign prices based on fingerprints
     price_oil = pd.DataFrame(
         data_fingerprints['OIL - Domestic'] * data_fingerprints['Coastal'] * data_costs.loc['OIL', 'Domestic'] +
         data_fingerprints['OIL - Domestic'] * data_fingerprints['Inland'] * data_costs.loc['OIL', 'Domestic'] +
-        data_fingerprints['OIL - Import'] * data_fingerprints['Coastal'] * data_costs.loc['OIL', 'Imported'] +
-        data_fingerprints['OIL - Import'] * data_fingerprints['Inland'] * data_costs.loc['OIL', 'Imported'] +
-        data_fingerprints['OIL - Pipeline'] * data_fingerprints['Inland'] * data_costs.loc['OIL', 'Pipeline'],
+        (data_fingerprints['OIL - Import'] * data_fingerprints['Coastal'] * data_costs.loc['OIL', 'Imported'] +
+         data_fingerprints['OIL - Import'] * data_fingerprints['Coastal'] * port_charges_1 +
+         data_fingerprints['OIL - Import'] * data_fingerprints['Coastal'] * transport_costs_oil) +
+        (data_fingerprints['OIL - Import'] * data_fingerprints['Inland'] * data_costs.loc['OIL', 'Imported'] +
+         data_fingerprints['OIL - Import'] * data_fingerprints['Inland'] * port_charges_2 +
+         data_fingerprints['OIL - Import'] * data_fingerprints['Inland'] * transport_costs_oil) +
+        data_fingerprints['OIL - Pipeline'] * data_fingerprints['Inland'] * data_costs.loc['OIL', 'Pipeline'] +
+        data_fingerprints['OIL - Pipeline'] * data_fingerprints['Coastal'] * data_costs.loc['OIL', 'Pipeline'],
         columns=['OIL'])
     price_gas = pd.DataFrame(
         data_fingerprints['GAS - Domestic'] * data_fingerprints['Coastal'] * data_costs.loc['GAS', 'Domestic'] +
@@ -78,10 +106,13 @@ def get_fuel_prices(data_costs, data_fingerprints, data_distance, YEAR, sensitiv
     price_hrd = pd.DataFrame(
         (data_fingerprints['HRD - Import'] * data_fingerprints['Coastal'] * data_costs.loc['HRD', 'Imported'] +
          data_fingerprints['HRD - Import'] * data_fingerprints['Coastal'] * port_charges_1 +
-         data_fingerprints['HRD - Import'] * data_fingerprints['Coastal'] * data_distance['HRD'] * transport_hrd) +
+         data_fingerprints['HRD - Import'] * data_fingerprints['Coastal'] * transport_costs_hrd) +
         (data_fingerprints['HRD - Import'] * data_fingerprints['Inland'] * data_costs.loc['HRD', 'Imported'] +
          data_fingerprints['HRD - Import'] * data_fingerprints['Inland'] * port_charges_2 +
-         data_fingerprints['HRD - Import'] * data_fingerprints['Inland'] * data_distance['HRD'] * transport_hrd),
+         data_fingerprints['HRD - Import'] * data_fingerprints['Inland'] * transport_costs_hrd) +
+         data_fingerprints['HRD - Domestic'] * data_fingerprints['Coastal'] * data_costs.loc['HRD', 'Domestic'] +
+         data_fingerprints['HRD - Domestic'] * data_fingerprints['Inland'] * data_costs.loc['HRD', 'Domestic']
+        ,
         columns=['HRD'])
     price_bio = pd.DataFrame(
         data_fingerprints['BIO - Moderate'] * data_fingerprints['Coastal'] * data_costs.loc['BIO', 'Moderate'] +

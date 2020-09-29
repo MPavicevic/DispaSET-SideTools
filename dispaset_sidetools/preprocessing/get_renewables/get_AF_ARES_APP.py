@@ -13,10 +13,13 @@ import enlopy as el
 import logging
 
 # Local source tree imports
-from ...common import date_range, get_country_codes, write_csv_files, commons, get_ktoe_to_mwh, make_dir, leap_year
+from ...common import date_range, get_country_codes, write_csv_files, commons, get_gwh_to_mwh, get_ktoe_to_mwh, \
+                      make_dir, leap_year
 from ..get_capacities.get_Capacities_ARES_APP import get_hydro_units
 
-def get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, path, YEAR_InFlow, generation, capacity_factors, write_csv=False, SOURCE='JRC', SOURCE_Hydro='LISFLOOD'):
+def get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, path, YEAR_InFlow, generation,
+                   capacity_factors, write_csv=False, SOURCE='JRC', SOURCE_Hydro='LISFLOOD'):
+
     codes = get_country_codes(list(solar_AF.columns))
 
     # Assign proper index and column names
@@ -65,14 +68,15 @@ def get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, pat
     data.index = list(hydro_units['Unit'])
 
     # Annual generation in MWh
-    generation = get_ktoe_to_mwh(generation, ['Biofuels', 'Fosil', 'Hydro', 'Geothermal', 'RES'])
+    # generation = get_ktoe_to_mwh(generation, ['Biofuels', 'Fosil', 'Hydro', 'Geothermal', 'RES'])
+    generation = get_gwh_to_mwh(generation, ['BIO', 'WAT', 'GEO', 'PV', 'CSP', 'WIN'])
 
     # Identify annual generation per zone and share of installed capacity
     for c in list(data['Zone'].unique()):
         if c in list(generation.index):
             data.loc[data['Zone'] == c, 'Share'] = data['PowerCapacity'].loc[data['Zone'] == c] / \
                                                    data['PowerCapacity'].loc[data['Zone'] == c].sum()
-            data.loc[data['Zone'] == c, 'Generation_Historic'] = generation['Hydro'][c]
+            data.loc[data['Zone'] == c, 'Generation_Historic'] = generation['WAT'][c]
         else:
             data.loc[data['Zone'] == c, 'Generation_Historic'] = 0
     # Assign annual generation for each individual unit based on shares

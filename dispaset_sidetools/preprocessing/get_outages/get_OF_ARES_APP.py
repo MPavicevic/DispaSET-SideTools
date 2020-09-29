@@ -9,12 +9,13 @@ from __future__ import division
 
 import pandas as pd
 
-from ...common import date_range, get_ktoe_to_mwh
+from ...common import date_range, get_ktoe_to_mwh, get_gwh_to_mwh
 
 
 def get_outages(allunits, generation, capacity_factors, SOURCE, YEAR):
     # Annual generation in MWh
-    generation = get_ktoe_to_mwh(generation, ['Biofuels', 'Fosil', 'Hydro', 'Geothermal', 'RES'])
+    # generation = get_ktoe_to_mwh(generation, ['Biofuels', 'Fosil', 'Hydro', 'Geothermal', 'RES'])
+    generation = get_gwh_to_mwh(generation, ['BIO', 'WAT', 'GEO', 'PV', 'CSP', 'WIN'])
     aa = pd.concat(allunits, ignore_index=True)
     bio_units = list(aa.loc[aa['Fuel'] == 'BIO']['Unit'])
     bio_data = aa.loc[aa['Fuel'] == 'BIO']
@@ -24,7 +25,7 @@ def get_outages(allunits, generation, capacity_factors, SOURCE, YEAR):
         if c in list(generation.index):
             bio_data.loc[bio_data['Zone'] == c, 'Share'] = bio_data['PowerCapacity'].loc[bio_data['Zone'] == c] / \
                                                            bio_data['PowerCapacity'].loc[bio_data['Zone'] == c].sum()
-            bio_data.loc[bio_data['Zone'] == c, 'Generation_Historic'] = generation['Biofuels'][c]
+            bio_data.loc[bio_data['Zone'] == c, 'Generation_Historic'] = generation['BIO'][c]
         else:
             bio_data.loc[bio_data['Zone'] == c, 'Generation_Historic'] = 0
     # Assign annual generation for each individual unit based on shares
@@ -48,7 +49,7 @@ def get_outages(allunits, generation, capacity_factors, SOURCE, YEAR):
         if c in list(generation.index):
             geo_data.loc[geo_data['Zone'] == c, 'Share'] = geo_data['PowerCapacity'].loc[geo_data['Zone'] == c] / \
                                                            geo_data['PowerCapacity'].loc[geo_data['Zone'] == c].sum()
-            geo_data.loc[geo_data['Zone'] == c, 'Generation_Historic'] = generation['Geothermal'][c]
+            geo_data.loc[geo_data['Zone'] == c, 'Generation_Historic'] = generation['GEO'][c]
         else:
             geo_data.loc[geo_data['Zone'] == c, 'Generation_Historic'] = 0
     # Assign annual generation for each individual unit based on shares
@@ -65,8 +66,8 @@ def get_outages(allunits, generation, capacity_factors, SOURCE, YEAR):
         geo_outage = ones_df_geo - ones_df_geo * geo_data['CF']
 
 # Identify zones where units are selected
-    csp_units = list(aa.loc[(aa['Fuel'] == 'SUN') & (aa['Technology'] == 'STUR')]['Unit'])
-    csp_data = aa.loc[(aa['Fuel'] == 'SUN') & (aa['Technology'] == 'STUR')]
+    csp_units = list(aa.loc[(aa['Fuel'] == 'SUN') & (aa['Technology'] == 'SCSP')]['Unit'])
+    csp_data = aa.loc[(aa['Fuel'] == 'SUN') & (aa['Technology'] == 'SCSP')]
 
     for c in list(csp_data['Zone'].unique()):
         if c in list(generation.index):

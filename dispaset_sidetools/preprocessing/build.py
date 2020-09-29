@@ -16,7 +16,7 @@ from ..common import write_csv_files
 
 
 def create_powerplants(temba_inputs, pp_data, hydro_data, typical_units, typical_cooling, countries, YEAR,
-                               EFFICIENCY, TEMBA=False, scenario=False, write_csv = False):
+                       EFFICIENCY, TEMBA=False, scenario=False, write_csv = False):
     """
     Function that calls functions from all the scripts dedicated for individual parts of the database
     :param temba_inputs:        path to the TEMBA outputs

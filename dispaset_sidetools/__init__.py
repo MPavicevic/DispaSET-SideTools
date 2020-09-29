@@ -2,7 +2,7 @@
 import logging.config
 import os
 
-from .common import date_range, get_country_codes, write_csv_files, commons, round_down
+from .common import date_range, get_country_codes, write_csv_files, commons, round_down, used_power_pools
 
 _LOGCONFIG = {
      "version": 1,

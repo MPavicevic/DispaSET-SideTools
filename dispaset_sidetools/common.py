@@ -60,7 +60,7 @@ commons['TimeStep'] = '1h'
 
 # DispaSET technologies:
 commons['Technologies'] = ['COMC', 'GTUR', 'HDAM', 'HROR', 'HPHS', 'ICEN', 'PHOT', 'STUR', 'WTOF', 'WTON', 'CAES',
-                           'BATS', 'BEVS', 'THMS', 'P2GS']
+                           'BATS', 'BEVS', 'THMS', 'P2GS', 'SCSP']
 # List of renewable technologies:
 commons['tech_renewables'] = ['WTON', 'WTOF', 'PHOT', 'HROR']
 # List of storage technologies:
@@ -69,6 +69,8 @@ commons['tech_storage'] = ['HDAM', 'HPHS', 'BATS', 'BEVS', 'CAES', 'THMS']
 commons['types_CHP'] = ['extraction', 'back-pressure', 'p2h']
 # DispaSET fuels:
 commons['Fuels'] = ['BIO', 'GAS', 'HRD', 'LIG', 'NUC', 'OIL', 'PEA', 'SUN', 'WAT', 'WIN', 'WST', 'OTH', 'GEO']
+# DispaSET cooling technologies
+commons['Cooling'] = ['AIR', 'MDT', 'NDT', 'OTB', 'OTS', 'OTF']
 # Ordered list of fuels for plotting (the first ones are negative):
 commons['MeritOrder'] = ['Storage', 'FlowOut', 'NUC', 'LIG', 'HRD', 'BIO', 'GAS', 'OIL', 'PEA', 'WST', 'SUN', 'WIN',
                          'FlowIn', 'WAT']
@@ -460,7 +462,7 @@ def get_country_codes(zones):
            'western Sahara': 'Western Sahara',
            'Santa Helena': 'Saint Helena, Ascension and Tristan da Cunha',
            'Reunion': 'Réunion',
-           'Congo Dem Rep': 'Congo',
+           'Congo Dem Rep': 'Congo, The Democratic Republic of the',
            "Cote D'Ivoire": "Côte d'Ivoire",
            'São Tomé and Príncipe': 'Sao Tome and Principe',
            'Sao Tome & Principe': 'Sao Tome and Principe',
@@ -566,6 +568,19 @@ def get_ktoe_to_mwh(data, keys):
     for key in keys:
         data[key] = data[key] * 11630
     return data
+
+
+def get_gwh_to_mwh(data, keys):
+    """
+    Function that converts gwh to mwh
+    :param data:    pd.DataFrame
+    :param keys:    Column names where conversion should occur
+    :return:        Data in MWh
+    """
+    for key in keys:
+        data[key] = data[key] * 1000
+    return data
+
 
 def make_timeseries(x=None, year=None, length=None, startdate=None, freq=None):
     """Convert numpy array to a pandas series with a timed index. Convenience wrapper around a datetime-indexed pd.DataFrame.
@@ -699,3 +714,50 @@ def reshape_timeseries(Load, x='dayofyear', y=None, aggfunc='sum'):
 
 def round_down(num, divisor):
     return num - (num%divisor)
+
+
+#%% Countries used in the analysis
+commons['PowerPools'] = {}
+
+
+commons['PowerPools']['EAPP'] = ['Burundi', 'Djibouti', 'Egypt', 'Ethiopia', 'Eritrea', 'Kenya', 'Rwanda', 'Somalia',
+                                 'Sudan', 'South Sudan', 'Tanzania', 'Uganda']
+commons['PowerPools']['NAPP'] = ['Algeria', 'Libya', 'Morocco', 'Mauritania', 'Tunisia']
+commons['PowerPools']['CAPP'] = ['Angola', 'Cameroon', 'Central African Republic', 'Republic of the Congo', 'Chad',
+                                 'Gabon', 'Equatorial Guinea', 'Democratic Republic of the Congo']
+commons['PowerPools']['WAPP'] = ['Benin', 'Burkina Faso', "Côte d'Ivoire", 'Gambia', 'Ghana', 'Guinea', 'Guinea-Bissau',
+                                 'Liberia', 'Mali', 'Niger', 'Nigeria','Senegal', 'Sierra Leone', 'Togo']
+commons['PowerPools']['SAPP'] = ['Botswana', 'Lesotho', 'Malawi', 'Mozambique', 'Namibia', 'South Africa', 'Swaziland',
+                                 'Zambia', 'Zimbabwe']
+
+
+def used_power_pools(power_pools):
+    """
+    returns list of countries from selected power pools
+    :param power_pools:     list of power pools
+    :return:                list of countries alpha2 codes
+    """
+    used = set()
+    countries = []
+    for p in power_pools:
+        countries.extend(commons['PowerPools'][p])
+    countries = [x for x in countries if x not in used and (used.add(x) or True)]
+    countries = get_country_codes(countries)
+    return countries
+
+
+def alpha3_from_alpha2(alpha_2):
+    """
+    Returns alpha3 from alpha2 country codes
+    :param alpha_2:     list of alpha2 country codes
+    :return:            list of alpha3 country codes
+    """
+    alpha3 = []
+    for z in alpha_2:
+        alpha3.append(pycountry.countries.get(alpha_2=z).alpha_3)
+    return alpha3
+
+commons['coastal_countries'] = {}
+commons['coastal_countries']['Africa'] = ['BJ', 'CD', 'MA', 'EG', 'LY', 'AO', 'SO', 'ZA', 'MZ', 'ER', 'NA', 'TZ', 'TN', 'DZ', 'GA',
+                                          'NG', 'SD', 'MR', 'GH', 'KE', 'SN', 'CI', 'CM', 'SL', 'GW', 'GN', 'DJ', 'GQ',
+                                          'GM', 'TG', 'LR', 'CG']
