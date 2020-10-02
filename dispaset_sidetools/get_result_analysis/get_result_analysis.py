@@ -30,12 +30,14 @@ input_folder = commons['InputFolder']
 source_folder = 'ARES_Africa/'
 results_folder = 'Results/'
 # Select one of the folowing pickle files:
-# 'JRC_Reference_results.p', 'JRC_Connected_results.p', 'JRC_WaterValue_results.p', 'TEMBA_results.p'
-results_pickle = 'TEMBA_results.p'
+# 'JRC_Reference_results.p', 'JRC_Connected_results.p', 'JRC_WaterValue_results.p', 'TEMBA_results.p, 'Africa'
+results_pickle = 'Africa'
 output_folder = commons['OutputFolder']
 make_dir(output_folder + source_folder)
 make_dir(output_folder + source_folder + 'Figures/')
 folder_figures = output_folder + source_folder + 'Figures/'
+# only applicable for Africa scenarios - either Baseline or Connected
+scenario = 'Baseline'
 
 ########################################################################################################################
 ########################################!!! DO NOT MODIFY AFTER THIS LINE !!!###########################################
@@ -59,16 +61,39 @@ elif results_pickle in ['JRC_Reference_results.p', 'JRC_Connected_results.p', 'J
         flag = 'WaterWalue'
         make_dir(folder_figures + 'WaterWalue/')
         folder_figures = folder_figures + 'WaterWalue/'
+elif results_pickle == 'Africa':
+    flag = 'Africa_Baseline'
+    make_dir(folder_figures + flag + '/')
+    folder_figures = folder_figures + flag + '/'
+
 
 # %% Load the inputs and the results/result analysis of the simulation
 # Pickle files should always contain Dispa-SET results in the following order: inputs, results, r, costs, operation
-with open(input_folder + source_folder + results_folder + results_pickle, 'rb') as handle:
-    inputs = pickle.load(handle)
-    results = pickle.load(handle)
-    r = pickle.load(handle)
-    costs = pickle.load(handle)
-    operation = pickle.load(handle)
+if results_pickle in ['JRC_Reference_results.p', 'JRC_Connected_results.p', 'JRC_WaterValue_results.p',
+                       'TEMBA_results.p']:
+    with open(input_folder + source_folder + results_folder + results_pickle, 'rb') as handle:
+        inputs = pickle.load(handle)
+        results = pickle.load(handle)
+        r = pickle.load(handle)
+        costs = pickle.load(handle)
+        operation = pickle.load(handle)
+elif results_pickle == 'Africa':
+    with open(input_folder + source_folder + results_folder + scenario + '_Inputs.p', 'rb') as handle:
+        inputs = pickle.load(handle)
+    with open(input_folder + source_folder + results_folder + scenario + '_Results.p', 'rb') as handle:
+        results = pickle.load(handle)
+    with open(input_folder + source_folder + results_folder + scenario + '_r.p', 'rb') as handle:
+        r = pickle.load(handle)
+    with open(input_folder + source_folder + results_folder + scenario + '_costs.p', 'rb') as handle:
+        costs = pickle.load(handle)
+    with open(input_folder + source_folder + results_folder + scenario + '_operation.p', 'rb') as handle:
+        operation = pickle.load(handle)
+    with open(input_folder + source_folder + results_folder + scenario + '_pft.p', 'rb') as handle:
+        pft = pickle.load(handle)
+    with open(input_folder + source_folder + results_folder + scenario + '_pft_prct.p', 'rb') as handle:
+        pft_prct = pickle.load(handle)
 
+stop
 
 # %% Clean up scenario names to match labels in the study
 def rename_scenarios(data, string, new_string):

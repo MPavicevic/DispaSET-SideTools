@@ -99,5 +99,5 @@ def create_outages(allunits, generation, capacity_factors, SOURCE, scenario, YEA
         write_csv_files(outages, 'ARES_APP', SOURCE, 'OutageFactors', str(YEAR), write_csv, 'Zonal')
     return outages
 
-def create_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, path, YEAR_InFlow, generation, capacity_factors):
-    get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, path, YEAR_InFlow, generation, capacity_factors)
+def create_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, path, YEAR_InFlow, generation, capacity_factors, write_csv=False):
+    get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, path, YEAR_InFlow, generation, capacity_factors, write_csv)

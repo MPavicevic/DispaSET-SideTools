@@ -27,7 +27,7 @@ def get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, pat
     wind_AF.rename(columns=dict(zip(wind_AF.columns, codes)), inplace=True)
     solar_AF.drop(columns=['Unknown code'], inplace=True)
     wind_AF.drop(columns=['Unknown code'], inplace=True)
-    solar_AF.set_index(date_range('1/1/2005', '1/1/2017', freq='H'), inplace=True)
+    solar_AF.set_index(date_range('1/1/2016', '1/1/2018', freq='H'), inplace=True)
     wind_AF.set_index(date_range('1/1/2005', '1/1/2017', freq='H'), inplace=True)
 
     # Filter wind and solar for selected zones
@@ -90,10 +90,10 @@ def get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, pat
     # Initial Inflow adjustment for all units
     data['Correction'] = (data['Generation_Historic'] - data['Generation_From_Flows']) / data['Generation_From_Flows']
     # Assign AF for HDAM's
-    af_hdam = tmp_flow.loc[:, data['Technology'] == 'HDAM'] * 9.81 / 1e6 * 1000 * \
-              data['Dam height (m)'].loc[data['Technology'] == 'HDAM'] * \
-              (1 + data['Correction'].loc[data['Technology'] == 'HDAM']) / \
-              data['PowerCapacity'].loc[data['Technology'] == 'HDAM']
+    af_hdam = tmp_flow.loc[:, (data['Technology'] == 'HDAM') | (data['Technology'] == 'HPHS')] * 9.81 / 1e6 * 1000 * \
+              data['Dam height (m)'].loc[(data['Technology'] == 'HDAM') | (data['Technology'] == 'HPHS')] * \
+              (1 + data['Correction'].loc[(data['Technology'] == 'HDAM') | (data['Technology'] == 'HPHS')]) / \
+              data['PowerCapacity'].loc[(data['Technology'] == 'HDAM') | (data['Technology'] == 'HPHS')]
 
     # Helper functions
     def get_hror_cf(data, CF, generation):
@@ -149,20 +149,21 @@ def get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, pat
         for c in list(capacity_factors.index):
             aa = el.gen_load_from_LDC(el.generate.gen_analytical_LDC((1, CF[c], 0, prds), bins=prds), N=prds)
             tmp[c] = aa
+            tmp[c] = tmp[c].rolling(window=2).mean().bfill()
         tmp.set_index(date_range(start_date, end_date, freq='H'), inplace=True)
         return tmp
 
 
-    # Initial correction factors for wind and sun
-    cor_res = pd.DataFrame(index=list(solar_AF.columns))
-    cor_res['PV'] = 0.5
-    # Iterations
-    for i in range(20):
-        tmp_sun = get_res_cf(solar_AF, cor_res['PV'], capacity_factors['CF_PV'] * solar_AF.count(axis=0))
-        cor_res['PV'] = tmp_sun[0]
-        solar_AF = tmp_sun[1]
-        if i % 10 == 0:
-            logging.info('iteration #' + str(i) + ' max correction for solar PV: ' + str(tmp_sun[0].max()))
+    # # Initial correction factors for wind and sun
+    # cor_res = pd.DataFrame(index=list(solar_AF.columns))
+    # cor_res['PV'] = 0.5
+    # # Iterations
+    # for i in range(20):
+    #     tmp_sun = get_res_cf(solar_AF, cor_res['PV'], capacity_factors['CF_PV'] * solar_AF.count(axis=0))
+    #     cor_res['PV'] = tmp_sun[0]
+    #     solar_AF = tmp_sun[1]
+    #     if i % 10 == 0:
+    #         logging.info('iteration #' + str(i) + ' max correction for solar PV: ' + str(tmp_sun[0].max()))
 
     # Get generation for HROR units
     generation = tmp_flow.loc[:, data['Technology'] == 'HROR'] * 9.81 / 1e6 * 1000 * \
@@ -171,12 +172,14 @@ def get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, pat
     # Initial inflow adjustment for HROR units
     correction_factor = data['Correction'].loc[data['Technology'] == 'HROR']
     # Iterations
-    for i in range(100):
+    for i in range(60):
         tmp_data = get_hror_cf(data, correction_factor, generation)
         correction_factor = tmp_data[0]
         generation = tmp_data[1]
         if i % 10 == 0:
             logging.info('iteration #' + str(i) + ' max correction: ' + str(tmp_data[0].max()))
+        if tmp_data[0].max() <= 1e-3:
+            break
 
     # New AF for HROR units
     af_hror = tmp_data[1] / data['PowerCapacity'].loc[data['Technology'] == 'HROR']
@@ -195,7 +198,7 @@ def get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, pat
         hdam_timeseries = {}
         res_timeseries = {}
         # Predefined all 0 DataFrame. Used to fill missing AF and Hydro data
-        zero_df = pd.DataFrame(af_hror.index, columns=['HROR', 'PHOT', 'WTON', 'WTOF', 'HDAM']).fillna(0)
+        zero_df = pd.DataFrame(af_hror.index, columns=['HROR', 'PHOT', 'WTON', 'WTOF', 'HDAM', 'HPHS']).fillna(0)
         # Create new wind timeseries
         year = start_date.split("-", 1)[0].strip()
         wind_AF = get_wind_AF(start_date, str(int(year) + 1) + '-01-01', capacity_factors['CF_Wind'])
@@ -206,7 +209,7 @@ def get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, pat
                     tmp_PV = pd.DataFrame(solar_AF[region].loc['2016-01-01':'2016-12-31'])
                     logging.info(region + ' PHOT timseries created from PHOT dataset and year 2016')
                 else:
-                    tmp_PV = pd.DataFrame(solar_AF[region].loc['2015-01-01':'2015-12-31'])
+                    tmp_PV = pd.DataFrame(solar_AF[region].loc['2017-01-01':'2017-12-31'])
                     logging.info(region + ' PHOT timseries created from PHOT dataset and year 2015')
                 tmp_PV.reset_index(inplace=True, drop=True)
                 tmp_PV.set_index(date_range(start_date, str(int(year) + 1) + '-01-01', 'H'), inplace=True)
@@ -258,11 +261,29 @@ def get_renewables(codes_CEN, solar_AF, wind_AF, hydro_dam_data, EFFICIENCY, pat
                 logging.warning(region + ' there is no HDAM timeseries present in the availability factors')
                 tmp_HDAM = pd.DataFrame(zero_df['HDAM'].loc[start_date:end_date])
 
+            # Pumped Hydro
+            tmp_HPHS = zero_df
+            if region in unit_hdam:
+                tmp_HPHS = tmp_af.loc[start_date:end_date, list(hydro_units['Unit'].loc[(hydro_units['Zone'] == region) &
+                                                                                        (hydro_units[
+                                                                                             'Technology'] == 'HPHS')])]
+                tmp_hp = tmp_HPHS * data['PowerCapacity'].loc[(data['Technology'] == 'HPHS') & (data['Zone'] == region)]
+                tmp_hp = tmp_hp.sum(axis=1) / data['PowerCapacity'].loc[
+                    (data['Technology'] == 'HPHS') & (data['Zone'] == region)].sum()
+                tmp_HPHS['HPHS'] = tmp_hp
+            else:
+                logging.warning(region + ' there is no HPSH timeseries present in the availability factors')
+                tmp_HPHS = pd.DataFrame(zero_df['HPHS'].loc[start_date:end_date])
+
+            tmp_SCSP = tmp_PV.copy()
+            tmp_SCSP.rename(columns={'PHOT':'SCSP'}, inplace=True)
             # Combine it all together
             tmp_res_timeseries = [tmp_WTON, tmp_WTOF, tmp_PV, tmp_HROR]
             res_timeseries[region] = pd.concat(tmp_res_timeseries, axis=1)
             # Separate HDAM's
-            hdam_timeseries[region] = tmp_HDAM.copy()
+            tmp_inflow_timeseries = [tmp_HDAM, tmp_SCSP, tmp_HPHS]
+            hdam_timeseries[region] = pd.concat(tmp_inflow_timeseries, axis=1)
+            # hdam_timeseries[region] = tmp_HDAM.copy()
         return res_timeseries, hdam_timeseries
 
     def write_csv_hydro(file_name_IF=None, inflow_timeseries=None, write_csv=False):

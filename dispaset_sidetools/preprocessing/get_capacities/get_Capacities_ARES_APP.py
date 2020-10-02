@@ -197,12 +197,12 @@ def powerplant_data_preprocessing(pp_data):
 
     # Convert Fuels and Technologies to Dispa-SET readable format
     fuels = {'AGAS': 'GAS', 'BGAS': 'GAS', 'CGAS': 'GAS', 'CSGAS': 'GAS', 'DGAS': 'GAS', 'FGAS': 'GAS', 'LGAS': 'GAS',
-             'LNG': 'GAS', 'LPG': 'GAS', 'REFGAS': 'GAS', 'WOODGAS': 'GAS',
+             'LNG': 'GAS', 'LPG': 'GAS', 'REFGAS': 'GAS', 'WOODGAS': 'GAS', 'BFG': 'GAS', 'WSTGAS': 'GAS',
              'BAG': 'BIO', 'BIOMASS': 'BIO', 'BL': 'BIO', 'WOOD': 'BIO',
              'COAL': 'HRD',
-             'KERO': 'OIL', 'LIQ': 'OIL', 'SHALE': 'OIL', 'NAP': 'OIL',
+             'KERO': 'OIL', 'LIQ': 'OIL', 'SHALE': 'OIL', 'NAP': 'OIL', 'JET': 'OIL',
              'PEAT': 'PEA',
-             'REF': 'WST', 'UNK': 'OTH',
+             'REF': 'WST', 'UNK': 'OTH', 'WSTH': 'OTH',
              'UR': 'NUC',
              'WIND': 'WIN'}
 
@@ -324,11 +324,16 @@ def get_hydro_units(data_hydro, EFFICIENCY):
                                 data_hydro['Dam height (m)'] * EFFICIENCY / 3.6 / 1e3
     # Assign technology based on minimum number of storage hours
     hydro_units.loc[data_hydro['STOCapacity'] / hydro_units['PowerCapacity'] >= 5, 'Technology'] = 'HDAM'
+    hydro_units.loc[data_hydro['Pumped'] == 'Yes', 'Technology'] = 'HPHS'
+    hydro_units.loc[data_hydro['Pumped'] == 'Yes', 'STOCapacity'] = data_hydro['STOCapacity']
     hydro_units['Technology'].fillna('HROR', inplace=True)
     hydro_units.loc[data_hydro['STOCapacity'] / hydro_units['PowerCapacity'] >= 5, 'STOCapacity'] = data_hydro[
         'STOCapacity']
     # HROR efficiency is 1
     hydro_units.loc[hydro_units['Technology'] == 'HROR', 'Efficiency'] = 1
+    hydro_units.loc[hydro_units['Technology'] == 'HPHS', 'Efficiency'] = 0.9
+    hydro_units.loc[hydro_units['Technology'] == 'HPHS', 'STOMaxChargingPower'] = hydro_units.loc[:, 'PowerCapacity']
+    hydro_units.loc[hydro_units['Technology'] == 'HPHS', 'STOChargingEfficiency'] = 0.9
     hydro_units.loc[:, 'WaterWithdrawal'] = data_hydro.loc[:, 'WaterWithdrawal (m3/MWh)']
     hydro_units.loc[:, 'WaterConsumption'] = data_hydro.loc[:, 'WaterConsumption (m3/MWh)']
     return hydro_units

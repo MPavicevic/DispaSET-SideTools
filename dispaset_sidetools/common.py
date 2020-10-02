@@ -52,8 +52,8 @@ commons = {}
 commons['logfile'] = str(datetime.datetime.now()).replace(':', '-').replace(' ', '_') + '.dispa_sidetools.log'
 
 # Standard folders
-commons['InputFolder'] = '../../Inputs/'
-commons['OutputFolder'] = '../../Outputs/'
+commons['InputFolder'] = '../Inputs/'
+commons['OutputFolder'] = '../Outputs/'
 
 # Timestep
 commons['TimeStep'] = '1h'

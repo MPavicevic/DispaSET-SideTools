@@ -80,8 +80,11 @@ def get_outages(allunits, generation, capacity_factors, SOURCE, YEAR):
 
     csp_outage = ones_df_csp - ones_df_csp * csp_data['CF']
 
-    outage = pd.concat([bio_outage, geo_outage, csp_outage], axis=1, sort=False, join='inner')
-    units_with_outage = pd.concat([bio_data, geo_data, csp_data], axis=0, sort=False)
+    # outage = pd.concat([bio_outage, geo_outage, csp_outage], axis=1, sort=False, join='inner')
+    outage = pd.concat([bio_outage, geo_outage], axis=1, sort=False, join='inner')
+
+    # units_with_outage = pd.concat([bio_data, geo_data, csp_data], axis=0, sort=False)
+    units_with_outage = pd.concat([bio_data, geo_data], axis=0, sort=False)
     units_with_outage = units_with_outage.loc[units_with_outage['Zone'].isin(list(generation.index))]
 
     tmp_out = {}
