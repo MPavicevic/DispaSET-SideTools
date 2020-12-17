@@ -1,0 +1,391 @@
+﻿label_tech,Location,id,OutputPower,label
+Storage and Pumping,CAPP,1980,5.484766395,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1981,4.602074296,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1982,4.818541958,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1983,2.877432359,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1984,3.565039146,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1985,5.397521574,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1986,5.899808607,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1987,5.491706151,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1988,7.009015626,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1989,7.051100817,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1990,5.885976395,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1991,5.640161066,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1992,4.198278051,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1993,3.749138549,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1994,5.886906535,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1995,4.550430598,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1996,6.404664618,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1997,5.883962824,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1998,4.911947518,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,1999,4.43186876,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2000,4.220357929,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2001,4.014071691,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2002,4.586099211,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2003,4.72592623,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2004,4.388941952,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2005,3.623233926,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2006,5.56285262,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2007,3.987699806,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2008,4.513183559,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2009,5.454488949,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2010,5.08999528,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2011,5.4228995,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2012,4.649675047,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2013,4.056115476,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2014,4.471639734,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2015,5.448305962,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2016,3.655860058,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2017,4.133072088,4.9 ± 0.9 TWh
+Storage and Pumping,CAPP,2018,5.553707365,4.9 ± 0.9 TWh
+Run-of-river,CAPP,1980,7.681089176,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1981,5.602610313,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1982,7.994502867,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1983,6.484471226,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1984,9.092336984,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1985,6.05221982,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1986,8.814279311,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1987,7.401889439,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1988,8.034428865,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1989,8.276655905,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1990,8.142936338,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1991,8.51761142,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1992,9.068716334,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1993,6.135619942,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1994,7.665645911,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1995,8.590398144,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1996,8.600714568,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1997,8.043799253,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1998,9.054624138,8.4 ± 1.2 TWh
+Run-of-river,CAPP,1999,8.548246975,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2000,7.56205114,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2001,8.705351346,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2002,8.878580705,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2003,10.2211596,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2004,9.431743449,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2005,8.669874312,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2006,8.304308789,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2007,9.19286369,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2008,8.831020157,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2009,8.564800035,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2010,10.90859316,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2011,11.37153686,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2012,8.503634123,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2013,9.200296814,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2014,8.246829992,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2015,7.687789709,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2016,9.41110194,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2017,7.198716588,8.4 ± 1.2 TWh
+Run-of-river,CAPP,2018,10.75914011,8.4 ± 1.2 TWh
+Storage and Pumping,EAPP,1980,32.49439967,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1981,36.4023301,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1982,32.48215465,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1983,29.16881609,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1984,33.84463146,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1985,36.12224641,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1986,37.57076321,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1987,42.38323332,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1988,40.5111668,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1989,36.96046199,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1990,34.45015785,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1991,36.01245725,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1992,32.13785353,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1993,25.94430313,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1994,29.66486169,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1995,32.06461244,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1996,37.08491221,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1997,34.2538013,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1998,36.28920182,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,1999,29.16824112,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2000,26.65373246,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2001,36.34960671,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2002,29.09974822,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2003,26.74572353,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2004,28.86604878,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2005,30.19549712,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2006,35.79235315,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2007,29.93181755,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2008,28.77794549,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2009,26.31573105,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2010,32.4455936,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2011,33.78405195,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2012,31.09990418,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2013,30.77183573,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2014,26.28849644,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2015,26.71250513,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2016,25.01403452,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2017,24.8936388,31.9 ± 4.4 TWh
+Storage and Pumping,EAPP,2018,29.51508948,31.9 ± 4.4 TWh
+Run-of-river,EAPP,1980,9.525600098,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1981,8.82483888,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1982,8.433503471,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1983,7.191549448,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1984,8.688474899,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1985,8.888107517,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1986,9.221259142,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1987,9.247975736,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1988,8.93548945,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1989,9.222525281,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1990,8.411136201,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1991,8.502560963,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1992,8.160198487,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1993,8.153004092,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1994,8.170600755,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1995,8.314449857,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1996,9.338028367,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1997,8.170582431,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1998,8.202636725,8.2 ± 0.7 TWh
+Run-of-river,EAPP,1999,7.925340288,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2000,8.013690728,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2001,7.648597042,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2002,7.571501257,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2003,8.264786376,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2004,7.919725516,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2005,7.837201399,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2006,8.031668707,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2007,7.666083797,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2008,7.220991082,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2009,8.357836223,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2010,8.031663807,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2011,7.799521204,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2012,8.524771199,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2013,7.662242542,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2014,7.575995592,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2015,6.8214439,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2016,7.005107715,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2017,7.121317877,8.2 ± 0.7 TWh
+Run-of-river,EAPP,2018,7.992255728,8.2 ± 0.7 TWh
+Storage and Pumping,NAPP,1980,4.541176907,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1981,5.14229886,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1982,4.388015676,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1983,3.833503666,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1984,4.048562472,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1985,4.475088088,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1986,4.976513957,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1987,4.404967177,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1988,4.603933839,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1989,4.3890447,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1990,3.921854869,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1991,4.718739595,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1992,4.169344966,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1993,3.788970887,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1994,4.769128294,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1995,3.959282104,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1996,4.300136571,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1997,3.749169889,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1998,4.709728531,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,1999,3.938258216,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2000,2.876802282,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2001,3.978498218,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2002,3.755173934,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2003,4.043763813,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2004,3.829815396,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2005,3.892269474,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2006,3.923022531,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2007,4.226763447,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2008,3.840811474,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2009,3.962748831,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2010,4.585463534,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2011,4.237911959,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2012,4.501296341,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2013,4.373707042,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2014,4.08974522,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2015,4.595529117,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2016,3.932904773,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2017,3.721343441,4.2 ± 0.4 TWh
+Storage and Pumping,NAPP,2018,4.217048703,4.2 ± 0.4 TWh
+Run-of-river,NAPP,1980,0.311966421,0.3 ± 0 TWh
+Run-of-river,NAPP,1981,0.305203004,0.3 ± 0 TWh
+Run-of-river,NAPP,1982,0.334993042,0.3 ± 0 TWh
+Run-of-river,NAPP,1983,0.277672279,0.3 ± 0 TWh
+Run-of-river,NAPP,1984,0.337317751,0.3 ± 0 TWh
+Run-of-river,NAPP,1985,0.353503853,0.3 ± 0 TWh
+Run-of-river,NAPP,1986,0.335353422,0.3 ± 0 TWh
+Run-of-river,NAPP,1987,0.287025956,0.3 ± 0 TWh
+Run-of-river,NAPP,1988,0.305852359,0.3 ± 0 TWh
+Run-of-river,NAPP,1989,0.307468636,0.3 ± 0 TWh
+Run-of-river,NAPP,1990,0.305566537,0.3 ± 0 TWh
+Run-of-river,NAPP,1991,0.291130738,0.3 ± 0 TWh
+Run-of-river,NAPP,1992,0.302286008,0.3 ± 0 TWh
+Run-of-river,NAPP,1993,0.291615565,0.3 ± 0 TWh
+Run-of-river,NAPP,1994,0.256026697,0.3 ± 0 TWh
+Run-of-river,NAPP,1995,0.285159142,0.3 ± 0 TWh
+Run-of-river,NAPP,1996,0.316723741,0.3 ± 0 TWh
+Run-of-river,NAPP,1997,0.277266931,0.3 ± 0 TWh
+Run-of-river,NAPP,1998,0.347989547,0.3 ± 0 TWh
+Run-of-river,NAPP,1999,0.30311175,0.3 ± 0 TWh
+Run-of-river,NAPP,2000,0.227599372,0.3 ± 0 TWh
+Run-of-river,NAPP,2001,0.306937719,0.3 ± 0 TWh
+Run-of-river,NAPP,2002,0.275900576,0.3 ± 0 TWh
+Run-of-river,NAPP,2003,0.355603835,0.3 ± 0 TWh
+Run-of-river,NAPP,2004,0.333099579,0.3 ± 0 TWh
+Run-of-river,NAPP,2005,0.299284297,0.3 ± 0 TWh
+Run-of-river,NAPP,2006,0.303631703,0.3 ± 0 TWh
+Run-of-river,NAPP,2007,0.336370383,0.3 ± 0 TWh
+Run-of-river,NAPP,2008,0.283432713,0.3 ± 0 TWh
+Run-of-river,NAPP,2009,0.320028801,0.3 ± 0 TWh
+Run-of-river,NAPP,2010,0.32391289,0.3 ± 0 TWh
+Run-of-river,NAPP,2011,0.344020515,0.3 ± 0 TWh
+Run-of-river,NAPP,2012,0.301664286,0.3 ± 0 TWh
+Run-of-river,NAPP,2013,0.332768262,0.3 ± 0 TWh
+Run-of-river,NAPP,2014,0.316489868,0.3 ± 0 TWh
+Run-of-river,NAPP,2015,0.320734994,0.3 ± 0 TWh
+Run-of-river,NAPP,2016,0.285645084,0.3 ± 0 TWh
+Run-of-river,NAPP,2017,0.270183979,0.3 ± 0 TWh
+Run-of-river,NAPP,2018,0.368204002,0.3 ± 0 TWh
+Storage and Pumping,SAPP,1980,45.88272111,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1981,38.7773735,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1982,39.25447321,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1983,43.47178202,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1984,42.85783176,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1985,49.10841949,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1986,43.60622141,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1987,48.88311325,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1988,40.36418833,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1989,40.60773626,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1990,41.154824,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1991,40.69946598,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1992,37.39121751,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1993,37.41828353,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1994,38.05880049,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1995,42.31861386,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1996,33.46266884,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1997,33.29631408,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1998,51.06186148,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,1999,34.70245509,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2000,20.75725397,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2001,40.63437939,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2002,37.46694928,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2003,34.61019191,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2004,32.22812642,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2005,34.88068125,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2006,32.64499035,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2007,40.80187318,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2008,32.00945035,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2009,30.80697206,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2010,43.8739717,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2011,36.98210034,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2012,36.40871362,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2013,39.12449454,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2014,38.18134509,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2015,37.77090679,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2016,42.79935952,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2017,34.44961324,38.8 ± 5.7 TWh
+Storage and Pumping,SAPP,2018,44.79824826,38.8 ± 5.7 TWh
+Run-of-river,SAPP,1980,5.282921469,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1981,5.464162144,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1982,5.40094252,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1983,4.093252944,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1984,4.2872238,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1985,5.274430878,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1986,5.492355549,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1987,5.097665452,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1988,5.221058919,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1989,5.924093585,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1990,5.421460787,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1991,5.246807753,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1992,4.879544683,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1993,4.641180208,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1994,5.446620946,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1995,5.510184947,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1996,4.920898061,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1997,4.117740279,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1998,5.006411712,4.8 ± 0.6 TWh
+Run-of-river,SAPP,1999,4.992610276,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2000,4.867597864,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2001,4.539254515,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2002,3.590885005,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2003,4.993117309,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2004,4.045066731,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2005,4.193987356,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2006,4.151717354,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2007,4.416583498,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2008,4.618539402,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2009,4.085432779,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2010,5.671834366,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2011,4.638209038,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2012,4.805115105,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2013,4.722447402,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2014,3.912272363,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2015,4.709336747,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2016,5.025158239,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2017,4.283241929,4.8 ± 0.6 TWh
+Run-of-river,SAPP,2018,4.95935592,4.8 ± 0.6 TWh
+Storage and Pumping,WAPP,1980,27.48381172,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1981,26.99802488,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1982,26.44043467,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1983,23.82244058,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1984,24.1921217,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1985,30.33931168,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1986,28.22116733,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1987,26.78421544,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1988,28.17857466,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1989,23.65350943,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1990,26.07145055,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1991,26.88124506,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1992,25.10894065,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1993,23.76115881,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1994,27.01501055,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1995,27.12700124,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1996,26.4503032,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1997,22.99557419,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1998,27.15378806,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,1999,24.70504706,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2000,17.23365998,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2001,22.18963787,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2002,19.68655646,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2003,20.62418506,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2004,20.02904809,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2005,19.36514889,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2006,19.68477874,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2007,23.1468995,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2008,19.47993553,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2009,18.38034902,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2010,22.50022503,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2011,20.50237513,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2012,21.48657092,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2013,22.82160321,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2014,21.01666257,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2015,19.63705834,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2016,20.28194453,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2017,17.69321208,23.3 ± 3.4 TWh
+Storage and Pumping,WAPP,2018,20.00865331,23.3 ± 3.4 TWh
+Run-of-river,WAPP,1980,1.447524685,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1981,2.084402361,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1982,1.901362236,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1983,1.352059513,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1984,1.608353284,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1985,1.933976345,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1986,2.019677268,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1987,1.549464483,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1988,2.303513296,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1989,1.94421192,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1990,1.948695234,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1991,1.420389814,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1992,1.31513147,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1993,1.840804663,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1994,1.483687885,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1995,1.403926214,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1996,2.005889598,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1997,2.165979882,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1998,1.822318765,1.8 ± 0.3 TWh
+Run-of-river,WAPP,1999,1.972566472,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2000,2.408642216,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2001,2.082570913,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2002,1.489623824,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2003,1.651739778,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2004,1.767390057,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2005,1.547781339,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2006,2.079191047,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2007,1.931720952,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2008,1.79854578,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2009,1.871333075,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2010,1.94091321,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2011,1.915476798,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2012,1.456571504,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2013,1.956727114,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2014,2.123148374,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2015,1.888379115,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2016,1.39949734,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2017,2.096579811,1.8 ± 0.3 TWh
+Run-of-river,WAPP,2018,1.932815186,1.8 ± 0.3 TWh
