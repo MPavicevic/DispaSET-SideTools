@@ -67,6 +67,7 @@ def write_csv_files(file_name,demand,write_csv=None):
     filename = file_name + '.csv'
     if write_csv == True:
         for c in countries:
+            make_dir(output_folder)
             make_dir(output_folder + 'Database')
             folder = output_folder + 'Database/H2Demand/'
             make_dir(folder)

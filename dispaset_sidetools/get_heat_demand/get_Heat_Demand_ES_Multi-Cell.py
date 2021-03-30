@@ -61,6 +61,7 @@ def write_csv_files(dem_filename, heat_demand,WRITE_CSV_FILES):
     filename = dem_filename + '.csv'
     if WRITE_CSV_FILES is True:
         for c in heat_demand:
+            make_dir(output_folder)
             make_dir(output_folder + 'Database')
             folder = output_folder + 'Database/Heat_demand/'
             make_dir(folder)

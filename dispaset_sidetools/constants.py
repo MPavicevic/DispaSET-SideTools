@@ -67,32 +67,32 @@ mapping['SORT'] = {u'CCGT': u'ELEC',
                    u'IND_COGEN_GAS': u'CHP',  # ADD extraction/back-pressure/other
                    u'IND_COGEN_WOOD': u'CHP',  # ADD extraction/back-pressure/other
                    u'IND_COGEN_WASTE': u'CHP',  # ADD extraction/back-pressure/other
-                   u'IND_BOILER_GAS': u'HeatSlack',
-                   u'IND_BOILER_WOOD': u'HeatSlack',
-                   u'IND_BOILER_OIL': u'HeatSlack',
-                   u'IND_BOILER_COAL': u'HeatSlack',
-                   u'IND_BOILER_WASTE': u'HeatSlack',
+                   u'IND_BOILER_GAS': u'HEAT',
+                   u'IND_BOILER_WOOD': u'HEAT',
+                   u'IND_BOILER_OIL': u'HEAT',
+                   u'IND_BOILER_COAL': u'HEAT',
+                   u'IND_BOILER_WASTE': u'HEAT',
                    u'IND_DIRECT_ELEC': u'P2HT',  # P2HT ?
                    u'DHN_HP_ELEC': u'P2HT',  # P2HT ?
                    u'DHN_COGEN_GAS': u'CHP',  # ADD extraction/back-pressure/other
                    u'DHN_COGEN_WOOD': u'CHP',  # ADD extraction/back-pressure/other
                    u'DHN_COGEN_WASTE': u'CHP',  # ADD extraction/back-pressure/other
                    u'DHN_COGEN_WET_BIOMASS': u'CHP',  # ADD extraction/back-pressure/other
-                   u'DHN_BOILER_GAS': u'HeatSlack',
-                   u'DHN_BOILER_WOOD': u'HeatSlack',
-                   u'DHN_BOILER_OIL': u'HeatSlack',
-                   u'DHN_DEEP_GEO': u'HeatSlack',
-                   u'DHN_SOLAR': u'HeatSlack',
+                   u'DHN_BOILER_GAS': u'HEAT',
+                   u'DHN_BOILER_WOOD': u'HEAT',
+                   u'DHN_BOILER_OIL': u'HEAT',
+                   u'DHN_DEEP_GEO': u'HEAT',
+                   u'DHN_SOLAR': u'HEAT',
                    u'DEC_HP_ELEC': u'P2HT',  # P2HT ?
                    u'DEC_THHP_GAS': u'HeatSlack',
                    u'DEC_COGEN_GAS': u'CHP',  # ADD extraction/back-pressure/other
                    u'DEC_COGEN_OIL': u'CHP',  # ADD extraction/back-pressure/other
                    u'DEC_ADVCOGEN_GAS': u'CHP',  # ADD extraction/back-pressure/other
                    u'DEC_ADVCOGEN_H2': u'CHP',  # ADD extraction/back-pressure/other
-                   u'DEC_BOILER_GAS': u'HeatSlack',
-                   u'DEC_BOILER_WOOD': u'HeatSlack',
-                   u'DEC_BOILER_OIL': u'HeatSlack',
-                   u'DEC_SOLAR': u'HeatSlack',
+                   u'DEC_BOILER_GAS': u'HEAT',
+                   u'DEC_BOILER_WOOD': u'HEAT',
+                   u'DEC_BOILER_OIL': u'HEAT',
+                   u'DEC_SOLAR': u'HEAT',
                    u'DEC_DIRECT_ELEC': u'P2HT',
                    u'PHS': u'STO',
                    u'PHES': u'STO',  # Same thing than PHS ?
@@ -117,7 +117,7 @@ mapping['SORT'] = {u'CCGT': u'ELEC',
                    u'H2_ELECTROLYSIS' : u'P2GS'}  # TO DO
 
 mapping['TECH'] = {u'CCGT': u'COMC',
-                   u'COAL_US': u'COMC',
+                   u'COAL_US': u'STUR',
                    u'COAL_IGCC': u'STUR',
                    u'PV': u'PHOT',
                    u'GEOTHERMAL': u'STUR',
@@ -132,33 +132,33 @@ mapping['TECH'] = {u'CCGT': u'COMC',
                    u'IND_COGEN_GAS': u'STUR',
                    u'IND_COGEN_WOOD': u'STUR',
                    u'IND_COGEN_WASTE': u'STUR',
-                   u'IND_BOILER_GAS': u'HeatSlack',
-                   u'IND_BOILER_WOOD': u'HeatSlack',
-                   u'IND_BOILER_OIL': u'HeatSlack',
-                   u'IND_BOILER_COAL': u'HeatSlack',
-                   u'IND_BOILER_WASTE': u'HeatSlack',
-                   u'IND_DIRECT_ELEC': u'P2HT',  # TO CHECK
-                   u'DHN_HP_ELEC': u'P2HT',  # TO CHECK : HP = Heat Pump ?
-                   u'DHN_COGEN_GAS': u'STUR',
-                   u'DHN_COGEN_WOOD': u'STUR',
-                   u'DHN_COGEN_WASTE': u'STUR',
-                   u'DHN_COGEN_WET_BIOMASS': u'STUR',
-                   u'DHN_BOILER_GAS': u'HeatSlack',
-                   u'DHN_BOILER_WOOD': u'HeatSlack',
-                   u'DHN_BOILER_OIL': u'HeatSlack',
-                   u'DHN_DEEP_GEO': u'HeatSlack',
-                   u'DHN_SOLAR': u'HeatSlack',
-                   u'DEC_HP_ELEC': u'P2HT',  # TO CHECK : HP = Heat Pump ?
+                   u'IND_BOILER_GAS': u'HOBO',
+                   u'IND_BOILER_WOOD': u'HOBO',
+                   u'IND_BOILER_OIL': u'HOBO',
+                   u'IND_BOILER_COAL': u'HOBO',
+                   u'IND_BOILER_WASTE': u'HOBO',
+                   u'IND_DIRECT_ELEC': u'REHE',  # TO CHECK
+                   u'DHN_HP_ELEC': u'HYHP',  # TO CHECK : HP = Heat Pump ?
+                   u'DHN_COGEN_GAS': u'COMC',
+                   u'DHN_COGEN_WOOD': u'COMC',
+                   u'DHN_COGEN_WASTE': u'COMC',
+                   u'DHN_COGEN_WET_BIOMASS': u'COMC',
+                   u'DHN_BOILER_GAS': u'HOBO',
+                   u'DHN_BOILER_WOOD': u'HOBO',
+                   u'DHN_BOILER_OIL': u'HOBO',
+                   u'DHN_DEEP_GEO': u'GETH',
+                   u'DHN_SOLAR': u'SOTH',
+                   u'DEC_HP_ELEC': u'ASHP',  # TO CHECK : HP = Heat Pump ?
                    u'DEC_THHP_GAS': u'HeatSlack',
-                   u'DEC_COGEN_GAS': u'STUR',
-                   u'DEC_COGEN_OIL': u'STUR',
-                   u'DEC_ADVCOGEN_GAS': u'STUR',
+                   u'DEC_COGEN_GAS': u'GTUR',
+                   u'DEC_COGEN_OIL': u'GTUR',
+                   u'DEC_ADVCOGEN_GAS': u'COMC',
                    u'DEC_ADVCOGEN_H2': u'STUR',
-                   u'DEC_BOILER_GAS': u'HeatSlack',
-                   u'DEC_BOILER_WOOD': u'HeatSlack',
-                   u'DEC_BOILER_OIL': u'HeatSlack',
-                   u'DEC_SOLAR': u'HeatSlack',
-                   u'DEC_DIRECT_ELEC': u'P2HT',  # TO CHECK : HP = Heat Pump ?
+                   u'DEC_BOILER_GAS': u'HOBO',
+                   u'DEC_BOILER_WOOD': u'HOBO',
+                   u'DEC_BOILER_OIL': u'HOBO',
+                   u'DEC_SOLAR': u'SOTH',
+                   u'DEC_DIRECT_ELEC': u'REHE',  # TO CHECK : HP = Heat Pump ?
                    u'PHS': u'HPHS',
                    u'PHES': u'HPHS',
                    u'DAM_STORAGE': u'HDAM',
@@ -180,7 +180,7 @@ mapping['TECH'] = {u'CCGT': u'COMC',
                    u'TS_DHN_DAILY': u'THMS',  # TO DO
                    u'TS_DHN_SEASONAL': u'THMS',  # TO DO
                    u'SEASONAL_NG': u'',  # TO DO
-                   u'SEASONAL_H2': u'P2GS_STO',
+                   u'SEASONAL_H2': u'P2GS',
                    u'H2_ELECTROLYSIS' : u'P2GS'}  # TO DO
 
 mapping['FUEL'] = {u'CCGT': u'GAS',
@@ -198,32 +198,32 @@ mapping['FUEL'] = {u'CCGT': u'GAS',
                    u'IND_COGEN_GAS': u'GAS',
                    u'IND_COGEN_WOOD': u'BIO',
                    u'IND_COGEN_WASTE': u'WST',
-                   u'IND_BOILER_GAS': u'HeatSlack',
-                   u'IND_BOILER_WOOD': u'HeatSlack',
-                   u'IND_BOILER_OIL': u'HeatSlack',
-                   u'IND_BOILER_COAL': u'HeatSlack',
-                   u'IND_BOILER_WASTE': u'HeatSlack',
+                   u'IND_BOILER_GAS': u'GAS',
+                   u'IND_BOILER_WOOD': u'BIO',
+                   u'IND_BOILER_OIL': u'OIL',
+                   u'IND_BOILER_COAL': u'HRD',
+                   u'IND_BOILER_WASTE': u'WST',
                    u'IND_DIRECT_ELEC': u'OTH',  # P2HT ?
                    u'DHN_HP_ELEC': u'OTH',  # P2HT ?
                    u'DHN_COGEN_GAS': u'GAS',
                    u'DHN_COGEN_WOOD': u'BIO',
                    u'DHN_COGEN_WASTE': u'WST',
                    u'DHN_COGEN_WET_BIOMASS': u'BIO',
-                   u'DHN_BOILER_GAS': u'HeatSlack',
-                   u'DHN_BOILER_WOOD': u'HeatSlack',
-                   u'DHN_BOILER_OIL': u'HeatSlack',
-                   u'DHN_DEEP_GEO': u'HeatSlack',
-                   u'DHN_SOLAR': u'HeatSlack',
-                   u'DEC_HP_ELEC': u'OTH',  # P2HT ?
+                   u'DHN_BOILER_GAS': u'GAS',
+                   u'DHN_BOILER_WOOD': u'BIO',
+                   u'DHN_BOILER_OIL': u'OIL',
+                   u'DHN_DEEP_GEO': u'GEO',
+                   u'DHN_SOLAR': u'SUN',
+                   u'DEC_HP_ELEC': u'AIR',  # P2HT ?
                    u'DEC_THHP_GAS': u'HeatSlack',
                    u'DEC_COGEN_GAS': u'GAS',
                    u'DEC_COGEN_OIL': u'OIL',
                    u'DEC_ADVCOGEN_GAS': u'GAS',
                    u'DEC_ADVCOGEN_H2': u'HYD',
-                   u'DEC_BOILER_GAS': u'HeatSlack',
-                   u'DEC_BOILER_WOOD': u'HeatSlack',
-                   u'DEC_BOILER_OIL': u'HeatSlack',
-                   u'DEC_SOLAR': u'HeatSlack',
+                   u'DEC_BOILER_GAS': u'GAS',
+                   u'DEC_BOILER_WOOD': u'BIO',
+                   u'DEC_BOILER_OIL': u'OIL',
+                   u'DEC_SOLAR': u'SUN',
                    u'DEC_DIRECT_ELEC': u'OTH',
                    u'PHS': u'WAT',
                    u'PHES': u'WAT',
@@ -257,7 +257,7 @@ mapping['FUEL_ES'] = {u'CCGT': u'NG',
                       u'HYDRO_RIVER': u'RES_HYDRO',
                       u'NEW_HYDRO_RIVER': u'RES_HYDRO',
                       u'WIND': u'RES_WIND',  # IF WIND is not specified, WIND is asumed to be ONSHORE
-                   u'WIND_OCapitalfCapitalfSHORE': u'RES_WIND',
+                      u'WIND_OCapitalfCapitalfSHORE': u'RES_WIND',
                       u'WIND_OFFSHORE': u'RES_WIND',
                       u'WIND_ONSHORE': u'RES_WIND',
                       u'IND_COGEN_GAS': u'NG',
@@ -310,7 +310,7 @@ mapping['FUEL_ES'] = {u'CCGT': u'NG',
                       u'TS_DHN_SEASONAL': u'',  # TO DO #STO ? Efficiency ?
                       u'SEASONAL_NG': u'',  # TO DO #STO ? Efficiency ?
                       u'SEASONAL_H2': u'',
-                   u'H2_ELECTROLYSIS' : u'ELECTRICITY'}  # TO DO #STO ? Efficiency ?
+                      u'H2_ELECTROLYSIS' : u'ELECTRICITY'}  # TO DO #STO ? Efficiency ?
 
 mapping['CHP_HEAT'] = {u'IND_COGEN_GAS': u'HEAT_HIGH_T',
                        u'IND_COGEN_WOOD': u'HEAT_HIGH_T',

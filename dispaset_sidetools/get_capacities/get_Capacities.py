@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import math
 
-from search import sto_dhn
-from common import make_dir
+from ..search import sto_dhn
+from ..common import make_dir
 
 sidetools_folder = '../'  # folder with the common.py and various Dictionaries
 input_folder = '../../Inputs/'  # to access DATA - DATA_brut & Typical_Units(to find installed power f [GW or GWh for storage])
@@ -40,6 +40,54 @@ num_TD = 12  # number of TDs used in EnergyScope
 # HYDRO_CLUSTERING = 'OFF'  # Define type of hydro clustering (OFF, HPHS, HROR)
 # TECH_CLUSTERING = True  # Clusters technologies by treshold (efficient way to reduce total number of units)
 # CLUSTER_TRESHOLD = 0.3  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
+
+
+""" 
+    Data needed for the Power Plants in DISPA-SET (ES means from ES): 
+    - Unit Name
+    - Capacity : Power Capacity [MW]    ==>     ES + Up to US [Repartitionning through Typical_Units.csv]
+    - Nunits                            ==>     ES Capacity Installed + [Repartitionning through Typical_Units.csv]
+    - Year : Comissionning Year         ==>     For each year new powerplant database is needed
+    - Technology                        ==>     ES + Dico
+    - Fuel : Primary Fuel               ==>     ES + Dico
+    - Fuel Prices                       ==>     Set them as constant
+    -------- Technology and Fuel in ES correspond to 1 technology in DISPA-SET -------- 
+    - Zone :                            ==>     To be implemented based on hystorical data
+    - Efficiency [%]                    ==>     ES + Typical_units.csv
+    - Efficiency at min load [%]        ==>     Typical_units.csv
+    - CO2 Intensity [TCO2/MWh]          ==>     ES + Typical_units.csv
+    - Min Load [%]                      ==>     Typical_units.csv
+    - Ramp up rate [%/min]              ==>     Typical_units.csv
+    - Ramp down rate [%/min]            ==>     Typical_units.csv
+    - Start-up time[h]                  ==>     Typical_units.csv
+    - MinUpTime [h]                     ==>     Typical_units.csv
+    - Min down Time [h]                 ==>     Typical_units.csv
+    - No Load Cost [EUR/h]              ==>     Typical_units.csv
+    - Start-up cost [EUR]               ==>     Typical_units.csv
+    - Ramping cost [EUR/MW]             ==>     Typical_units.csv
+    - Presence of CHP [y/n] & Type      ==>     ES + Typical_units.csv
+    - CHPPowerToHeat                    ==>     ES + Typical_units.csv
+    - CHPPowerLossFactor                ==>     Typical_units.csv
+    - CHPMaxHeat                        ==>     if needed from Typical_units.csv
+
+    column_names = [# Generic
+                    'Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Zone_th', 'Zone_H2', 'Technology', 'Fuel', 
+                    
+                    # Technology specific
+                    'Efficiency', 'MinUpTime', 'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 
+                    'NoLoadCost_pu', 'RampingCost', 'PartLoadMin', 'MinEfficiency', 'StartUpTime', 'CO2Intensity',
+                    'WaterWithdrawal', 'WaterConsumption',
+                    
+                    # CHP related
+                    'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor', 'CHPMaxHeat',
+                    
+                    # P2HT related
+                    'COP', 'Tnominal', 'coef_COP_a', 'coef_COP_b', 
+                    
+                    # Storage related
+                    'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency']
+"""
+
 
 # ---------------------------------------- DICO ----------------------------------------#
 # For the moment, the dico is in the file, but this will have to be read from a .txt file

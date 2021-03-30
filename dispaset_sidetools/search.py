@@ -2,12 +2,11 @@ import pandas as pd
 import glob
 import time
 
-import sys, os
-sys.path.append(os.path.abspath(r'..'))
+# import sys, os
+# sys.path.append(os.path.abspath(r'..'))
 
-from dispaset_sidetools.common import *
-from dispaset_sidetools.search import *
-from dispaset_sidetools.constants import *
+from .common import *
+from .constants import *
 
 
 ########################################################################################################################
@@ -347,11 +346,11 @@ def sto_dhn(country, tech_names, TYPE, numTD): #Change the number of arguments -
 
 # Create Dataframe with the DS column names, and as index, all the TECH in DS terminology
 # Are these the right columns ? - TO CHECK
-column_names = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Technology', 'Fuel', 'Efficiency', 'MinUpTime',
-                'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu',
-                'RampingCost', 'PartLoadMin', 'MinEfficiency', 'StartUpTime', 'CO2Intensity',
-                'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor', 'COP', 'Tnominal', 'coef_COP_a', 'coef_COP_b',
-                'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency', 'CHPMaxHeat']
+# column_names = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Technology', 'Fuel', 'Efficiency', 'MinUpTime',
+#                 'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu',
+#                 'RampingCost', 'PartLoadMin', 'MinEfficiency', 'StartUpTime', 'CO2Intensity',
+#                 'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor', 'COP', 'Tnominal', 'coef_COP_a', 'coef_COP_b',
+#                 'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency', 'CHPMaxHeat']
 
 ########################################################################################################################
 
