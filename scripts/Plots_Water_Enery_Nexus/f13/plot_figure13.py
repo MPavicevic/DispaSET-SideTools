@@ -4,6 +4,8 @@ from plotnine import *
 import matplotlib as mpl
 import seaborn as sns
 
+scenario = 'Baseline'
+
 mix1 = pd.read_csv("data_figure13.csv")
 mix_min_max1 = pd.read_csv("data_figure13_minmax.csv")
 mix_min_max1['min'] = mix_min_max1['min'] * 100
@@ -11,12 +13,19 @@ mix_min_max1['max'] = mix_min_max1['max'] * 100
 cat_order = ['BIO', 'GEO', 'NUC', 'PEA', 'OIL', 'GAS', 'HRD', 'WAT', 'SUN', 'WIN']
 mix1['fuel_class'] = pd.Categorical(mix1['fuel_class'], categories=cat_order, ordered=True)
 
+if scenario == 'Baseline':
+    mix = mix1[mix1['Scenario'] != 'Connected']
+    mix_min_max1['Label'] = mix_min_max1['min'].round(1).astype(str) + '% - ' + mix_min_max1['max'].round(1).astype(
+        str) + '%'
+    mix_min_max = mix_min_max1[mix_min_max1['Scenario'] != "Connected"]
+else:
+    mix = mix1[mix1['Scenario'] != 'Baseline']
+    mix_min_max1['Label'] = mix_min_max1['min'].round(1).astype(str) + '% - ' + mix_min_max1['max'].round(1).astype(
+        str) + '%'
+    mix_min_max = mix_min_max1[mix_min_max1['Scenario'] != "Baseline"]
 
-mix = mix1[mix1['Scenario'] != 'Connected']
-
-
-mix_min_max1['Label'] = mix_min_max1['min'].round(1).astype(str) + '% - ' + mix_min_max1['max'].round(1).astype(str) + '%'
-mix_min_max = mix_min_max1[mix_min_max1['Scenario'] != "Connected"]
+mix.reset_index(inplace=True)
+mix_min_max.reset_index(inplace=True)
 
 fuel_cmap = {'LIG': '#af4b9180', 'PEA': '#af4b9199', 'HRD': 'darkviolet', 'OIL': 'magenta',
              'GAS': '#d7642dff',
@@ -39,7 +48,8 @@ g = (ggplot(mix) +
      facet_wrap('region', ncol=3, scales="free_x") +
      scale_y_continuous(labels=lambda l: ["%d%%" % (v * 100) for v in l]) +
      scale_fill_manual(values=fuel_cmap, name="") +
-     labs(x="Rank (climate years sorted by \n renewable energy generation)",
+     labs(title = scenario,
+          x="Rank (climate years sorted by \n renewable energy generation)",
           y="Share of annual generation (%)",
           fill = 'Fuel') +
      theme_minimal() +
@@ -54,4 +64,7 @@ g = (ggplot(mix) +
 
 g
 
-(ggsave(g, "figure13.png", width=15.5 / 2.5, height=12 / 2.5))
+if scenario == 'Baseline':
+    (ggsave(g, "figure13_Baseline.png", width=15.5 / 2.5, height=12 / 2.5))
+else:
+    (ggsave(g, "figure13_Connected.png", width=15.5 / 2.5, height=12 / 2.5))

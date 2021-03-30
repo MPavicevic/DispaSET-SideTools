@@ -82,7 +82,7 @@ g2 = (ggplot(data=data) +
       scale_size(range=[4, 25],
                  breaks=[250, 500, 1000, 2000, 4000, 6000],
                  labels=["250", "500", "1000", "2000", "4000", "6000"],
-                 name='Average Hydro In Flows [MWh/h]') +
+                 name='Average Hydro Inflows [MWh/h]') +
       scale_fill_distiller(type='div', palette='RdBu', direction=-1) +
       labs(x='Water Withdrawal (Thermal) [$m^3$/MWh]', y='Water Consumption (Thermal) [$m^3$/MWh]',
            fill='Generation Cost [EUR/MWh]', color='Power Pool') +
