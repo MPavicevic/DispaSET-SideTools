@@ -9,7 +9,6 @@ import math
 from dispaset_sidetools.search import *   #line to import the dictionary
 from dispaset_sidetools.constants import *   #line to import the dictionary
 
-
 sidetools_folder = '../'  # folder with the common.py and various Dictionaries
 #input_folder = '../../Inputs/EnergyScope/'  # to access DATA - DATA_preprocessing_BE & Typical_Units(to find installed power f [GW or GWh for storage])
 #output_folder = '../../Outputs/EnergyScope/'
@@ -80,11 +79,12 @@ def define_PP(Zone):
 
     # Create Dataframe with the DS column names, and as index, all the TECH in DS terminology
     # Are these the right columns ? - TO CHECK
-    column_names = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Zone_th', 'Zone_H2', 'Technology', 'Fuel', 'Efficiency', 'MinUpTime',
-                    'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu',
+    column_names = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Zone_th', 'Zone_H2', 'Technology', 'Fuel', 'Efficiency',
+                    'MinUpTime', 'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu',
                     'RampingCost', 'PartLoadMin', 'MinEfficiency', 'StartUpTime', 'CO2Intensity',
                     'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor', 'COP', 'Tnominal', 'coef_COP_a', 'coef_COP_b',
-                    'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency', 'CHPMaxHeat']
+                    'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency', 'CHPMaxHeat',
+                    'WaterWithdrawal', 'WaterConsumption']
 
     PowerPlants = pd.DataFrame(columns=column_names, index=all_tech)
 
@@ -715,6 +715,10 @@ def define_PP(Zone):
     # Sort columns as they should be
     PowerPlants = PowerPlants[column_names]
 
+    # Assign water consumption
+    PowerPlants.loc[:, 'WaterWithdrawal'] = 0
+    PowerPlants.loc[:, 'WaterConsumption'] = 0
+
     return PowerPlants
 
 
@@ -732,7 +736,7 @@ def write_csv_files(file_name, demand, country, write_csv=None):
 #loop to write the powerplants for each country
 for c in countries:
     allunits = define_PP(c)
-    write_csv_files('PowerPlants',allunits, c, True)
+    # write_csv_files('PowerPlants',allunits, c, True)
 
 #allunits = define_PP(ZONE[0])
 #allunits.to_csv(output_folder + 'Database/PowerPlants/' + 'PowerPlants_th_H2.csv', index=False)

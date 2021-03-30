@@ -5,8 +5,8 @@ sys.path.append(os.path.abspath(r'..'))
 date_str = '1/1/2015'
 hourly_periods = 8760
 
-input_folder_fromPrepare = '../Inputs/Inputs_FinalCase_BE2015/'
-output_folder_fromPrepare = '../Outputs/Outputs_FinalCase_BE2015/'
+input_folder_fromPrepare = '../Inputs/EnergyScope/'
+output_folder_fromPrepare = '../Outputs/EnergyScope/'
 input_PP_folder_fromPrepare = '../Dispa-SET.git/Database/PowerPlants/'
 
 input_folder = '../' + input_folder_fromPrepare
