@@ -93,7 +93,7 @@ g2 = (ggplot(data=data) +
 
 g2
 
-(ggsave(g2, "figure18a.png", width=15.5 / 2.5, height=10 / 2.5))
+(ggsave(g2, "figure18a.png", width=15.5 / 2.5, height=10 / 2.5, dpi=300))
 
 
 
@@ -123,7 +123,7 @@ g3 = (ggplot(data=data) +
 
 g3
 
-(ggsave(g3, "figure18b.png", width=15.5 / 2.5, height=10 / 2.5))
+(ggsave(g3, "figure18b.png", width=15.5 / 2.5, height=10 / 2.5, dpi=300))
 
 data = data[data['id'] != 2000]
 g4 = (ggplot(data=data) +
@@ -168,5 +168,5 @@ g4 = (ggplot(data=data) +
 
 g4
 
-(ggsave(g4, "figure18d.png", width=15.5 / 2.5, height=10 / 2.5))
+(ggsave(g4, "figure18d.png", width=15.5 / 2.5, height=10 / 2.5, dpi=300))
 

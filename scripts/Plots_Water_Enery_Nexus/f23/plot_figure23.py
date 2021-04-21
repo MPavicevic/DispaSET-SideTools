@@ -60,4 +60,4 @@ g = (ggplot(toplot) + aes(x=toplot['Week'], y=toplot['q_m']) +
 
 g
 
-ggsave(g, "figure23.png", width=20 / 2.5, height=10 / 2.5)
+ggsave(g, "figure23.png", width=20 / 2.5, height=10 / 2.5, dpi=300)

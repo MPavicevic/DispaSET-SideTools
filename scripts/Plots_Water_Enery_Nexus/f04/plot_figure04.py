@@ -28,4 +28,4 @@ g = (ggplot(sel) +
      theme_minimal()
      )
 
-(ggsave(g, "figure04.png", width=15.5/2.5, height=6/2.5))
+(ggsave(g, "figure04a.png", width=15.5/2.5, height=6/2.5, dpi = 300))

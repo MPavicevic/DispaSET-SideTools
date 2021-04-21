@@ -46,4 +46,4 @@ g = (ggplot(pp) + aes(x=pp['Region'], y=pp['share2'], fill=pp['Technology']) +
 g
 
 
-ggsave(g, "figure10_2.png", width=15.5/2.5, height=6/2.5)
+ggsave(g, "figure10_2.png", width=15.5/2.5, height=6/2.5, dpi=300)

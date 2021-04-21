@@ -219,7 +219,7 @@ g6 = (ggplot(data3) + aes(y=data3['WEI_Abs'], x=data3['WEI+']) +
 
 g6
 
-(ggsave(g6, "figureWEI_T_Tot_2.png", width=15.5 / 2.5, height=13 / 2.5))
+(ggsave(g6, "figureWEI_T_Tot_2.png", width=15.5 / 2.5, height=13 / 2.5, dpi=300))
 
 
 data3 = data_test[data_test['Variable'] != 'Thermal'].reset_index()
@@ -268,4 +268,4 @@ g8 = (ggplot(data3) + aes(y=data3['WEI_Abs'], x=data3['WEI+']) +
 
 g8
 
-(ggsave(g8, "figureWEI_Tot_2.png", width=15.5 / 2.5, height=13 / 2.5))
+(ggsave(g8, "figureWEI_Tot_2.png", width=15.5 / 2.5, height=13 / 2.5, dpi=300))

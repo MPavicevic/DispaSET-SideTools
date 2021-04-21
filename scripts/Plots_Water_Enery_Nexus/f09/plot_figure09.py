@@ -47,4 +47,4 @@ g = (ggplot(toplot) + aes(x=toplot['Region'], y=toplot['Share'], fill=toplot['fu
 
 g
 
-ggsave(g, "figure09.png", width=15.5/2.5, height=6/2.5)
+ggsave(g, "figure09.png", width=15.5/2.5, height=6/2.5, dpi=300)
