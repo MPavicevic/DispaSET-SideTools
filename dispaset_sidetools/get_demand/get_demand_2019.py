@@ -14,10 +14,13 @@ import numpy as np
 import pandas as pd
 
 #Input files
-location='C:/Users/student/Desktop/Data_Matijs/TotalLoadValue/'
-DH_dem=pd.read_csv('C:/Users/student/Desktop/Data_Matijs/HeatDemand_DistrictH/HeatDemand_DH.csv',index_col=0)
-heatdem_el=pd.read_excel('C:/Users/student/Desktop/Data_Matijs/HeatDemandTotal/E_demandP2HT.xlsx',index_col=0)
-heatdem_tot=pd.read_excel('C:/Users/student/Desktop/Data_Matijs/HeatDemandTotal/HeatDemandTotal.xlsx',index_col=0)
+location='../../Inputs/JRC_EU_TIMES/2019/'
+map1='TotalLoadValue/'
+map2='HeatDemand/'
+
+DH_dem=pd.read_csv(location+map2+ 'HeatDemand_DH.csv',index_col=0)
+heatdem_el=pd.read_excel(location+map2+ 'E_demandP2HT.xlsx',index_col=0)
+heatdem_tot=pd.read_excel(location+map2+ 'HeatDemandTotal.xlsx',index_col=0)
 
 #convert to Mwh
 heatdem_tot=heatdem_tot*1000000
@@ -36,7 +39,7 @@ for c in countries:
 #substract electricity dem from P2HT units from total load    
 total_load=pd.DataFrame()   
 for c in countries:
-    tmp_load=pd.read_csv(location+c+'/2019.csv', usecols=[1])
+    tmp_load=pd.read_csv(location+map1+c+'/2019.csv', usecols=[1])
     total_load.loc[:,c]=tmp_load.iloc[:,0]
 total_load.index=DH_dem.index  
 total_sub=pd.DataFrame()
