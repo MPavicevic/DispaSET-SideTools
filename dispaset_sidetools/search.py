@@ -1,6 +1,7 @@
 import pandas as pd
 import glob
 import time
+import logging
 
 # import sys, os
 # sys.path.append(os.path.abspath(r'..'))
@@ -19,20 +20,23 @@ from .constants import *
 #           feat = feature needed regarding to the technology studied
 # Output :   Value of the feature asked
 
-def search_assets(country,tech, feat):
-    assets = pd.read_csv(input_folder + country + '/' + 'Assets.txt', delimiter='\t')
+def search_assets(tech, feat, assets, country=None):
+    # if country is None:
+    #     assets = pd.read_csv(input_folder + country + '/' + 'Assets.txt', delimiter='\t')
+    # else:
+    #     assets = pd.read_csv(input_folder + '/' + 'Assets.txt', delimiter='\t')
 
     features = list(assets.head())
     features = [x.strip(' ') for x in features]
-    column = features.index(feat)
-    col_names = features[1:]
+    # col_names = features[1:]
 
-    col_names.append("end")
-    assets.columns = col_names
+    # features.append("end")
+    assets.columns = features
 
     output = float(assets.at[tech, feat])
 
     return output
+
 
 ########################################################################################################################
 
@@ -43,9 +47,7 @@ def search_assets(country,tech, feat):
 # Output :   Value of the feature asked
 #
 #
-def search_YearBalance(country ,tech, feat):
-    yearbal = pd.read_csv(input_folder + country + '/' + 'YearBalance.txt', delimiter='\t')
-    yearbal.set_index('Tech', inplace=True)
+def search_YearBalance(yearbal, tech, feat):
     techno = list(yearbal.index)
     techno2 = [x.strip(' ') for x in techno]
     yearbal.set_index([techno2], inplace=True)
@@ -53,6 +55,7 @@ def search_YearBalance(country ,tech, feat):
     output = yearbal.at[tech, feat]
 
     return output
+
 
 ########################################################################################################################
 
@@ -76,6 +79,7 @@ def search_PowerPlant(country, tech, feat):
 
     return output
 
+
 ########################################################################################################################
 # Return the dataframe containing the EnergyScope Storage levels of 'type' 'Elec' or 'Heat'
 #
@@ -90,6 +94,7 @@ def get_DistriStorage(country, type):
     distriSto = distriSto.set_index(distriSto.columns[0])
     return distriSto
 
+
 ########################################################################################################################
 
 #
@@ -101,32 +106,17 @@ def get_DistriStorage(country, type):
 # Output :   Value of the feature asked
 #
 #
-def search_HeatLayers(LayersDF, TD, hour, tech):
-    tech = ''.join(c for c in tech if c not in '-(){}<>[], ')
-    tech = ''.join([i for i in tech if not i.isdigit()])
-    output = LayersDF.at[((TD-1)*24)+hour - 1, tech]
-    return output
-
-
-########################################################################################################################
-
-#
-#
-# Input :  ElecLayersDF = ElecLayers dataframe
-#           TD = typical day studied
-#           hour = hour studied
-#           tech  = tech studied
-# Output :   Value of the feature asked
-#
-#
-def search_ElecLayers(ElecLayersDF,TD, hour, tech):
-    if 'H2' in tech:
-        output = ElecLayersDF.at[((TD-1)*24)+hour - 1, tech]
+def search_HeatLayers(LayersDF, TD, hour, tech=None):
+    if tech is None:
+        output = LayersDF.loc[((TD - 1) * 24) + hour - 1, :]
+    elif 'H2' in tech:
+        output = LayersDF.at[((TD - 1) * 24) + hour - 1, tech]
     else:
         tech = ''.join(c for c in tech if c not in '-(){}<>[], ')
         tech = ''.join([i for i in tech if not i.isdigit()])
-        output = ElecLayersDF.at[((TD-1)*24)+hour - 1, tech]
+        output = LayersDF.at[((TD - 1) * 24) + hour - 1, tech]
     return output
+
 
 ########################################################################################################################
 
@@ -139,9 +129,30 @@ def search_ElecLayers(ElecLayersDF,TD, hour, tech):
 # Output :   Value of the feature asked
 #
 #
-def search_H2Layers(H2LayersDF,TD, hour, tech):
+def search_ElecLayers(ElecLayersDF, TD, hour, tech):
+    if 'H2' in tech:
+        output = ElecLayersDF.at[((TD - 1) * 24) + hour - 1, tech]
+    else:
+        tech = ''.join(c for c in tech if c not in '-(){}<>[], ')
+        tech = ''.join([i for i in tech if not i.isdigit()])
+        output = ElecLayersDF.at[((TD - 1) * 24) + hour - 1, tech]
+    return output
+
+
+########################################################################################################################
+
+#
+#
+# Input :  ElecLayersDF = ElecLayers dataframe
+#           TD = typical day studied
+#           hour = hour studied
+#           tech  = tech studied
+# Output :   Value of the feature asked
+#
+#
+def search_H2Layers(H2LayersDF, TD, hour, tech):
     tech = ''.join(c for c in tech if c not in '-(){}<>[], ')
-    output = H2LayersDF.at[((TD-1)*24)+hour - 1, tech]
+    output = H2LayersDF.at[((TD - 1) * 24) + hour - 1, tech]
     return output
 
 
@@ -156,6 +167,7 @@ def search_Dict_ES2DS(tech_ES):
     tech_DS = str(mapping['TECH'][tech_ES] + '_' + mapping['FUEL'][tech_ES])
     return tech_DS
 
+
 ########################################################################################################################
 
 #
@@ -164,7 +176,7 @@ def search_Dict_ES2DS(tech_ES):
 # Input = 'type'
 # Output = list of tech of type 'tyoe'
 #
-def search_Dict_list(old_list,type):
+def search_Dict_list(old_list, type):
     mylist = old_list
     for i in mapping['TECH']:
         if mapping['TECH'][i] == type:
@@ -190,13 +202,12 @@ def get_TDFile(x, input_folder):
 
     # Select lines of ESTD_12TD where TD are described
     newfile = open("newfile.txt", 'r+')
-    ESTD_TD = input_folder + x + '/' + 'ESTD_'+str(n_TD)+'TD.dat'
+    ESTD_TD = input_folder + x + '/' + 'ESTD_' + str(n_TD) + 'TD.dat'
 
     with open(ESTD_TD) as f:
         for line in f:
             if line[0] == '(':
                 newfile.write(line)
-
 
     df = pd.read_csv('newfile.txt', delimiter='\t', index_col=0)
     cols = list(df.columns.values)
@@ -212,6 +223,7 @@ def get_TDFile(x, input_folder):
 
     TD_final.to_csv(input_folder + x + '/' + 'TD_file.csv')
 
+
 ########################################################################################################################
 
 #
@@ -219,9 +231,12 @@ def get_TDFile(x, input_folder):
 # Input: -numbTD =  the number of typical days in the studied case
 # Output: - list of TD's distribution
 #
-def distri_TD(country, n_TD):
-    TD_final = pd.read_csv(input_folder + country + '/' +'TD_file.csv')
-    #TD_final = pd.read_csv(input_folder_fromPrepare + country + '/' +'TD_file.csv')
+def distri_TD(n_TD, TD_final, country=None):
+    # if country is None:
+    #     TD_final = pd.read_csv(input_folder + country + '/' + 'TD_file.csv')
+    # else:
+    #     TD_final = pd.read_csv(input_folder + '/' + 'TD_file.csv')
+    # # TD_final = pd.read_csv(input_folder_fromPrepare + country + '/' +'TD_file.csv')
 
     distri = [0] * n_TD
 
@@ -242,10 +257,10 @@ def distri_TD(country, n_TD):
 #        - numbTD = number of typical days
 # Output: - TD number for the concerned hour
 #
-def get_TD(TD_DF, hour,numbTD):
+def get_TD(TD_DF, hour, numbTD):
     n_TD = numbTD  # enter number of TD's
 
-    TD = TD_DF.loc[hour-1,'TD']
+    TD = TD_DF.loc[hour - 1, 'TD']
 
     return TD
 
@@ -270,6 +285,7 @@ def search_LTlayers(country, TD, hour, tech):
     output = float(LT_layers.at[index, tech])
     return output
 
+
 ########################################################################################################################
 
 #
@@ -281,50 +297,56 @@ def search_LTlayers(country, TD, hour, tech):
 # Outputs :  - the yearly energy of dhn_sto_daily or dhn_sto_seasonal for each CHP or P2H
 #
 #
-def sto_dhn(country, tech_names, TYPE, numTD): #Change the number of arguments - TO DO
+def sto_dhn(tech_names, TYPE, numTD, assets, layer_t, td_hourly, country=None):  # Change the number of arguments - TO DO
     n_TD = numTD
     type = 'TS_DHN_' + TYPE
-    f_ts_dhn = search_assets(country, type, 'f') #Here, change the number of arguments - TO DO
+    f_ts_dhn = search_assets(type, 'f', assets)  # Here, change the number of arguments - TO DO
     tech_chp = []
     tech_p2h = []
+    tech_heat = []
     for elem in tech_names:
         if elem[:3] == 'DHN':
             if elem[4:9] == 'COGEN':
                 tech_chp.append(elem)
+            elif (elem[4:10] == 'BOILER') or (elem[4:9] == 'SOLAR') or (elem[4:8] == 'DEEP'):
+                tech_heat.append(elem)
             else:
                 tech_p2h.append(elem)
-    tech_all = tech_chp + tech_p2h
+    tech_all = tech_chp + tech_p2h + tech_heat
 
     sto_dhn_td = pd.DataFrame(index=range(0, n_TD), columns=tech_all)  # sto of each tech, daily (TD)
 
-
-    if f_ts_dhn == 0 :   #This means there are no installed capacity, you can return an empty list
+    if f_ts_dhn == 0:  # This means there are no installed capacity, you can return an empty list
         dhn_sto = pd.DataFrame(columns=tech_all)
         return dhn_sto
 
     # 1) Build a dataframe with LTLayers data
-    lt_layers_df_ori = pd.read_csv(input_folder + country + '/' + 'LTlayers.txt', delimiter='\t')
-    lt_layers_df = lt_layers_df_ori[tech_all].copy()                        #Keeping only the releveant columns
-    lt_layers_df['SUM'] = lt_layers_df.sum(numeric_only=True, axis=1)       #Sum of all production at each hour
+    lt_layers_df_ori = layer_t
+    lt_layers_df = lt_layers_df_ori[tech_all].copy()  # Keeping only the releveant columns
+    lt_layers_df['SUM'] = lt_layers_df.sum(numeric_only=True, axis=1)  # Sum of all production at each hour
 
     # 2) Compute Ratios
     lt_layers_df[tech_all] = lt_layers_df[tech_all].div(lt_layers_df['SUM'], axis=0)
 
     # 3) get Sto_Type_P_in, and Multiply Ratio with Storage Input at each hour
-    sto_df = -lt_layers_df_ori[type + '_Pin']   #Storage input at each hour ;
-                                                # NOTE : '-' sign is necessary as P_in is defined as negative
+    sto_df = -lt_layers_df_ori[type + '_Pin']  # Storage input at each hour ;
+    # NOTE : '-' sign is necessary as P_in is defined as negative
     lt_layers_df[tech_all] = lt_layers_df[tech_all].mul(sto_df, axis=0)
 
     # 4) groupby, TD, sum
     #       - Add the TD column from the original
-    lt_layers_df['Td']  = lt_layers_df_ori.iloc[:,0].copy()     #Copy the first column which contains the Td
+    lt_layers_df['Td'] = lt_layers_df_ori.iloc[:, 0].copy()  # Copy the first column which contains the Td
     #       - Drop the SUM column
     lt_layers_df.drop('SUM', axis=1, inplace=True)
     #       - GroupBy
     sto_dhn_td = lt_layers_df.groupby('Td').sum()
 
     # Multiply each elem of sto_dhn_td by distri_TD => gives total prod Sto of tech_x - HERE
-    mydistri = distri_TD(country, n_TD)
+    # if country is None:
+    #     mydistri = distri_TD(country, n_TD, td_hourly)
+    # else:
+    #     mydistri = distri_TD(n_TD)
+    mydistri = distri_TD(n_TD, td_hourly, country)
     dhn_interm = sto_dhn_td.mul(mydistri, axis=0)
 
     # Multiply f_ts_dhn_seasonal by each ratio of storage. SizeOfSto_tech_x = f_ts_dhn_seasonal * (total_prod_Sto_tech_x) / (SUMi total_prod_Sto_techi)
@@ -377,6 +399,7 @@ def search_TypicalUnits(tech, fuel):
 
     return pd.DataFrame(columns=column_names)  # 'NOTHING for' + tech + fuel
 
+
 ########################################################################################################################
 
 
@@ -396,11 +419,11 @@ def search_TypicalUnits_CHP(country, tech, fuel, CHPType):
             try:
                 PowerPlants = PowerPlants[column_names]
                 return PowerPlants.loc[(PowerPlants['Technology'] == tech) & (PowerPlants['Fuel'] == fuel) & (
-                            PowerPlants['CHPType'] == CHPType)]
+                        PowerPlants['CHPType'] == CHPType)]
             except:
                 print('not the right format of column_names in file', f)
             return PowerPlants.loc[(PowerPlants['Technology'] == tech) & (PowerPlants['Fuel'] == fuel) & (
-                        PowerPlants['CHPType'] == CHPType)]
+                    PowerPlants['CHPType'] == CHPType)]
 
         elif (not PowerPlants.loc[(PowerPlants['Technology'] == tech) & (PowerPlants['Fuel'] == fuel) & (
                 PowerPlants['CHPType'] == 'Extraction')].empty):
@@ -418,7 +441,7 @@ def search_TypicalUnits_CHP(country, tech, fuel, CHPType):
 ########################################################################################################################
 
 def write_TypicalUnits(missing_tech):
-    Typical_Units = pd.read_csv(input_folder +  'Typical_Units.csv')
+    Typical_Units = pd.read_csv(input_folder + 'Typical_Units.csv')
     powerplants = pd.DataFrame(columns=column_names)
 
     for (i, j) in missing_tech:
@@ -429,6 +452,7 @@ def write_TypicalUnits(missing_tech):
             powerplants = pd.concat([powerplants, tmp])
     Typical_Units = pd.concat([Typical_Units, powerplants])
     Typical_Units.to_csv(input_folder + 'Typical_Units_modif.csv', index=False)
+
 
 ########################################################################################################################
 
@@ -444,7 +468,6 @@ def write_TypicalUnits_CHP(missing_tech_CHP):
             powerplants = pd.concat([powerplants, tmp])
     Typical_Units = pd.concat([Typical_Units, powerplants])
     Typical_Units.to_csv(input_folder + 'Typical_Units_modif.csv', index=False)
-
 
 
 ########################################################################################################################
@@ -464,3 +487,42 @@ def from_excel_to_dataFrame(filename, tab):
         df = df.set_index(df.columns[0])
 
     return df
+
+
+def process_TD(td_final):
+
+    td_unique = td_final[0].unique()
+    td_unique_sorted = pd.DataFrame({'TD_day': np.sort(td_unique), 'TD': range(1, len(np.sort(td_unique).tolist()) + 1, 1)})
+    mapping_td = dict(td_unique_sorted[['TD_day', 'TD']].values)
+    td_hourly = pd.DataFrame({'h_year': range(1, 8761, 1), 'hour': ''})
+    list_int = list(range(1, 25, 1))
+    days = pd.Series(td_final[0])
+    days = days.repeat(24).reset_index()
+    td_hourly['hour'] = np.tile(list_int, len(td_hourly) // len(list_int))
+    td_hourly['day'] = days[0]
+    td_hourly['TD'] = td_hourly['day'].map(mapping_td)
+
+    return td_hourly
+
+
+def write_csv_files(file_name, demand, var_name, index=True, write_csv=None, country=None, inflows=None):
+    filename = file_name + '.csv'
+    if write_csv:
+        make_dir(output_folder)
+        make_dir(output_folder + 'Database')
+        if inflows is None:
+            folder = output_folder + 'Database/' + var_name + '/'
+            make_dir(folder)
+        else:
+            folder = output_folder + 'Database/' + 'HydroData/'
+            make_dir(folder)
+            folder = folder + var_name + '/'
+            make_dir(folder)
+        if country is None:
+            make_dir(folder + 'ES/')
+            demand.to_csv(folder + 'ES/' + filename, header=True, index=index)
+        else:
+            make_dir(folder + country)
+            demand.to_csv(folder + country + '/' + filename, header=True, index=index)
+    else:
+        logging.warning('WRITE_CSV_FILES = False, unable to write .csv files inside the ' + var_name + ' folder')

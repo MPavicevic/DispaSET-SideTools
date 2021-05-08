@@ -24,6 +24,17 @@ from dispaset_sidetools.common import *
 from dispaset_sidetools.search import * #from_excel_to_dataFrame,search_YearBalance
 from dispaset_sidetools.constants import *
 
+Zone = None
+
+ES_folder = '../../../EnergyScope/'
+DATA = 'Data/'
+STEP_1 = 'STEP_1_TD_selection/'
+STEP_2 = 'STEP_2_Energy_Model/'
+
+# folder with the common.py and various Dictionaries
+sidetools_folder = '../'
+# to access DATA - DATA_preprocessing_BE & Typical_Units (to find installed power f [GW or GWh for storage])
+hourly_data = ES_folder + STEP_2 + 'output/hourly_data/'
 
 ######################################################################################################
 #Enter the starting date
@@ -62,21 +73,4 @@ for x in countries:
 
 ######################################################################################################
 
-def write_csv_files(file_name,demand,write_csv=None):
-
-    filename = file_name + '.csv'
-    if write_csv == True:
-        for c in countries:
-            make_dir(output_folder)
-            make_dir(output_folder + 'Database')
-            folder = output_folder + 'Database/H2Demand/'
-            make_dir(folder)
-            make_dir(folder + c)
-
-            column_name = list(demand.columns)
-            result = [i for i in column_name if i.startswith(c)]
-            demand[result].to_csv(folder + c + '/' + filename, header=True)
-    else:
-        print('[WARNING ]: '+'WRITE_CSV_FILES = False, unable to write .csv files')
-
-write_csv_files('2015_ES',H2_EUD,True)
+# write_csv_files('2015_ES',H2_EUD, '2015_ES', index=True, write_csv=True)

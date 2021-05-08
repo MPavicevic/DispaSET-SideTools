@@ -12,6 +12,7 @@ Output :    - Database/HydroData/ScaledLevels/##/... .csv
 """
 from __future__ import division
 
+import logging
 import sys, os
 sys.path.append(os.path.abspath(r'../..'))
 
@@ -25,6 +26,19 @@ from dispaset_sidetools.common import *
 from dispaset_sidetools.search import *
 from dispaset_sidetools.constants import *
 
+Zone = None
+
+countries = ['ES']
+
+ES_folder = '../../../EnergyScope/'
+DATA = 'Data/'
+STEP_1 = 'STEP_1_TD_selection/'
+STEP_2 = 'STEP_2_Energy_Model/'
+
+# folder with the common.py and various Dictionaries
+sidetools_folder = '../'
+# to access DATA - DATA_preprocessing_BE & Typical_Units (to find installed power f [GW or GWh for storage])
+hourly_data = ES_folder + STEP_2 + 'output/hourly_data/'
 
 #Enter studied year
 start = pd.to_datetime(date_str)
@@ -39,69 +53,78 @@ scaledlevels_timeseries = {}
 for x in countries:
 
     #input files
-    Storage = pd.read_csv(input_folder + x + '/' + 'Distri_E_stored.txt', delimiter = '\t' ,index_col = 0)
+    timeseries = pd.read_csv(ES_folder + DATA + 'Developper_data/Time_series.csv', header=1)
+    timeseries.set_index(drange, inplace=True)
+
+    Storage = pd.read_csv(hourly_data + 'energy_stored.txt', delimiter='\t', index_col=0)
     Storage.set_index(drange, inplace=True)
-    AF_ES_df = from_excel_to_dataFrame(input_folder + x + '/' + 'DATA_preprocessing.xlsx', 'AvailabilityFactors')
-    AF_ES_df.set_index(drange, inplace=True)
+
+    AF_ES_df = timeseries.loc[:,['PV','Wind_onshore', 'Wind_offshore', 'Hydro_river']]
 
     #Availability Factors
-    AvailFactors_DS = [' ']
+    AvailFactors_DS = []
     for i in AF_ES_df:
-        if i[3:] in mapping['TECH']:
-            DS_AF = mapping['TECH'][i[3:]]
-            AvailFactors_DS.append(mapping['TECH'][i[3:]])
-        elif 'Wind' in i or 'wind' in i or 'WIND' in i:
-            AvailFactors_DS.append('WTON')
+        if i in mapping['TECH']:
+            DS_AF = mapping['TECH'][i]
+            AvailFactors_DS.append(mapping['TECH'][i])
     AF_DS_df = AF_ES_df.set_axis(AvailFactors_DS, axis=1, inplace=False)
     for i in AvailFactors_DS:
         AF_DS_df.loc[AF_DS_df[i] < 0,i] = 0
         AF_DS_df.loc[AF_DS_df[i] > 1,i] = 1
-    res_timeseries[x] = AF_DS_df.drop(AF_DS_df.columns[0], axis=1)
+    res_timeseries[x] = AF_DS_df
 
     #Scaled Inflows
-    Inflows = pd.DataFrame(index=drange)
-    for i in AvailFactors_DS:
-        if i == 'HDAM' or i == 'HPHS':
-            Inflows[i] = res_timeseries[x][i]
-    inflow_timeseries[x] = Inflows
+    try:
+        Inflows_DS = []
+        IF_ES_df = timeseries.loc[:, ['Hydro_dam']]
+        for i in IF_ES_df:
+            if i in mapping['TECH']:
+                DS_IF = mapping['TECH'][i]
+                Inflows_DS.append(mapping['TECH'][i])
+        inflow_timeseries[x] = IF_ES_df.set_axis(Inflows_DS, axis=1)
+    except:
+        logging.ERROR('Hydro_dam timeseries not present in ES')
+
+    #
+    # #ScaledLevels:
+    # Levels = pd.DataFrame(index=drange)
+    # for i in AvailFactors_DS:
+    #     if i == 'HDAM':
+    #         Levels[i] = Storage['DAM_STORAGE'].div(float(search_assets(x,'DAM_STORAGE','f')))
+    #     elif i == 'HPHS':
+    #         Levels[i] = Storage['PHS'].div(float(search_assets(x,'PHS','f')))
+    # scaledlevels_timeseries[x] = Levels
+
+for c in countries:
+    write_csv_files('AF_2015_ES', res_timeseries[c], 'AvailabilityFactors', index=True, write_csv=True, country=c)
+    write_csv_files('IF_2015_ES', inflow_timeseries[c], 'ScaledInFlows', index=True, write_csv=True, country=c, inflows=True)
 
 
-    #ScaledLevels:
-    Levels = pd.DataFrame(index=drange)
-    for i in AvailFactors_DS:
-        if i == 'HDAM':
-            Levels[i] = Storage['DAM_STORAGE'].div(float(search_assets(x,'DAM_STORAGE','f')))
-        elif i == 'HPHS':
-            Levels[i] = Storage['PHS'].div(float(search_assets(x,'PHS','f')))
-    scaledlevels_timeseries[x] = Levels
-
-
-
-def write_csv_files(file_name_AF,file_name_IF,file_name_RL,res_timeseries,inflow_timeseries,scaledlevels_timeseries,write_csv=None):
-
-    filename_AF = file_name_AF + '.csv'
-    filename_IF = file_name_IF + '.csv'
-    filename_RL = file_name_RL + '.csv'
-    if write_csv == True:
-        for c in res_timeseries:
-            make_dir(output_folder + 'Database')
-            folder = output_folder + 'Database/AvailabilityFactors/'
-            make_dir(folder)
-            make_dir(folder + c)
-            res_timeseries[c].to_csv(folder + c + '/' + filename_AF)
-        for c in inflow_timeseries:
-            make_dir(output_folder + 'Database')
-            make_dir(output_folder + 'Database/HydroData')
-            folder_1 = output_folder + 'Database/HydroData/ScaledInflows/'
-            make_dir(folder_1)
-            make_dir(folder_1 + c)
-            inflow_timeseries[c].to_csv(folder_1 + c + '/' + filename_IF)
-        for c in scaledlevels_timeseries:
-            folder_2 = output_folder + 'Database/HydroData/ScaledLevels/'
-            make_dir(folder_2)
-            make_dir(folder_2 + c)
-            scaledlevels_timeseries[c].to_csv(folder_2 + c + '/' + filename_RL)
-    else:
-        print('[WARNING ]: '+'WRITE_CSV_FILES = False, unable to write .csv files')
-
-write_csv_files('2015_ES','2015_ES','2015_ES',res_timeseries,inflow_timeseries,scaledlevels_timeseries,True)
+# def write_csv_files(file_name_AF,file_name_IF,file_name_RL,res_timeseries,inflow_timeseries,scaledlevels_timeseries,write_csv=None):
+#
+#     filename_AF = file_name_AF + '.csv'
+#     filename_IF = file_name_IF + '.csv'
+#     filename_RL = file_name_RL + '.csv'
+#     if write_csv == True:
+#         for c in res_timeseries:
+#             make_dir(output_folder + 'Database')
+#             folder = output_folder + 'Database/AvailabilityFactors/'
+#             make_dir(folder)
+#             make_dir(folder + c)
+#             res_timeseries[c].to_csv(folder + c + '/' + filename_AF)
+#         for c in inflow_timeseries:
+#             make_dir(output_folder + 'Database')
+#             make_dir(output_folder + 'Database/HydroData')
+#             folder_1 = output_folder + 'Database/HydroData/ScaledInflows/'
+#             make_dir(folder_1)
+#             make_dir(folder_1 + c)
+#             inflow_timeseries[c].to_csv(folder_1 + c + '/' + filename_IF)
+#         for c in scaledlevels_timeseries:
+#             folder_2 = output_folder + 'Database/HydroData/ScaledLevels/'
+#             make_dir(folder_2)
+#             make_dir(folder_2 + c)
+#             scaledlevels_timeseries[c].to_csv(folder_2 + c + '/' + filename_RL)
+#     else:
+#         print('[WARNING ]: '+'WRITE_CSV_FILES = False, unable to write .csv files')
+#
+# write_csv_files('2015_ES','2015_ES','2015_ES',res_timeseries,inflow_timeseries,scaledlevels_timeseries,True)
