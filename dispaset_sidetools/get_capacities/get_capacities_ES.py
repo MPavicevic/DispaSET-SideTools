@@ -102,7 +102,7 @@ assets = assets.groupby(assets.index).mean()
 #         2) CHP PowerToHeatRatio
 #         3) P2HT COP_nom
 
-layers_in_out = pd.read_csv(ES_folder + DATA + 'Developper_data/Layers_in_out.csv', sep=separator)
+layers_in_out = pd.read_csv(ES_folder + DATA + 'Developer_data/Layers_in_out.csv', sep=separator)
 layers_in_out.set_index(layers_in_out['param layers_in_out:'], inplace=True)
 layers_in_out.index = layers_in_out.index.str.strip()
 
@@ -111,7 +111,7 @@ layers_in_out.index = layers_in_out.index.str.strip()
 #         2) STOSellfDischarge for STO TECH
 #         3) STOMaxChargingPower for STO TECH
 
-storage_characteristics = pd.read_csv(ES_folder + DATA + 'Developper_data/Storage_charecteristics.csv', sep=separator)
+storage_characteristics = pd.read_csv(ES_folder + DATA + 'Developer_data/Storage_characteristics.csv', sep=separator)
 storage_characteristics.set_index(storage_characteristics['param :'], inplace=True)
 storage_characteristics.rename(columns=lambda x: x.strip(), inplace=True)
 storage_characteristics.index = storage_characteristics.index.str.strip()
@@ -119,7 +119,7 @@ storage_characteristics.index = storage_characteristics.index.str.strip()
 # %% Get Storage_eff_in will be used to get :
 #         1) Efficiency for STO TECH
 
-storage_eff_in = pd.read_csv(ES_folder + DATA + 'Developper_data/Storage_eff_in.csv', sep=separator)
+storage_eff_in = pd.read_csv(ES_folder + DATA + 'Developer_data/Storage_eff_in.csv', sep=separator)
 storage_eff_in.set_index(storage_eff_in['param storage_eff_in:'], inplace=True)
 storage_eff_in.rename(columns=lambda x: x.strip(), inplace=True)
 storage_eff_in.index = storage_eff_in.index.str.strip()
@@ -127,7 +127,7 @@ storage_eff_in.index = storage_eff_in.index.str.strip()
 # %% Get Storage_eff_out will be used to get :
 #         1) STOChargingEfficiency for STO TECH
 
-storage_eff_out = pd.read_csv(ES_folder + DATA + 'Developper_data/Storage_eff_out.csv', sep=separator)
+storage_eff_out = pd.read_csv(ES_folder + DATA + 'Developer_data/Storage_eff_out.csv', sep=separator)
 storage_eff_out.set_index(storage_eff_out['param storage_eff_out:'], inplace=True)
 storage_eff_out.rename(columns=lambda x: x.strip(), inplace=True)
 storage_eff_out.index = storage_eff_out.index.str.strip()
@@ -137,6 +137,10 @@ storage_eff_out.index = storage_eff_out.index.str.strip()
 layer_low_t_dhn = pd.read_csv(hourly_data + 'layer_HEAT_LOW_T_DHN.txt', sep="\t")
 layer_low_t_dec = pd.read_csv(hourly_data + 'layer_HEAT_LOW_T_DECEN.txt', sep="\t")
 layer_high_t = pd.read_csv(hourly_data + 'layer_HEAT_HIGH_T.txt', sep="\t")
+
+# %% Get GWP_op data, this will be used to compute CO2Intensity of different technologies inside DS
+gwp_op = pd.read_csv(ES_folder + STEP_2 + 'output/GWP_op.txt', sep="\t", index_col=0)
+gwp_op.index = gwp_op.index.map(mapping['RESOURCE'])
 
 # %% Get typical days mapping
 
@@ -513,7 +517,7 @@ Technology_Fuel_in_system = Technology_Fuel_in_system.values.tolist()
 # Typical Units : run through Typical_Units with existing Technology_Fuel pairs in ES simulation
 
 # Characteristics is a list over which we need to iterate for typical Units
-Caracteristics = ['MinUpTime', 'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu',
+Characteristics = ['MinUpTime', 'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu',
                   'RampingCost', 'PartLoadMin', 'MinEfficiency', 'StartUpTime', 'CO2Intensity',
                   'CHPPowerLossFactor']
 
@@ -542,8 +546,15 @@ for index in index_list:
 
     # If the unit is present in Typical_Units.csv
     else:
-        for carac in Caracteristics:
-            value = Typical_row[carac].values
+        for carac in Characteristics:
+            if carac == 'CO2Intensity':
+                if PowerPlants.loc[index, 'Fuel'] in list(gwp_op.index):
+                    value = gwp_op.loc[PowerPlants.loc[index, 'Fuel']].values / PowerPlants.loc[index, 'Efficiency']
+                else:
+                    value = Typical_row[carac].values
+
+            else:
+                value = Typical_row[carac].values
 
             # Adding the needed characteristics of typical units
             # Take into account the cases where the array is of length :
@@ -636,7 +647,7 @@ for index in index_CHP_list:
 
     # If the unit is present in Typical_Units.csv
     else:
-        for carac in Caracteristics:
+        for carac in Characteristics:
             value = Typical_row[carac].values
 
             # Adding the needed characteristics of typical units
@@ -722,7 +733,7 @@ for index in index_P2GS_list:
 
     # If the unit is present in Typical_Units.csv
     else:
-        for carac in Caracteristics:
+        for carac in Characteristics:
             value = Typical_row[carac].values
 
             # Adding the needed characteristics of typical units

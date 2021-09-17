@@ -29,12 +29,12 @@ ES_txtfiles = ['Assets', 'Distri_E_stored', 'ElecLayers', 'H2Layers', 'HTLayers'
 
 # Lists of tech
 elec_mobi_tech = ['TRAMWAY_TROLLEY', 'TRAIN_PUB', 'TRAIN_FREIGHT']  # electro mobility technology
-p2h_tech = ['IND_DIRECT_ELEC', 'DHN_HP_ELEC', 'DEC_HP_ELEC', 'DEC_DIRECT_ELEC', 'DEC_THHP_GAS']
+p2h_tech = ['IND_DIRECT_ELEC', 'DHN_HP_ELEC', 'DEC_HP_ELEC', 'DEC_DIRECT_ELEC']
 chp_tech = ['IND_COGEN_GAS', 'IND_COGEN_WOOD', 'IND_COGEN_WASTE', 'DHN_COGEN_GAS', 'DHN_COGEN_WOOD', 'DHN_COGEN_WASTE',
             'DEC_COGEN_GAS', 'DEC_COGEN_OIL', 'DHN_COGEN_WET_BIOMASS', 'DEC_COGEN_GAS']
 OtherHeat_tech = ['IND_BOILER_GAS', 'IND_BOILER_WASTE', 'IND_BOILER_COAL', 'IND_BOILER_WOOD', 'IND_BOILER_OIL',
                   'DHN_DEEP_GEO', 'DHN_BOILER_GAS', 'DHN_BOILER_OIL', 'DEC_BOILER_GAS', 'DEC_BOILER_WOOD',
-                  'DEC_BOILER_OIL', 'DEC_SOLAR']
+                  'DEC_BOILER_OIL', 'DEC_SOLAR', 'DEC_THHP_GAS']
 power_tech = ['CCGT', 'PV', 'WIND_ONSHORE', 'WIND_OFFSHORE', 'WIND', 'IND_COGEN_GAS', 'IND_COGEN_WASTE',
               'DHN_COGEN_GAS', 'DHN_COGEN_WOOD', 'DHN_COGEN_WET_BIOMASS', 'DHN_COGEN_WASTE', 'HYDRO_RIVER', 'NUCLEAR',
               'GEOTHERMAL', 'COAL_US', 'DEC_COGEN_GAS']
@@ -110,7 +110,7 @@ mapping['SORT'] = {u'CCGT': u'ELEC',
                    u'DHN_DEEP_GEO': u'HEAT',
                    u'DHN_SOLAR': u'HEAT',
                    u'DEC_HP_ELEC': u'P2HT',  # P2HT ?
-                   u'DEC_THHP_GAS': u'P2HT',
+                   u'DEC_THHP_GAS': u'HEAT',
                    u'DEC_COGEN_GAS': u'CHP',  # ADD extraction/back-pressure/other
                    u'DEC_COGEN_OIL': u'CHP',  # ADD extraction/back-pressure/other
                    u'DEC_ADVCOGEN_GAS': u'CHP',  # ADD extraction/back-pressure/other
@@ -276,6 +276,31 @@ mapping['FUEL'] = {u'CCGT': u'GAS',
                    u'SEASONAL_H2': u'HYD',
                    u'H2_ELECTROLYSIS': u'HYD'}  # TO DO
 
+mapping['RESOURCE'] = {u'BIODIESEL': u'BIODIESEL',
+                       u'BIOETHANOL': u'BIOETHANOL',
+                       u'CO2_ATM ': u'CO2_ATM',
+                       u'CO2_CAPTURED': u'CO2_CAPTURED',
+                       u'CO2_EMISSIONS': u'CO2_EMISSIONS',
+                       u'CO2_INDUSTRY ': u'CO2_INDUSTRY',
+                       u'COAL': u'HRD',
+                       u'DIESEL': u'OIL',
+                       u'ELECTRICITY': u'ELECTRICITY',
+                       u'ELEC_EXPORT': u'ELEC_EXPORT',
+                       u'GASOLINE': u'GASOLINE',
+                       u'H2': u'HYD',
+                       u'LFO': u'LFO',
+                       u'NG': u'GAS',
+                       u'RES_GEO': u'GEO',
+                       u'RES_HYDRO': u'WAT',
+                       u'RES_SOLAR': u'SUN',
+                       u'RES_WIND': u'WIN',
+                       u'SLF': u'SLF',
+                       u'SNG': u'SNG',
+                       u'URANIUM': u'NUC',
+                       u'WASTE': u'WST',
+                       u'WET_BIOMASS': u'WET_BIOMASS',
+                       u'WOOD': u'WOOD'}
+
 # DICO used to get efficiency of tech in layers_in_out
 mapping['FUEL_ES'] = {u'CCGT': u'NG',
                       u'COAL_IGCC': u'COAL',
@@ -367,14 +392,15 @@ mapping['HEAT_ONLY_HEAT'] = {u'IND_BOILER_GAS': u'HEAT_HIGH_T',
                              u'DEC_BOILER_GAS': u'HEAT_LOW_T_DECEN',
                              u'DEC_BOILER_WOOD': u'HEAT_LOW_T_DECEN',
                              u'DEC_BOILER_OIL': u'HEAT_LOW_T_DECEN',
-                             u'DEC_SOLAR': u'HEAT_LOW_T_DECEN'
+                             u'DEC_SOLAR': u'HEAT_LOW_T_DECEN',
+                             u'DEC_THHP_GAS': u'HEAT_LOW_T_DECEN'
                              }
 
 mapping['P2HT_HEAT'] = {u'IND_DIRECT_ELEC': u'HEAT_HIGH_T',
                         u'DHN_HP_ELEC': u'HEAT_LOW_T_DHN',
                         u'DEC_HP_ELEC': u'HEAT_LOW_T_DECEN',
-                        u'DEC_DIRECT_ELEC': u'HEAT_LOW_T_DECEN',
-                        u'DEC_THHP_GAS': u'HEAT_LOW_T_DECEN'}
+                        u'DEC_DIRECT_ELEC': u'HEAT_LOW_T_DECEN'
+                        }
 # u'TS_DEC_HP_ELEC': u''} - Thermal Storage : is P2HT techno ?
 
 # That dictionary could be automatize for DEC_P2HT - IS IT BETTER THOUGH ? - TO CHECK
