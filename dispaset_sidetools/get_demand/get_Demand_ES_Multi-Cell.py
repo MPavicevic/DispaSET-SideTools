@@ -20,6 +20,8 @@ sys.path.append(os.path.abspath(r'../..'))
 from dispaset_sidetools.search import *
 from dispaset_sidetools.constants import *
 
+separator = ';'
+
 countries = ['ES']
 
 ES_folder = '../../../EnergyScope/'
@@ -41,8 +43,8 @@ for x in countries:
     grid_losses = grid_losses_list[countries.index(x)]
 
     # input file
-    timeseries = pd.read_csv(ES_folder + DATA + 'Developper_data/Time_series.csv', header=1)
-    demands = pd.read_csv(ES_folder + DATA + 'User_data/Demand.csv')
+    timeseries = pd.read_csv(ES_folder + DATA + 'Developper_data/Time_series.csv', header=0, sep=separator)
+    demands = pd.read_csv(ES_folder + DATA + 'User_data/Demand.csv', sep=separator)
     el_demand_baseload = demands.loc[0,'HOUSEHOLDS'] + demands.loc[0,'SERVICES'] + demands.loc[0,'INDUSTRY']
     el_demand_variable = demands.loc[1,'HOUSEHOLDS'] + demands.loc[1,'SERVICES'] + demands.loc[1,'INDUSTRY']
     yearbal = pd.read_csv(ES_folder + STEP_2 + 'output/year_balance.txt', delimiter='\t', index_col='Tech')

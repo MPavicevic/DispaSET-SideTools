@@ -28,6 +28,8 @@ from dispaset_sidetools.constants import *
 
 Zone = None
 
+seprator = ';'
+
 countries = ['ES']
 
 ES_folder = '../../../EnergyScope/'
@@ -53,13 +55,13 @@ scaledlevels_timeseries = {}
 for x in countries:
 
     #input files
-    timeseries = pd.read_csv(ES_folder + DATA + 'Developper_data/Time_series.csv', header=1)
+    timeseries = pd.read_csv(ES_folder + DATA + 'Developper_data/Time_series.csv', header=0, sep=seprator)
     timeseries.set_index(drange, inplace=True)
 
-    Storage = pd.read_csv(hourly_data + 'energy_stored.txt', delimiter='\t', index_col=0)
+    Storage = pd.read_csv(hourly_data + 'energy_stored.txt', delimiter='\t', index_col=0, sep=seprator)
     Storage.set_index(drange, inplace=True)
 
-    AF_ES_df = timeseries.loc[:,['PV','Wind_onshore', 'Wind_offshore', 'Hydro_river']]
+    AF_ES_df = timeseries.loc[:, ['PV','Wind_onshore', 'Wind_offshore', 'Hydro_river']]
 
     #Availability Factors
     AvailFactors_DS = []
@@ -83,7 +85,7 @@ for x in countries:
                 Inflows_DS.append(mapping['TECH'][i])
         inflow_timeseries[x] = IF_ES_df.set_axis(Inflows_DS, axis=1)
     except:
-        logging.ERROR('Hydro_dam timeseries not present in ES')
+        logging.error('Hydro_dam timeseries not present in ES')
 
     #
     # #ScaledLevels:
@@ -97,7 +99,8 @@ for x in countries:
 
 for c in countries:
     write_csv_files('AF_2015_ES', res_timeseries[c], 'AvailabilityFactors', index=True, write_csv=True, country=c)
-    write_csv_files('IF_2015_ES', inflow_timeseries[c], 'ScaledInFlows', index=True, write_csv=True, country=c, inflows=True)
+    if inflow_timeseries:
+        write_csv_files('IF_2015_ES', inflow_timeseries[c], 'ScaledInFlows', index=True, write_csv=True, country=c, inflows=True)
 
 
 # def write_csv_files(file_name_AF,file_name_IF,file_name_RL,res_timeseries,inflow_timeseries,scaledlevels_timeseries,write_csv=None):

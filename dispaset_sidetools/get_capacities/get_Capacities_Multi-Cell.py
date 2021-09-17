@@ -28,6 +28,8 @@ WRITE_CSV_FILES = True  # Write csv database
 TECHNOLOGY_THRESHOLD = 0  # threshold (%) below which a technology is considered negligible and no unit is created
 STO_THRESHOLD = 0.5  # under STO_THRESHOLD GWh, we don't consider DHN_THMS
 
+separator = ';'
+
 """ 
     Data needed for the Power Plants in DISPA-SET (ES means from ES): 
     - Unit Name
@@ -85,9 +87,11 @@ def define_PP(Zone):
 
     # Read the file
     assets = pd.read_csv(input_folder + Zone + '/' + 'Assets.txt', delimiter='\t')
+    assets.columns = assets.columns.str.replace(' ','')
 
     # Get all Technologies as an index to be used later as index of the PowerPlants DataFrame
-    all_tech = assets.index
+    # all_tech = assets.index
+    all_tech = assets.loc[:,'TECHNOLOGIES']
 
     PowerPlants = pd.DataFrame(columns=column_names, index=all_tech)
 
@@ -146,7 +150,7 @@ def define_PP(Zone):
 
     # Fill in the capacity value at Power Capacity column
     # The assets.txt file is not in a right format to work with dataframe to get capacity installed f properly - TO FIX
-    PowerPlants['PowerCapacity'] = assets['  f_min']
+    PowerPlants['PowerCapacity'] = assets['f_min']
     # Watch out for STO_TECH /!\ - PowerCapacity in DS is MW, where f is in GW/GWh
     # Here everything is in GW/GWh
 

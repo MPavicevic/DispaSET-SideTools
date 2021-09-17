@@ -23,6 +23,8 @@ from dispaset_sidetools.common import *
 from dispaset_sidetools.search import *
 from dispaset_sidetools.constants import *
 
+separator = ';'
+
 countries = ['ES']
 
 ES_folder = '../../../EnergyScope/'
@@ -41,8 +43,8 @@ for x in countries:
     DHN_Sto_losses = DHN_Sto_losses_list[countries.index(x)]
 
     # Input file
-    timeseries = pd.read_csv(ES_folder + DATA + 'Developper_data/Time_series.csv', header=1)
-    demands = pd.read_csv(ES_folder + DATA + 'User_data/Demand.csv')
+    timeseries = pd.read_csv(ES_folder + DATA + 'Developper_data/Time_series.csv', header=0, sep=separator)
+    demands = pd.read_csv(ES_folder + DATA + 'User_data/Demand.csv', sep=separator)
     yearbal = pd.read_csv(ES_folder + STEP_2 + 'output/year_balance.txt', delimiter='\t', index_col='Tech')
 
     heat_demand = demands.loc[3, 'HOUSEHOLDS'] + demands.loc[3, 'SERVICES'] + demands.loc[3, 'INDUSTRY']
