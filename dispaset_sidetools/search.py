@@ -505,7 +505,7 @@ def process_TD(td_final):
     return td_hourly
 
 
-def write_csv_files(file_name, demand, var_name, index=True, write_csv=None, country=None, inflows=None):
+def write_csv_files(file_name, demand, var_name, index=True, write_csv=None, country=None, inflows=None, heating=False):
     filename = file_name + '.csv'
     if write_csv:
         make_dir(output_folder)
@@ -519,8 +519,12 @@ def write_csv_files(file_name, demand, var_name, index=True, write_csv=None, cou
             folder = folder + var_name + '/'
             make_dir(folder)
         if country is None:
-            make_dir(folder + 'ES/')
-            demand.to_csv(folder + 'ES/' + filename, header=True, index=index)
+            if heating is True:
+                make_dir(folder)
+                demand.to_csv(folder + filename, header=True, index=index)
+            else:
+                make_dir(folder + 'ES/')
+                demand.to_csv(folder + 'ES/' + filename, header=True, index=index)
         else:
             make_dir(folder + country)
             demand.to_csv(folder + country + '/' + filename, header=True, index=index)

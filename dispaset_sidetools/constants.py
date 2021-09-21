@@ -11,7 +11,8 @@ output_folder_fromPrepare = '../Outputs/EnergyScope/'
 input_PP_folder_fromPrepare = '../Dispa-SET.git/Database/PowerPlants/'
 
 input_folder = '../' + input_folder_fromPrepare
-output_folder = '../' + output_folder_fromPrepare
+# output_folder = '../' + output_folder_fromPrepare
+output_folder = output_folder_fromPrepare
 input_PP_folder = '../' + input_PP_folder_fromPrepare  # input file = PowerPlants.csv
 
 # Define constants
