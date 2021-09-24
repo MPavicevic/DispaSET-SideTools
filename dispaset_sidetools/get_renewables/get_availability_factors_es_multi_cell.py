@@ -56,7 +56,7 @@ def get_availability_factors_from_es(ES_folder, countries = ['ES'], seprator = '
         timeseries = pd.read_csv(ES_folder + DATA + 'Developer_data/Time_series.csv', header=0, sep=seprator)
         timeseries.set_index(drange, inplace=True)
 
-        Storage = pd.read_csv(hourly_data + 'energy_stored.txt', delimiter='\t', index_col=0, sep=seprator)
+        Storage = pd.read_csv(hourly_data + 'energy_stored.txt', delimiter='\t', index_col=0)
         Storage.set_index(drange, inplace=True)
 
         AF_ES_df = timeseries.loc[:, ['PV','Wind_onshore', 'Wind_offshore', 'Hydro_river']]
