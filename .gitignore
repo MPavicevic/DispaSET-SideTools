@@ -105,3 +105,4 @@ venv.bak/
 /Outputs/
 *.gitignore
 /.idea/
+/Simulations/
