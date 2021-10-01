@@ -22,22 +22,16 @@ DST_folder = '../../DispaSET-SideTools'
 data_folders = [ES_folder + '/Data/User_data', ES_folder + '/Data/Developer_data']
 ES_path = ES_folder + '/STEP_2_Energy_Model'
 step1_output = ES_folder + '/STEP_1_TD_selection/TD_of_days.out'
+ES_output_dir = ES_path+'/output'
 
 # %% ###################################
 ########### Editable inputs ###########
 #######################################
-config_es = {'run_ES': False,
-             'importing': True,
-             'printing': False,
-             'printing_td': False,
-             'GWP_limit': 45000,  # [ktCO2-eq./year]	# Minimum GWP reduction
-             'data_folders': data_folders,
-             'ES_path': ES_path,
-             'step1_output': step1_output,
-             'all_data': pd.DataFrame(),
-             'Working_directory': os.getcwd(),
-             'import_reserves': '',
-             'reserves': pd.DataFrame()}
+config_es = {'run_ES': False, 'import_reserves': '', 'importing': True, 'printing': False, 'printing_td': False,
+             'GWP_limit': 70000, 'data_folders': data_folders,
+             'ES_path': ES_path, 'ES_output_dir': ES_output_dir,
+             'step1_output': step1_output, 'all_data': pd.DataFrame(),
+             'Working_directory': os.getcwd()}
 
 # %% ####################################
 #### Update and Execute EnergyScope ####
@@ -75,7 +69,8 @@ for i in range(end):
     # Dynamic Data - to be modified in a loop
     # compute the actual average annual emission factors for each resource
     GWP_op[i] = es.compute_gwp_op(config_es['data_folders'], config_es['ES_path'])
-    GWP_op[i].to_csv(ES_path + '\output\GWP_op.txt', sep='\t')  # TODO automate
+    GWP_op[i].to_csv(ES_output_dir+'\GWP_op.txt', sep='\t') #TODO automate
+    #TODO update with new possibility of changing output folder
     capacities[i] = dst.get_capacities_from_es(ES_folder=ES_folder + '/', typical_units_folder=typical_units_folder)
     Price_CO2[i] = pd.read_csv(ES_path + '/output/CO2_cost.txt', delimiter='\t')
     Price_CO2[i] = [float(i) for i in list(Price_CO2[i].columns)]
