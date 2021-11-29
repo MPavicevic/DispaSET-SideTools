@@ -1,13 +1,14 @@
 # Add the root folder of Dispa-SET-side tools to the path so that the library can be loaded:
 import sys, os
 
-sys.path.append(os.path.abspath('..'))
-
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import dispaset as ds
 import dispaset_sidetools as dst
 import energyscope as es
+
+sys.path.append(os.path.abspath('..'))
 
 # %% ###################################
 ############## Path setup #############
@@ -22,16 +23,15 @@ DST_folder = '../../DispaSET-SideTools'
 data_folders = [ES_folder + '/Data/User_data', ES_folder + '/Data/Developer_data']
 ES_path = ES_folder + '/STEP_2_Energy_Model'
 step1_output = ES_folder + '/STEP_1_TD_selection/TD_of_days.out'
-ES_output_dir = ES_path+'/output'
+ES_output_dir = ES_path + '/output'
 
 # %% ###################################
 ########### Editable inputs ###########
 #######################################
 config_es = {'run_ES': False, 'import_reserves': '', 'importing': True, 'printing': False, 'printing_td': False,
-             'GWP_limit': 70000, 'data_folders': data_folders,
-             'ES_path': ES_path, 'ES_output_dir': ES_output_dir,
-             'step1_output': step1_output, 'all_data': pd.DataFrame(),
-             'Working_directory': os.getcwd()}
+             'GWP_limit': 70000, 'data_folders': data_folders, 'ES_path': ES_path, 'ES_output_dir': ES_output_dir,
+             'step1_output': step1_output, 'all_data': pd.DataFrame(), 'Working_directory': os.getcwd(),
+             'reserves': pd.DataFrame()}
 
 # %% ####################################
 #### Update and Execute EnergyScope ####
@@ -64,13 +64,14 @@ Price_CO2 = dict()
 LL = pd.DataFrame()
 Curtailment = pd.DataFrame()
 end = 4
+iteration = {}
 
 for i in range(end):
     # Dynamic Data - to be modified in a loop
     # compute the actual average annual emission factors for each resource
     GWP_op[i] = es.compute_gwp_op(config_es['data_folders'], config_es['ES_path'])
-    GWP_op[i].to_csv(ES_output_dir+'\GWP_op.txt', sep='\t') #TODO automate
-    #TODO update with new possibility of changing output folder
+    GWP_op[i].to_csv(ES_output_dir + '\GWP_op.txt', sep='\t')  # TODO automate
+    # TODO update with new possibility of changing output folder
     capacities[i] = dst.get_capacities_from_es(ES_folder=ES_folder + '/', typical_units_folder=typical_units_folder)
     Price_CO2[i] = pd.read_csv(ES_path + '/output/CO2_cost.txt', delimiter='\t')
     Price_CO2[i] = [float(i) for i in list(Price_CO2[i].columns)]
@@ -80,7 +81,7 @@ for i in range(end):
     #######################################
     # Load the configuration file
     config = ds.load_config('../ConfigFiles/Config_EnergyScope.xlsx')
-    config['default']['PriceOfCO2'] = abs(Price_CO2[i][0]*1000)
+    config['default']['PriceOfCO2'] = abs(Price_CO2[i][0] * 1000)
 
     # Build the simulation environment:
     SimData = ds.build_simulation(config)
@@ -107,7 +108,7 @@ for i in range(end):
     else:
         config_es['reserves'] = reserves[i]
 
-    if i == end-1:
+    if i == end - 1:
         print('Last opt')
     else:
         config_es['all_data'] = es.run_ES(config_es)
@@ -115,17 +116,21 @@ for i in range(end):
     LL = pd.concat([LL, results[i]['OutputShedLoad']], axis=1)
     Curtailment = pd.concat([Curtailment, results[i]['OutputCurtailedPower']], axis=1)
 
-rng = pd.date_range('2015-1-1', '2015-12-31', freq='H')
-# Generate country-specific plots
-# ds.plot_zone(inputs,results,z='ES',rng=rng)
+import pickle
 
-# Generate country-specific plots
-ds.plot_zone(inputs[2], results[2], z_th='ES_DHN', rng=rng)
+with open('ES_DS_Results.p', 'wb') as handle:
+    pickle.dump(inputs, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+# with open('ES_DS_Results.p', 'rb') as handle:
+#     inputs = pickle.load(handle)
+#     results = pickle.load(handle)
 
 # # Plots
 # # import pandas as pd
 # import pandas as pd
-# rng = pd.date_range('2015-1-01','2015-12-31', freq='H')
+#
+# rng = pd.date_range('2015-1-01', '2015-12-31', freq='H')
 # # Generate country-specific plots
 # ds.plot_zone(inputs, results, rng=rng, z_th='ES_DHN')
 #
@@ -136,11 +141,86 @@ ds.plot_zone(inputs[2], results[2], z_th='ES_DHN', rng=rng)
 # sto = ds.plot_tech_cap(inputs)
 #
 # # Violin plot for CO2 emissions
-# ds.plot_co2(inputs, results, figsize=(9,6), width=0.9)
+# ds.plot_co2(inputs, results, figsize=(9, 6), width=0.9)
 #
 # # Bar plot with the energy balances in all countries:
-# ds.plot_energy_zone_fuel(inputs,results,ds.get_indicators_powerplant(inputs,results))
+# ds.plot_energy_zone_fuel(inputs, results, ds.get_indicators_powerplant(inputs, results))
 #
 # # Analyse the results for each country and provide quantitative indicators:
-# r = ds.get_result_analysis(inputs,results)
-#
+# r = ds.get_result_analysis(inputs, results)
+
+
+# Create figure and subplot manually
+# fig = plt.figure()
+# host = fig.add_subplot(111)
+
+# More versatile wrapper
+fig, host = plt.subplots(figsize=(8, 4))  # (width, height) in inches
+# (see https://matplotlib.org/3.3.3/api/_as_gen/matplotlib.pyplot.subplots.html)
+
+par1 = host.twinx()
+par2 = host.twinx()
+
+host.set_xlim(1, 4)
+host.set_ylim(0, 90)
+par1.set_ylim(0, 450)
+par2.set_ylim(0, 3300)
+
+host.set_xlabel("Iteration")
+host.set_ylabel("ENS_mean [MWh]")
+par1.set_ylabel("ENS_st.dev. [MWh]")
+par2.set_ylabel("ENS_max [MWh]")
+
+color1 = plt.cm.viridis(0.9)
+color2 = plt.cm.viridis(0.5)
+color3 = plt.cm.viridis(0)
+
+# p1, = host.plot([1, 2, 3, 4], [83.52, 19.99, 0.08, 0.04], color=color1, label="ENS_mean")
+# p2, = par1.plot([1, 2, 3, 4], [439.6, 177.7, 2.23, 1.37], color=color2, label="ENS_st.dev.")
+# p3, = par2.plot([1, 2, 3, 4], [3216, 3019, 102.74, 76.33], color=color3, label="ENS_max")
+
+p1, = host.plot([1, 2, 3, 4], [84.56, 20.74, 0.07, 0.6], color=color1, label="ENS_mean")
+p2, = par1.plot([1, 2, 3, 4], [438.4, 182.11, 5.0, 15.28], color=color2, label="ENS_st.dev.")
+p3, = par2.plot([1, 2, 3, 4], [3216, 3019, 455.8, 739.4], color=color3, label="ENS_max")
+
+lns = [p1, p2, p3]
+host.legend(handles=lns, loc='best')
+
+# right, left, top, bottom
+par2.spines['right'].set_position(('outward', 60))
+
+# no x-ticks
+par2.xaxis.set_ticks([1, 2, 3, 4])
+
+# Sometimes handy, same for xaxis
+# par2.yaxis.set_ticks_position('right')
+
+# Move "Velocity"-axis to the left
+# par2.spines['left'].set_position(('outward', 60))
+# par2.spines['left'].set_visible(True)
+# par2.yaxis.set_label_position('left')
+# par2.yaxis.set_ticks_position('left')
+
+host.yaxis.label.set_color(p1.get_color())
+par1.yaxis.label.set_color(p2.get_color())
+par2.yaxis.label.set_color(p3.get_color())
+
+plt.axhline(y=850, color='r', linestyle='dashed', label='Optimality treshold')
+
+plt.title('Optimality gap = 0.05%')
+
+# Adjust spacings w.r.t. figsize
+fig.tight_layout()
+# Alternatively: bbox_inches='tight' within the plt.savefig function
+#                (overwrites figsize)
+
+# Best for professional typesetting, e.g. LaTeX
+plt.savefig("0.005.png")
+# For raster graphics use the dpi argument. E.g. '[...].png", dpi=200)'
+
+plt.show()
+
+bb = pd.DataFrame()
+for i in range(0, 4):
+    aa = inputs[i]['units'].loc[:, ['PowerCapacity', 'Nunits', 'Fuel', 'Technology']]
+    aa.to_csv('Capacity_' + str(i) + '.csv')
