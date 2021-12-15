@@ -25,16 +25,15 @@ from ..constants import *
 from ..common import *
 
 
-def get_heat_demand_from_es(ES_folder, countries = ['ES'], separator = ';'):
+def get_heat_demand_from_es(config_es, countries = ['ES'], separator = ';'):
 
     # separator = ';'
 
     # countries = ['ES']
 
     # ES_folder = '../../../EnergyScope/'
-    DATA = 'Data/'
-    STEP_1 = 'STEP_1_TD_selection/'
-    STEP_2 = 'STEP_2_Energy_Model/'
+    ES_folder = config_es['ES_folder']
+    ES_output = ES_folder / 'case_studies' / config_es['case_study'] / 'output'
 
     # Enter the starting date
     start = pd.to_datetime(date_str)
@@ -47,9 +46,9 @@ def get_heat_demand_from_es(ES_folder, countries = ['ES'], separator = ';'):
         DHN_Sto_losses = DHN_Sto_losses_list[countries.index(x)]
 
         # Input file
-        timeseries = pd.read_csv(ES_folder + DATA + 'Developer_data/Time_series.csv', header=0, sep=separator)
-        demands = pd.read_csv(ES_folder + DATA + 'User_data/Demand.csv', sep=separator)
-        yearbal = pd.read_csv(ES_folder + STEP_2 + 'output/year_balance.txt', delimiter='\t', index_col='Tech')
+        timeseries = pd.read_csv(config_es['data_folders'][1]/'Time_series.csv', header=0, sep=separator)
+        demands = pd.read_csv(config_es['data_folders'][0]/'Demand.csv', sep=separator)
+        yearbal = pd.read_csv(ES_output/'year_balance.txt', delimiter='\t', index_col='Tech')
 
         heat_demand = demands.loc[3, 'HOUSEHOLDS'] + demands.loc[3, 'SERVICES'] + demands.loc[3, 'INDUSTRY']
         Heat = pd.DataFrame(timeseries.loc[:, 'Space Heating (%_sh)'] * heat_demand)
@@ -59,11 +58,11 @@ def get_heat_demand_from_es(ES_folder, countries = ['ES'], separator = ';'):
         dhn_heat_ESinput = pd.DataFrame(index=range(0, 8760), columns=dhn_heat_tech)
         decen_heat_ESinput = pd.DataFrame(index=range(0, 8760), columns=decen_heat_tech)
 
-        high_t_Layers = pd.read_csv(ES_folder + STEP_2 + 'output/hourly_data/layer_HEAT_HIGH_T.txt', delimiter='\t')
-        low_t_decen_Layers = pd.read_csv(ES_folder + STEP_2 + 'output/hourly_data/layer_HEAT_LOW_T_DECEN.txt',
+        high_t_Layers = pd.read_csv(ES_output/'hourly_data/layer_HEAT_HIGH_T.txt', delimiter='\t')
+        low_t_decen_Layers = pd.read_csv(ES_output/'hourly_data/layer_HEAT_LOW_T_DECEN.txt',
                                          delimiter='\t')
-        low_t_dhn_Layers = pd.read_csv(ES_folder + STEP_2 + 'output/hourly_data/layer_HEAT_LOW_T_DHN.txt', delimiter='\t')
-        td_final = pd.read_csv(ES_folder + STEP_1 + 'TD_of_days.out', header=None)
+        low_t_dhn_Layers = pd.read_csv(ES_output/'hourly_data/layer_HEAT_LOW_T_DHN.txt', delimiter='\t')
+        td_final = pd.read_csv(config_es['step1_output'], header=None)
         TD_DF = process_TD(td_final)
 
         ind_vals = ([day, h] for day in range(1, 366) for h in range(1, 25))

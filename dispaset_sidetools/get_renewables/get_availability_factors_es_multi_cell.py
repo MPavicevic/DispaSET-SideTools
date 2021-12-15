@@ -27,18 +27,19 @@ from ..search import *
 from ..constants import *
 
 
-def get_availability_factors_from_es(ES_folder, countries = ['ES'], seprator = ';'):
+def get_availability_factors_from_es(config_es, countries = ['ES'], seprator = ';'):
 
     Zone = None
 
-    DATA = 'Data/'
-    STEP_1 = 'STEP_1_TD_selection/'
-    STEP_2 = 'STEP_2_Energy_Model/'
+    # Path definition
+    ES_folder = config_es['ES_folder']
+    ES_output = ES_folder / 'case_studies' / config_es['case_study'] / 'output'
+    hourly_data = ES_output/'hourly_data'
+
+
 
     # folder with the common.py and various Dictionaries
     sidetools_folder = '../'
-    # to access DATA - DATA_preprocessing_BE & Typical_Units (to find installed power f [GW or GWh for storage])
-    hourly_data = ES_folder + STEP_2 + 'output/hourly_data/'
 
     #Enter studied year
     start = pd.to_datetime(date_str)
@@ -53,10 +54,10 @@ def get_availability_factors_from_es(ES_folder, countries = ['ES'], seprator = '
     for x in countries:
 
         #input files
-        timeseries = pd.read_csv(ES_folder + DATA + 'Developer_data/Time_series.csv', header=0, sep=seprator)
+        timeseries = pd.read_csv(config_es['data_folders'][1]/'Time_series.csv', header=0, sep=seprator)
         timeseries.set_index(drange, inplace=True)
 
-        Storage = pd.read_csv(hourly_data + 'energy_stored.txt', delimiter='\t', index_col=0)
+        Storage = pd.read_csv(hourly_data/'energy_stored.txt', delimiter='\t', index_col=0)
         Storage.set_index(drange, inplace=True)
 
         AF_ES_df = timeseries.loc[:, ['PV','Wind_onshore', 'Wind_offshore', 'Hydro_river']]

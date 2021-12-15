@@ -4,6 +4,7 @@ import sys, os
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from pathlib import Path
 import dispaset as ds
 import dispaset_sidetools as dst
 import energyscope as es
@@ -13,25 +14,38 @@ sys.path.append(os.path.abspath('..'))
 # %% ###################################
 ############## Path setup #############
 #######################################
+dst_path = Path(__file__).parents[1]
 # Typical units
-typical_units_folder = '../Inputs/EnergyScope/'
+typical_units_folder = dst_path/'Inputs'/'EnergyScope'
 
 # Energy Scope
-ES_folder = '../../EnergyScope'
-DST_folder = '../../DispaSET-SideTools'
+ES_folder = dst_path.parent/'glimpens_EnergyScope'
+DST_folder = dst_path.parent/'DispaSET-SideTools'
 
-data_folders = [ES_folder + '/Data/User_data', ES_folder + '/Data/Developer_data']
-ES_path = ES_folder + '/STEP_2_Energy_Model'
-step1_output = ES_folder + '/STEP_1_TD_selection/TD_of_days.out'
-ES_output_dir = ES_path + '/output'
+data_folders = [ES_folder/'Data'/'User_data', ES_folder/'Data'/'Developer_data']
+ES_path = ES_folder/'energyscope'/'STEP_2_Energy_Model'
+step1_output = ES_folder/'energyscope'/'STEP_1_TD_selection'/'TD_of_days.out'
 
 # %% ###################################
 ########### Editable inputs ###########
 #######################################
-config_es = {'run_ES': False, 'import_reserves': '', 'importing': True, 'printing': False, 'printing_td': False,
-             'GWP_limit': 70000, 'data_folders': data_folders, 'ES_path': ES_path, 'ES_output_dir': ES_output_dir,
-             'step1_output': step1_output, 'all_data': pd.DataFrame(), 'Working_directory': os.getcwd(),
-             'reserves': pd.DataFrame()}
+config_es = {'case_study': 'test3',
+          # Name of the case study. The outputs will be printed into : config['ES_path']+'\output_'+config['case_study']
+          'comment': 'This is a test of versionning',
+          'run_ES': False,
+          'import_reserves': '',
+          'importing': True,
+          'printing': False,
+          'printing_td': False,
+          'GWP_limit': 20000,  # [ktCO2-eq./year]	# Minimum GWP reduction
+          'import_capacity': 9.72,  # [GW] Electrical interconnections with neighbouring countries
+          'data_folders': data_folders,  # Folders containing the csv data files
+             'ES_folder': ES_folder, # Path to th directory of energyscope
+          'ES_path': ES_path,  # Path to the energy model (.mod and .run files)
+          'step1_output': step1_output,  # Output of the step 1 selection of typical days
+          'all_data': dict(),
+          'Working_directory': os.getcwd(),
+          'reserves': pd.DataFrame()}
 
 # %% ####################################
 #### Update and Execute EnergyScope ####
@@ -40,7 +54,7 @@ config_es = {'run_ES': False, 'import_reserves': '', 'importing': True, 'printin
 # Reading the data
 config_es['all_data'] = es.run_ES(config_es)
 # No electricity imports
-config_es['all_data'][1].loc['ELECTRICITY', 'avail'] = 0
+config_es['all_data']['Resources'].loc['ELECTRICITY', 'avail'] = 0
 # Printing and running
 config_es['importing'] = False
 config_es['printing'] = True
@@ -49,9 +63,9 @@ config_es['run_ES'] = True
 config_es['all_data'] = es.run_ES(config_es)
 
 # Static Data - to be created only once
-el_demand = dst.get_demand_from_es(ES_folder=ES_folder + '/')
-th_demand = dst.get_heat_demand_from_es(ES_folder=ES_folder + '/')
-af = dst.get_availability_factors_from_es(ES_folder=ES_folder + '/')
+el_demand = dst.get_demand_from_es(config_es)
+th_demand = dst.get_heat_demand_from_es(config_es)
+af = dst.get_availability_factors_from_es(config_es)
 
 inputs = dict()
 results = dict()
@@ -67,13 +81,14 @@ end = 4
 iteration = {}
 
 for i in range(end):
+    print('loop number', i)
     # Dynamic Data - to be modified in a loop
     # compute the actual average annual emission factors for each resource
-    GWP_op[i] = es.compute_gwp_op(config_es['data_folders'], config_es['ES_path'])
-    GWP_op[i].to_csv(ES_output_dir + '\GWP_op.txt', sep='\t')  # TODO automate
+    GWP_op[i] = es.compute_gwp_op(config_es['data_folders'], ES_folder/'case_studies'/config_es['case_study'])
+    GWP_op[i].to_csv(ES_folder/'case_studies'/config_es['case_study']/'output'/'GWP_op.txt', sep='\t')  # TODO automate
     # TODO update with new possibility of changing output folder
-    capacities[i] = dst.get_capacities_from_es(ES_folder=ES_folder + '/', typical_units_folder=typical_units_folder)
-    Price_CO2[i] = pd.read_csv(ES_path + '/output/CO2_cost.txt', delimiter='\t')
+    capacities[i] = dst.get_capacities_from_es(config_es, typical_units_folder=typical_units_folder)
+    Price_CO2[i] = pd.read_csv(ES_folder/'case_studies'/config_es['case_study']/'output'/'CO2_cost.txt', delimiter='\t')
     Price_CO2[i] = [float(i) for i in list(Price_CO2[i].columns)]
 
     # %% ###################################

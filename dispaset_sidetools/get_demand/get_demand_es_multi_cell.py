@@ -20,16 +20,15 @@ import sys
 from ..search import *
 from ..constants import *
 
-def get_demand_from_es(ES_folder, countries=['ES'], separator=';'):
+def get_demand_from_es(config_es, countries=['ES'], separator=';'):
 
     # separator = ';'
     #
     # countries = ['ES']
     #
     # ES_folder = '../../../EnergyScope/'
-    DATA = 'Data/'
-    STEP_1 = 'STEP_1_TD_selection/'
-    STEP_2 = 'STEP_2_Energy_Model/'
+    ES_folder = config_es['ES_folder']
+    ES_output = ES_folder / 'case_studies' / config_es['case_study']/'output'
 
     ######################################################################################################
 
@@ -45,11 +44,11 @@ def get_demand_from_es(ES_folder, countries=['ES'], separator=';'):
         grid_losses = grid_losses_list[countries.index(x)]
 
         # input file
-        timeseries = pd.read_csv(ES_folder + DATA + 'Developer_data/Time_series.csv', header=0, sep=separator)
-        demands = pd.read_csv(ES_folder + DATA + 'User_data/Demand.csv', sep=separator)
+        timeseries = pd.read_csv(config_es['data_folders'][1]/'Time_series.csv', header=0, sep=separator)
+        demands = pd.read_csv(config_es['data_folders'][0]/'Demand.csv', sep=separator)
         el_demand_baseload = demands.loc[0,'HOUSEHOLDS'] + demands.loc[0,'SERVICES'] + demands.loc[0,'INDUSTRY']
         el_demand_variable = demands.loc[1,'HOUSEHOLDS'] + demands.loc[1,'SERVICES'] + demands.loc[1,'INDUSTRY']
-        yearbal = pd.read_csv(ES_folder + STEP_2 + 'output/year_balance.txt', delimiter='\t', index_col='Tech')
+        yearbal = pd.read_csv(ES_output/'year_balance.txt', delimiter='\t', index_col='Tech')
         # TotalLoadValue = from_excel_to_dataFrame(input_folder + x + '/' + 'DATA_preprocessing.xlsx', 'EUD_elec')
         TotalLoadValue = pd.DataFrame(timeseries.loc[:,'Electricity (%_elec)'] * el_demand_variable +
                                       el_demand_baseload / len(timeseries))
@@ -69,8 +68,8 @@ def get_demand_from_es(ES_folder, countries=['ES'], separator=';'):
         TotalLoadValue = TotalLoadValue.multiply(factor) * 1000
         TotalLoadValue_ESinput = pd.DataFrame(index=range(0, 8760), columns=extra_demand_tech)
 
-        ElecLayers = pd.read_csv(ES_folder + STEP_2 + 'output/hourly_data/layer_ELECTRICITY.txt', delimiter='\t')
-        td_final = pd.read_csv(ES_folder + STEP_1 + 'TD_of_days.out', header=None)
+        ElecLayers = pd.read_csv(ES_output/'hourly_data/layer_ELECTRICITY.txt', delimiter='\t')
+        td_final = pd.read_csv(config_es['step1_output'], header=None)
         TD_DF = process_TD(td_final)
 
         for day in range(1, 366):

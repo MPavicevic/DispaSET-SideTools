@@ -11,19 +11,19 @@ from ..constants import *  # line to import the dictionary
 # sys.path.append(os.path.abspath(r'../..'))
 
 
-def get_capacities_from_es(ES_folder, typical_units_folder, YEAR = 2015, TECHNOLOGY_THRESHOLD = 0, STO_THRESHOLD = 0.5,
+def get_capacities_from_es(config_es, typical_units_folder, YEAR = 2015, TECHNOLOGY_THRESHOLD = 0, STO_THRESHOLD = 0.5,
                            Tenv = 273.15 + 35, Tdhn=90, Tind = 120, separator=';'):
 
     Zone = None
 
-    DATA = 'Data/'
-    STEP_1 = 'STEP_1_TD_selection/'
-    STEP_2 = 'STEP_2_Energy_Model/'
+    # Path definition
+    ES_folder = config_es['ES_folder']
+    ES_output = ES_folder / 'case_studies' / config_es['case_study'] / 'output'
+    hourly_data = ES_output / 'hourly_data'
 
     # folder with the common.py and various Dictionaries
     sidetools_folder = '../'
-    # to access DATA - DATA_preprocessing_BE & Typical_Units (to find installed power f [GW or GWh for storage])
-    hourly_data = ES_folder + STEP_2 + 'output/hourly_data/'
+
 
     # %% Adjustable inputs that should be modified
     # Scenario definition
@@ -93,7 +93,7 @@ def get_capacities_from_es(ES_folder, typical_units_folder, YEAR = 2015, TECHNOL
     #         2) Installed capacity "f"
     #         3) c_p
 
-    assets = pd.read_csv(ES_folder + STEP_2 + 'output/assets.txt', sep="\t", skiprows=[1], index_col=False)
+    assets = pd.read_csv(ES_output/'assets.txt', sep="\t", skiprows=[1], index_col=False)
     assets.set_index(assets['TECHNOLOGIES'], inplace=True)
     assets.index = assets.index.str.strip()
 
@@ -104,7 +104,7 @@ def get_capacities_from_es(ES_folder, typical_units_folder, YEAR = 2015, TECHNOL
     #         2) CHP PowerToHeatRatio
     #         3) P2HT COP_nom
 
-    layers_in_out = pd.read_csv(ES_folder + DATA + 'Developer_data/Layers_in_out.csv', sep=separator)
+    layers_in_out = pd.read_csv(config_es['data_folders'][1]/'Layers_in_out.csv', sep=separator)
     layers_in_out.set_index(layers_in_out['param layers_in_out:'], inplace=True)
     layers_in_out.index = layers_in_out.index.str.strip()
 
@@ -113,7 +113,7 @@ def get_capacities_from_es(ES_folder, typical_units_folder, YEAR = 2015, TECHNOL
     #         2) STOSellfDischarge for STO TECH
     #         3) STOMaxChargingPower for STO TECH
 
-    storage_characteristics = pd.read_csv(ES_folder + DATA + 'Developer_data/Storage_characteristics.csv', sep=separator)
+    storage_characteristics = pd.read_csv(config_es['data_folders'][1]/'Storage_characteristics.csv', sep=separator)
     storage_characteristics.set_index(storage_characteristics['param :'], inplace=True)
     storage_characteristics.rename(columns=lambda x: x.strip(), inplace=True)
     storage_characteristics.index = storage_characteristics.index.str.strip()
@@ -121,7 +121,7 @@ def get_capacities_from_es(ES_folder, typical_units_folder, YEAR = 2015, TECHNOL
     # %% Get Storage_eff_in will be used to get :
     #         1) Efficiency for STO TECH
 
-    storage_eff_in = pd.read_csv(ES_folder + DATA + 'Developer_data/Storage_eff_in.csv', sep=separator)
+    storage_eff_in = pd.read_csv(config_es['data_folders'][1]/'Storage_eff_in.csv', sep=separator)
     storage_eff_in.set_index(storage_eff_in['param storage_eff_in:'], inplace=True)
     storage_eff_in.rename(columns=lambda x: x.strip(), inplace=True)
     storage_eff_in.index = storage_eff_in.index.str.strip()
@@ -129,24 +129,24 @@ def get_capacities_from_es(ES_folder, typical_units_folder, YEAR = 2015, TECHNOL
     # %% Get Storage_eff_out will be used to get :
     #         1) STOChargingEfficiency for STO TECH
 
-    storage_eff_out = pd.read_csv(ES_folder + DATA + 'Developer_data/Storage_eff_out.csv', sep=separator)
+    storage_eff_out = pd.read_csv(config_es['data_folders'][1]/'Storage_eff_out.csv', sep=separator)
     storage_eff_out.set_index(storage_eff_out['param storage_eff_out:'], inplace=True)
     storage_eff_out.rename(columns=lambda x: x.strip(), inplace=True)
     storage_eff_out.index = storage_eff_out.index.str.strip()
 
     # %% Get hourly data will be used for storage units:
 
-    layer_low_t_dhn = pd.read_csv(hourly_data + 'layer_HEAT_LOW_T_DHN.txt', sep="\t")
-    layer_low_t_dec = pd.read_csv(hourly_data + 'layer_HEAT_LOW_T_DECEN.txt', sep="\t")
-    layer_high_t = pd.read_csv(hourly_data + 'layer_HEAT_HIGH_T.txt', sep="\t")
+    layer_low_t_dhn = pd.read_csv(hourly_data/'layer_HEAT_LOW_T_DHN.txt', sep="\t")
+    layer_low_t_dec = pd.read_csv(hourly_data/'layer_HEAT_LOW_T_DECEN.txt', sep="\t")
+    layer_high_t = pd.read_csv(hourly_data/'layer_HEAT_HIGH_T.txt', sep="\t")
 
     # %% Get GWP_op data, this will be used to compute CO2Intensity of different technologies inside DS
-    gwp_op = pd.read_csv(ES_folder + STEP_2 + 'output/GWP_op.txt', sep="\t", index_col=0)
+    gwp_op = pd.read_csv(ES_output/'GWP_op.txt', sep="\t", index_col=0)
     gwp_op.index = gwp_op.index.map(mapping['RESOURCE'])
 
     # %% Get typical days mapping
 
-    td_final = pd.read_csv(ES_folder + STEP_1 + 'TD_of_days.out', header=None)
+    td_final = pd.read_csv(config_es['step1_output'], header=None)
     td_unique = td_final[0].unique()
     td_unique_sorted = pd.DataFrame({'TD_day': np.sort(td_unique), 'TD': range(1, len(np.sort(td_unique).tolist()) + 1, 1)})
     mapping_td = dict(td_unique_sorted[['TD_day', 'TD']].values)
@@ -173,7 +173,7 @@ def get_capacities_from_es(ES_folder, typical_units_folder, YEAR = 2015, TECHNOL
     #         8) NoLoadCost
     #         9) StartUpCost
     #         10) RampingCost
-    typical_units = pd.read_csv(typical_units_folder + 'Typical_Units.csv')
+    typical_units = pd.read_csv(typical_units_folder/'Typical_Units.csv')
 
     ###############################################
     # ---- Do the mapping between ES and DS ----- #
