@@ -17,6 +17,7 @@ sys.path.append(os.path.abspath('..'))
 dst_path = Path(__file__).parents[1]
 # Typical units
 typical_units_folder = dst_path/'Inputs'/'EnergyScope'
+scenario = 45000
 
 # Energy Scope
 ES_folder = dst_path.parent/'glimpens_EnergyScope'
@@ -37,7 +38,7 @@ config_es = {'case_study': 'test3',
           'importing': True,
           'printing': False,
           'printing_td': False,
-          'GWP_limit': 20000,  # [ktCO2-eq./year]	# Minimum GWP reduction
+          'GWP_limit': scenario,  # [ktCO2-eq./year]	# Minimum GWP reduction
           'import_capacity': 9.72,  # [GW] Electrical interconnections with neighbouring countries
           'data_folders': data_folders,  # Folders containing the csv data files
              'ES_folder': ES_folder, # Path to th directory of energyscope
@@ -141,22 +142,21 @@ with open('ES_DS_Results.p', 'wb') as handle:
 #     inputs = pickle.load(handle)
 #     results = pickle.load(handle)
 
-# # Plots
-# # import pandas as pd
+# Plots
 # import pandas as pd
 #
 # rng = pd.date_range('2015-1-01', '2015-12-31', freq='H')
-# # Generate country-specific plots
-# ds.plot_zone(inputs, results, rng=rng, z_th='ES_DHN')
+# Generate country-specific plots
+# ds.plot_zone(inputs[3], results[3], rng=rng, z_th='ES_DHN')
 #
 # # Bar plot with the installed capacities in all countries:
 # cap = ds.plot_zone_capacities(inputs, results)
 #
 # # Bar plot with installed storage capacity
-# sto = ds.plot_tech_cap(inputs)
+# sto = ds.plot_tech_cap(inputs[3])
 #
 # # Violin plot for CO2 emissions
-# ds.plot_co2(inputs, results, figsize=(9, 6), width=0.9)
+# ds.plot_co2(inputs[3], results[3], figsize=(9, 6), width=0.9)
 #
 # # Bar plot with the energy balances in all countries:
 # ds.plot_energy_zone_fuel(inputs, results, ds.get_indicators_powerplant(inputs, results))
@@ -236,6 +236,12 @@ plt.savefig("0.005.png")
 plt.show()
 
 bb = pd.DataFrame()
+CF = {}
 for i in range(0, 4):
     aa = inputs[i]['units'].loc[:, ['PowerCapacity', 'Nunits', 'Fuel', 'Technology']]
-    aa.to_csv('Capacity_' + str(i) + '.csv')
+    aa.to_csv('Capacity_' + str(scenario) + '_' + str(i) + '.csv')
+
+    CF[i] = results[i]['OutputPower'].sum() / (inputs[i]['units'].loc[:,'PowerCapacity'] * inputs[i]['units'].loc[:,'Nunits']) / 8760
+    CF[i].fillna(0, inplace=True)
+
+    CF[i].to_csv('CF_' + str(scenario) + '_' + str(i) + '.csv')
