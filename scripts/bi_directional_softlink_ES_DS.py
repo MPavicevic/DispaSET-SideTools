@@ -20,7 +20,7 @@ typical_units_folder = dst_path/'Inputs'/'EnergyScope'
 scenario = 45000
 
 # Energy Scope
-ES_folder = dst_path.parent/'glimpens_EnergyScope'
+ES_folder = dst_path.parent/'EnergyScope'
 DST_folder = dst_path.parent/'DispaSET-SideTools'
 
 data_folders = [ES_folder/'Data'/'User_data', ES_folder/'Data'/'Developer_data']
