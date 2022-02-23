@@ -17,10 +17,11 @@ sys.path.append(os.path.abspath('..'))
 dst_path = Path(__file__).parents[1]
 # Typical units
 typical_units_folder = dst_path/'Inputs'/'EnergyScope'
-scenario = 45000
+scenario = 10000
+case_study = 'test5'
 
 # Energy Scope
-ES_folder = dst_path.parent/'EnergyScope'
+ES_folder = dst_path.parent/'EnergyScope_coupling_Dispa_set'
 DST_folder = dst_path.parent/'DispaSET-SideTools'
 
 data_folders = [ES_folder/'Data'/'User_data', ES_folder/'Data'/'Developer_data']
@@ -30,9 +31,9 @@ step1_output = ES_folder/'energyscope'/'STEP_1_TD_selection'/'TD_of_days.out'
 # %% ###################################
 ########### Editable inputs ###########
 #######################################
-config_es = {'case_study': 'test3',
+config_es = {'case_study': case_study,
           # Name of the case study. The outputs will be printed into : config['ES_path']+'\output_'+config['case_study']
-          'comment': 'This is a test of versionning',
+          'comment': 'Test with infinite PV',
           'run_ES': False,
           'import_reserves': '',
           'importing': True,
@@ -56,12 +57,13 @@ config_es = {'case_study': 'test3',
 config_es['all_data'] = es.run_ES(config_es)
 # No electricity imports
 config_es['all_data']['Resources'].loc['ELECTRICITY', 'avail'] = 0
+config_es['all_data']['Technologies'].loc['PV', 'f_max'] = 1e+15
 # Printing and running
 config_es['importing'] = False
 config_es['printing'] = True
 config_es['printing_td'] = True
 config_es['run_ES'] = True
-config_es['all_data'] = es.run_ES(config_es)
+# config_es['all_data'] = es.run_ES(config_es)
 
 # Static Data - to be created only once
 el_demand = dst.get_demand_from_es(config_es)
@@ -78,7 +80,7 @@ Price_CO2 = dict()
 
 LL = pd.DataFrame()
 Curtailment = pd.DataFrame()
-end = 4
+end = 2
 iteration = {}
 
 for i in range(end):
@@ -92,12 +94,25 @@ for i in range(end):
     Price_CO2[i] = pd.read_csv(ES_folder/'case_studies'/config_es['case_study']/'output'/'CO2_cost.txt', delimiter='\t')
     Price_CO2[i] = [float(i) for i in list(Price_CO2[i].columns)]
 
+    # compute fuel prices according to the use of RE vs NON-RE fuels
+    yearbal = pd.read_csv(ES_folder/'case_studies'/config_es['case_study']/'output'/'year_balance.txt', delimiter='\t', index_col='Tech')
+    yearbal.rename(columns=lambda x: x.strip(), inplace=True)
+    yearbal.rename(index=lambda x: x.strip(), inplace=True)
+    resources = config_es['all_data']['Resources']
+    df = yearbal.loc[resources.index, yearbal.columns.isin(list(resources.index))]
+    costs = (df.mul(resources.loc[:,'c_op'],axis=0).sum(axis=0)/df.sum(axis=0)).fillna(resources.loc[:,'c_op'])
+
+
     # %% ###################################
     ########## Execute Dispa-SET ##########
     #######################################
     # Load the configuration file
     config = ds.load_config('../ConfigFiles/Config_EnergyScope.xlsx')
     config['default']['PriceOfCO2'] = abs(Price_CO2[i][0] * 1000)
+    for i in dst.mapping['FUEL_COST']:
+        config['default'][dst.mapping['FUEL_COST'][i]] = costs.loc[i]*1000
+
+
 
     # Build the simulation environment:
     SimData = ds.build_simulation(config)
@@ -111,7 +126,8 @@ for i in range(end):
     # TODO : reading and storing ESTD results
 
     # run ES with reserves (2nd run)
-    config_es['printing'] = False
+    config_es['case_study'] = case_study + '_loop_'+ str(i)
+    #config_es['printing'] = False
     config_es['import_reserves'] = 'from_df'
     reserves[i] = pd.DataFrame(inputs[i]['param_df']['Demand'].loc[:, '2U'].values / 1000, columns=['end_uses_reserve'],
                                index=np.arange(1, 8761, 1))
@@ -237,7 +253,7 @@ plt.show()
 
 bb = pd.DataFrame()
 CF = {}
-for i in range(0, 4):
+for i in range(0, end):
     aa = inputs[i]['units'].loc[:, ['PowerCapacity', 'Nunits', 'Fuel', 'Technology']]
     aa.to_csv('Capacity_' + str(scenario) + '_' + str(i) + '.csv')
 

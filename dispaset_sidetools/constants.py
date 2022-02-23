@@ -81,6 +81,7 @@ mapping = {}
 
 # This dictionary is used to sort out wether a TECH is a PowerPlant, a CHP or a STO
 mapping['SORT'] = {u'CCGT': u'ELEC',
+                   u'CCGT_AMMONIA': u'ELEC',
                    u'COAL_US': u'ELEC',
                    u'COAL_IGCC': u'ELEC',
                    u'PV': u'ELEC',
@@ -144,6 +145,7 @@ mapping['SORT'] = {u'CCGT': u'ELEC',
                    u'H2_ELECTROLYSIS': u'P2GS'}  # TO DO
 
 mapping['TECH'] = {u'CCGT': u'COMC',
+                   u'CCGT_AMMONIA': u'COMC',
                    u'COAL_US': u'STUR',
                    u'COAL_IGCC': u'STUR',
                    u'PV': u'PHOT',
@@ -183,7 +185,7 @@ mapping['TECH'] = {u'CCGT': u'COMC',
                    u'DEC_COGEN_GAS': u'GTUR',
                    u'DEC_COGEN_OIL': u'GTUR',
                    u'DEC_ADVCOGEN_GAS': u'COMC',
-                   u'DEC_ADVCOGEN_H2': u'STUR',
+                   u'DEC_ADVCOGEN_H2': u'SOFC',
                    u'DEC_BOILER_GAS': u'HOBO',
                    u'DEC_BOILER_WOOD': u'HOBO',
                    u'DEC_BOILER_OIL': u'HOBO',
@@ -214,6 +216,7 @@ mapping['TECH'] = {u'CCGT': u'COMC',
                    u'H2_ELECTROLYSIS': u'P2GS'}  # TO DO
 
 mapping['FUEL'] = {u'CCGT': u'GAS',
+                   u'CCGT_AMMONIA': u'AMO',
                    u'COAL_IGCC': u'HRD',
                    u'COAL_US': u'HRD',
                    u'PV': u'SUN',
@@ -292,6 +295,7 @@ mapping['RESOURCE'] = {u'BIODIESEL': u'BIODIESEL',
                        u'LFO': u'LFO',
                        u'NG': u'GAS',
                        u'GAS': u'GAS',
+                       u'AMMONIA': u'AMO',
                        u'RES_GEO': u'GEO',
                        u'RES_HYDRO': u'WAT',
                        u'RES_SOLAR': u'SUN',
@@ -305,6 +309,7 @@ mapping['RESOURCE'] = {u'BIODIESEL': u'BIODIESEL',
 
 # DICO used to get efficiency of tech in layers_in_out
 mapping['FUEL_ES'] = {u'CCGT': u'GAS',
+                      u'CCGT_AMMONIA': u'AMMONIA',
                       u'COAL_IGCC': u'COAL',
                       u'COAL_US': u'COAL',
                       u'PV': u'RES_SOLAR',
@@ -419,5 +424,13 @@ mapping['THERMAL_STORAGE'] = {u'DEC_DIRECT_ELEC': u'TS_DEC_DIRECT_ELEC',
 
 # That dictionary could be automatize for DEC_P2HT - IS IT BETTER THOUGH ? - TO CHECK
 mapping['P2GS_STORAGE'] = {u'H2_ELECTROLYSIS': u'SEASONAL_H2'}
+
+# mapping of cvost of fuels
+mapping['FUEL_COST'] = {u'AMMONIA': u'PriceOfAmmonia',
+                        u'URANIUM': u'PriceOfNuclear',
+                        u'COAL': u'PriceOfBlackCoal',
+                        u'GAS': u'PriceOfGas',
+                        u'LFO': u'PriceOfFuelOil',
+                        u'WOOD': u'PriceOfBiomass'}
 
 ########################################################################################################################
