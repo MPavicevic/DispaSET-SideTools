@@ -461,7 +461,8 @@ reservoirs = get_reservoir_capacities(reservoirs)
 
 # %% BATS and BEVS data
 bevs_cap = pd.DataFrame()
-bevs_cap['BEVS'] = ev_batteries[str(YEAR)] * 1000
+# bevs_cap['BEVS'] = ev_batteries[str(YEAR)] * 1000
+bevs_cap['BEVS'] = ev_batteries['GW'] * 1000
 
 
 # %% CHP Data
@@ -634,7 +635,7 @@ if TECH_CLUSTERING is True:
     typical_tech_hrd = get_tech_treshold(typical_tech_hrd, CLUSTER_TRESHOLD)
     typical_tech_oil = get_tech_treshold(typical_tech_oil, CLUSTER_TRESHOLD)
 
-typical_tech_input.drop(columns=['GAS_Autoproducers', 'OIL_Autoproducers'], inplace=True)
+# typical_tech_input.drop(columns=['GAS_Autoproducers', 'OIL_Autoproducers'], inplace=True)
 technology_types = ['HDAM', 'HROR', 'HPHS', 'PHOT', 'WTOF', 'WTON', 'CAES', 'BATS', 'BEVS', 'THMS']
 typical_tech = pd.DataFrame([typical_tech_input['WAT_HDAM'], typical_tech_input['WAT_HPHS'],
                              typical_tech_input['WAT_HROR'], typical_tech_input['WIN_WTOF'],
@@ -1233,7 +1234,5 @@ def write_csv_files(power_plant_filename, units, write_csv=None):
     else:
         print('[WARNING ]: ' + 'WRITE_CSV_FILES = False, unable to write .csv files')
 
-for c in country:
-   allunits[c].to_csv('C:/Users/matijs/Documents/Dispa-SET-master/Data_Matijs/PowerPlants_4/'+c+'/2019.csv')
-#write_csv_files(SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE, allunits, WRITE_CSV_FILES)
+write_csv_files(SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE, allunits, WRITE_CSV_FILES)
 #write_pickle_file(allunits, SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE)

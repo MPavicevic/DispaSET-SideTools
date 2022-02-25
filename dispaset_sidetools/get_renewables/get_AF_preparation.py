@@ -24,7 +24,7 @@ os.chdir(dispaset_sidetools_path)
 
 from dispaset_sidetools.common import make_dir
 
-WRITE_CSV_FILES = False  # Write csv database
+WRITE_CSV_FILES = True  # Write csv database
 
 #Output File name
 scenario = 'ProRes1'

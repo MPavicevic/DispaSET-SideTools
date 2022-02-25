@@ -40,7 +40,7 @@ output_folder = 'Outputs/'  # Standard output folder
 source_folder = 'JRC_EU_TIMES'
 
 #File with NTC raw data
-inputfile_ntc = input_folder + source_folder + "NTC Forecasts.xlsx"
+inputfile_ntc = input_folder + '/Default/NTC Forecasts.xlsx'
 
 sys.path.append(os.path.abspath(r'../..'))
 
