@@ -16,38 +16,39 @@ sys.path.append(os.path.abspath('..'))
 #######################################
 dst_path = Path(__file__).parents[1]
 # Typical units
-typical_units_folder = dst_path/'Inputs'/'EnergyScope'
+typical_units_folder = dst_path / 'Inputs' / 'EnergyScope'
 scenario = 10000
 case_study = 'test7'
 
 # Energy Scope
-ES_folder = dst_path.parent/'EnergyScope_coupling_Dispa_set'
-DST_folder = dst_path.parent/'DispaSET-SideTools'
+ES_folder = dst_path.parent / 'EnergyScope'
+DST_folder = dst_path.parent / 'DispaSET-SideTools'
 
-data_folders = [ES_folder/'Data'/'User_data', ES_folder/'Data'/'Developer_data']
-ES_path = ES_folder/'energyscope'/'STEP_2_Energy_Model'
-step1_output = ES_folder/'energyscope'/'STEP_1_TD_selection'/'TD_of_days.out'
+data_folders = [ES_folder / 'Data' / 'User_data', ES_folder / 'Data' / 'Developer_data']
+ES_path = ES_folder / 'energyscope' / 'STEP_2_Energy_Model'
+step1_output = ES_folder / 'energyscope' / 'STEP_1_TD_selection' / 'TD_of_days.out'
 
 # %% ###################################
 ########### Editable inputs ###########
 #######################################
 config_es = {'case_study': case_study,
-          # Name of the case study. The outputs will be printed into : config['ES_path']+'\output_'+config['case_study']
-          'comment': 'Test with low emissions',
-          'run_ES': False,
-          'import_reserves': '',
-          'importing': True,
-          'printing': False,
-          'printing_td': False,
-          'GWP_limit': scenario,  # [ktCO2-eq./year]	# Minimum GWP reduction
-          'import_capacity': 9.72,  # [GW] Electrical interconnections with neighbouring countries
-          'data_folders': data_folders,  # Folders containing the csv data files
-             'ES_folder': ES_folder, # Path to th directory of energyscope
-          'ES_path': ES_path,  # Path to the energy model (.mod and .run files)
-          'step1_output': step1_output,  # Output of the step 1 selection of typical days
-          'all_data': dict(),
-          'Working_directory': os.getcwd(),
-          'reserves': pd.DataFrame()}
+             # Name of the case study. The outputs will be printed into : config['ES_path']+'\output_'+config['case_study']
+             'comment': 'Test with low emissions',
+             'run_ES': False,
+             'import_reserves': '',
+             'importing': True,
+             'printing': False,
+             'printing_td': False,
+             'GWP_limit': scenario,  # [ktCO2-eq./year]	# Minimum GWP reduction
+             'import_capacity': 9.72,  # [GW] Electrical interconnections with neighbouring countries
+             'data_folders': data_folders,  # Folders containing the csv data files
+             'ES_folder': ES_folder,  # Path to th directory of energyscope
+             'ES_path': ES_path,  # Path to the energy model (.mod and .run files)
+             'step1_output': step1_output,  # Output of the step 1 selection of typical days
+             'all_data': dict(),
+             'Working_directory': os.getcwd(),
+             'reserves': pd.DataFrame()
+             }
 
 # %% ####################################
 #### Update and Execute EnergyScope ####
@@ -57,6 +58,7 @@ config_es = {'case_study': case_study,
 config_es['all_data'] = es.run_ES(config_es)
 # No electricity imports
 config_es['all_data']['Resources'].loc['ELECTRICITY', 'avail'] = 0
+config_es['all_data']['Technologies'].loc['WIND_ONSHORE', 'f_max'] = 100
 # Printing and running
 config_es['importing'] = False
 config_es['printing'] = True
@@ -79,54 +81,55 @@ Price_CO2 = dict()
 
 LL = pd.DataFrame()
 Curtailment = pd.DataFrame()
-end = 2
+end = 1
 iteration = {}
 
 for i in range(end):
     print('loop number', i)
     # Dynamic Data - to be modified in a loop
     # compute the actual average annual emission factors for each resource
-    GWP_op[i] = es.compute_gwp_op(config_es['data_folders'], ES_folder/'case_studies'/config_es['case_study'])
-    GWP_op[i].to_csv(ES_folder/'case_studies'/config_es['case_study']/'output'/'GWP_op.txt', sep='\t')  # TODO automate
+    GWP_op[i] = es.compute_gwp_op(config_es['data_folders'], ES_folder / 'case_studies' / config_es['case_study'])
+    GWP_op[i].to_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'GWP_op.txt',
+                     sep='\t')  # TODO automate
     # TODO update with new possibility of changing output folder
     capacities[i] = dst.get_capacities_from_es(config_es, typical_units_folder=typical_units_folder)
-    Price_CO2[i] = pd.read_csv(ES_folder/'case_studies'/config_es['case_study']/'output'/'CO2_cost.txt', delimiter='\t', header=None)
-    # Price_CO2[i] = [float(x) for x in list(Price_CO2[i].columns)]
+    Price_CO2[i] = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'CO2_cost.txt',
+                               delimiter='\t', header=None)
 
     # compute fuel prices according to the use of RE vs NON-RE fuels
-    yearbal = pd.read_csv(ES_folder/'case_studies'/config_es['case_study']/'output'/'year_balance.txt', delimiter='\t', index_col='Tech')
+    yearbal = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'year_balance.txt',
+                          delimiter='\t', index_col='Tech')
     yearbal.rename(columns=lambda x: x.strip(), inplace=True)
     yearbal.rename(index=lambda x: x.strip(), inplace=True)
     resources = config_es['all_data']['Resources']
     df = yearbal.loc[resources.index, yearbal.columns.isin(list(resources.index))]
-    costs = (df.mul(resources.loc[:,'c_op'],axis=0).sum(axis=0)/df.sum(axis=0)).fillna(resources.loc[:,'c_op'])
+    costs = (df.mul(resources.loc[:, 'c_op'], axis=0).sum(axis=0) / df.sum(axis=0)).fillna(resources.loc[:, 'c_op'])
 
     # compute H2 yearly consumption and power capacity of electrolyser
-    h2_layer = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'hourly_data' / 'layer_H2.txt',
-                          delimiter='\t', index_col=[0,1])
+    h2_layer = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'hourly_data' /
+                           'layer_H2.txt', delimiter='\t', index_col=[0, 1])
     h2_layer.rename(columns=lambda x: x.strip(), inplace=True)
     h2_layer.drop(columns=['H2_STORAGE_Pin', 'H2_STORAGE_Pout'], inplace=True)
     # computing consumption of H2
-    h2_td = pd.DataFrame(-h2_layer[h2_layer<0].sum(axis=1), columns=['ES_H2']) #TODO automatise name zone assignment
+    h2_td = pd.DataFrame(-h2_layer[h2_layer < 0].sum(axis=1), columns=['ES_H2'])  # TODO automatise name zone assignment
     # transforming TD time series into yearly time series
     td_final = pd.read_csv(config_es['step1_output'], header=None)
     TD_DF = dst.process_TD(td_final)
-    h2_ts = TD_DF.loc[:,['TD','hour']]
-    h2_ts = h2_ts.merge(h2_td, left_on=['TD','hour'], right_index=True).sort_index()
-    h2_ts.drop(columns=['TD','hour'], inplace=True)
-    dst.write_csv_files('H2_demand', h2_ts, 'H2_demand', index=True, write_csv=True)
-
+    h2_ts = TD_DF.loc[:, ['TD', 'hour']]
+    h2_ts = h2_ts.merge(h2_td, left_on=['TD', 'hour'], right_index=True).sort_index()
+    h2_ts.drop(columns=['TD', 'hour'], inplace=True)
+    dst.write_csv_files('H2_demand', h2_ts * 1000, 'H2_demand', index=True, write_csv=True)
 
     # %% ###################################
     ########## Execute Dispa-SET ##########
     #######################################
     # Load the configuration file
     config = ds.load_config('../ConfigFiles/Config_EnergyScope.xlsx')
-    config['default']['PriceOfCO2'] = abs(Price_CO2[i].loc[0,0] * 1000)
+    config['default']['PriceOfCO2'] = abs(Price_CO2[i].loc[0, 0] * 1000)
     for j in dst.mapping['FUEL_COST']:
-        config['default'][dst.mapping['FUEL_COST'][j]] = costs.loc[j]*1000
-    config['H2RigidDemand'] = str(DST_folder/'Outputs'/'EnergyScope'/'Database'/'H2_demand'/'ES'/'H2_demand.csv')
-
+        config['default'][dst.mapping['FUEL_COST'][j]] = costs.loc[j] * 1000
+    config['H2RigidDemand'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'H2_demand' / 'ES' /
+                                  'H2_demand.csv')
 
     # Build the simulation environment:
     SimData = ds.build_simulation(config)
@@ -140,8 +143,8 @@ for i in range(end):
     # TODO : reading and storing ESTD results
 
     # run ES with reserves (2nd run)
-    config_es['case_study'] = case_study + '_loop_'+ str(i)
-    #config_es['printing'] = False
+    config_es['case_study'] = case_study + '_loop_' + str(i)
+    # config_es['printing'] = False
     config_es['import_reserves'] = 'from_df'
     reserves[i] = pd.DataFrame(inputs[i]['param_df']['Demand'].loc[:, '2U'].values / 1000, columns=['end_uses_reserve'],
                                index=np.arange(1, 8761, 1))
@@ -271,7 +274,8 @@ for i in range(0, end):
     aa = inputs[i]['units'].loc[:, ['PowerCapacity', 'Nunits', 'Fuel', 'Technology']]
     aa.to_csv('Capacity_' + str(scenario) + '_' + str(i) + '.csv')
 
-    CF[i] = results[i]['OutputPower'].sum() / (inputs[i]['units'].loc[:,'PowerCapacity'] * inputs[i]['units'].loc[:,'Nunits']) / 8760
+    CF[i] = results[i]['OutputPower'].sum() / (
+                inputs[i]['units'].loc[:, 'PowerCapacity'] * inputs[i]['units'].loc[:, 'Nunits']) / 8760
     CF[i].fillna(0, inplace=True)
 
     CF[i].to_csv('CF_' + str(scenario) + '_' + str(i) + '.csv')

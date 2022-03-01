@@ -574,7 +574,7 @@ def invert_dic_df(dic, tablename=''):
     return dic_out
 
 
-column_names = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Zone_th', 'Zone_H2', 'Technology', 'Fuel', 'Efficiency',
+column_names = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Zone_th', 'Zone_h2', 'Technology', 'Fuel', 'Efficiency',
                 'MinUpTime', 'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu',
                 'RampingCost', 'PartLoadMin', 'MinEfficiency', 'StartUpTime', 'CO2Intensity',
                 'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor', 'COP', 'Tnominal', 'coef_COP_a', 'coef_COP_b',

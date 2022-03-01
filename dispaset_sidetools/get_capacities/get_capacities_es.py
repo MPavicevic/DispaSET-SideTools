@@ -278,9 +278,9 @@ def get_capacities_from_es(config_es, typical_units_folder, YEAR = 2015, TECHNOL
             logging.warning(' Technology ' + p2gs_sto + 'has not been found in STO_eff_out/eff_in/_characteristics')
 
         if Zone is None:
-            PowerPlants.at[tech, 'Zone_H2'] = 'ES_H2'
+            PowerPlants.at[tech, 'Zone_h2'] = 'ES_H2'
         else:
-            PowerPlants.at[tech, 'Zone_H2'] = Zone + '_H2'  # in GWh
+            PowerPlants.at[tech, 'Zone_h2'] = Zone + '_H2'  # in GWh
     # %% --------------- Changes only for CHP Units  --------------- TO CHECK
     #      - Efficiency
     #      - PowerToTheatRatio
