@@ -142,6 +142,7 @@ mapping['SORT'] = {u'CCGT': u'ELEC',
                    u'TS_DHN_SEASONAL': u'STO',  # TO DO
                    u'SEASONAL_NG': u'',  # TO DO
                    u'SEASONAL_H2': u'P2GS_STO',
+                   u'H2_STORAGE': u'P2GS_STO',
                    u'H2_ELECTROLYSIS': u'P2GS'}  # TO DO
 
 mapping['TECH'] = {u'CCGT': u'COMC',
@@ -213,6 +214,7 @@ mapping['TECH'] = {u'CCGT': u'COMC',
                    u'TS_DHN_SEASONAL': u'THMS',  # TO DO
                    u'SEASONAL_NG': u'',  # TO DO
                    u'SEASONAL_H2': u'',
+                   u'H2_STORAGE': u'',
                    u'H2_ELECTROLYSIS': u'P2GS'}  # TO DO
 
 mapping['FUEL'] = {u'CCGT': u'GAS',
@@ -278,6 +280,7 @@ mapping['FUEL'] = {u'CCGT': u'GAS',
                    u'TS_DHN_SEASONAL': u'THE',  # TO DO
                    u'SEASONAL_NG': u'GAS',  # TO DO
                    u'SEASONAL_H2': u'HYD',
+                   u'H2_STORAGE': u'HYD',
                    u'H2_ELECTROLYSIS': u'HYD'}  # TO DO
 
 mapping['RESOURCE'] = {u'BIODIESEL': u'BIODIESEL',
@@ -371,6 +374,7 @@ mapping['FUEL_ES'] = {u'CCGT': u'GAS',
                       u'TS_DHN_SEASONAL': u'',  # TO DO #STO ? Efficiency ?
                       u'SEASONAL_NG': u'',  # TO DO #STO ? Efficiency ?
                       u'SEASONAL_H2': u'',
+                      u'H2_STORAGE': u'',
                       u'H2_ELECTROLYSIS': u'ELECTRICITY'}  # TO DO #STO ? Efficiency ?
 
 mapping['CHP_HEAT'] = {u'IND_COGEN_GAS': u'HEAT_HIGH_T',
@@ -423,7 +427,7 @@ mapping['THERMAL_STORAGE'] = {u'DEC_DIRECT_ELEC': u'TS_DEC_DIRECT_ELEC',
                               u'DEC_BOILER_OIL': u'TS_DEC_BOILER_OIL'}
 
 # That dictionary could be automatize for DEC_P2HT - IS IT BETTER THOUGH ? - TO CHECK
-mapping['P2GS_STORAGE'] = {u'H2_ELECTROLYSIS': u'SEASONAL_H2'}
+mapping['P2GS_STORAGE'] = {u'H2_ELECTROLYSIS': u'H2_STORAGE'}
 
 # mapping of cvost of fuels
 mapping['FUEL_COST'] = {u'AMMONIA': u'PriceOfAmmonia',
