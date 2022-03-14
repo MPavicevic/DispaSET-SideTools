@@ -8,6 +8,8 @@ from pathlib import Path
 import dispaset as ds
 import dispaset_sidetools as dst
 import energyscope as es
+import pickle
+
 
 sys.path.append(os.path.abspath('..'))
 
@@ -17,11 +19,11 @@ sys.path.append(os.path.abspath('..'))
 dst_path = Path(__file__).parents[1]
 # Typical units
 typical_units_folder = dst_path / 'Inputs' / 'EnergyScope'
-scenario = 10000
-case_study = 'test7'
+scenario = 1e15
+case_study = 'NoGwpLimit_ElecImport=0'
 
 # Energy Scope
-ES_folder = dst_path.parent / 'EnergyScope'
+ES_folder = dst_path.parent / 'EnergyScope_coupling_Dispa_set'
 DST_folder = dst_path.parent / 'DispaSET-SideTools'
 
 data_folders = [ES_folder / 'Data' / 'User_data', ES_folder / 'Data' / 'Developer_data']
@@ -31,7 +33,7 @@ step1_output = ES_folder / 'energyscope' / 'STEP_1_TD_selection' / 'TD_of_days.o
 # %% ###################################
 ########### Editable inputs ###########
 #######################################
-config_es = {'case_study': case_study,
+config_es = {'case_study': case_study+ '_loop_0',
              # Name of the case study. The outputs will be printed into : config['ES_path']+'\output_'+config['case_study']
              'comment': 'Test with low emissions',
              'run_ES': False,
@@ -47,24 +49,32 @@ config_es = {'case_study': case_study,
              'step1_output': step1_output,  # Output of the step 1 selection of typical days
              'all_data': dict(),
              'Working_directory': os.getcwd(),
-             'reserves': pd.DataFrame()
+             'reserves': pd.DataFrame(),
+             'user_defined': dict()
              }
 
 # %% ####################################
 #### Update and Execute EnergyScope ####
 ########################################
 
+
 # Reading the data
 config_es['all_data'] = es.run_ES(config_es)
 # No electricity imports
 config_es['all_data']['Resources'].loc['ELECTRICITY', 'avail'] = 0
-config_es['all_data']['Technologies'].loc['WIND_ONSHORE', 'f_max'] = 100
+config_es['all_data']['Resources'].loc['ELEC_EXPORT', 'avail'] = 0
+# No CCGT_AMMONIA
+config_es['all_data']['Technologies'].loc['CCGT_AMMONIA', 'f_max'] = 0
+# Allow infinite PV
+# config_es['all_data']['Technologies'].loc['CCGT', 'f_max'] = 15
+# config_es['user_defined']['solar_area'] = 1e15
+
 # Printing and running
 config_es['importing'] = False
 config_es['printing'] = True
 config_es['printing_td'] = True
 config_es['run_ES'] = True
-# config_es['all_data'] = es.run_ES(config_es)
+config_es['all_data'] = es.run_ES(config_es)
 
 # Static Data - to be created only once
 el_demand = dst.get_demand_from_es(config_es)
@@ -81,7 +91,7 @@ Price_CO2 = dict()
 
 LL = pd.DataFrame()
 Curtailment = pd.DataFrame()
-end = 1
+end = 6
 iteration = {}
 
 for i in range(end):
@@ -140,10 +150,17 @@ for i in range(end):
     # Load the simulation results:
     inputs[i], results[i] = ds.get_sim_results(config['SimulationDirectory'], cache=False)
 
+    # save DS results
+    ES_output = ES_folder / 'case_studies' / config_es['case_study'] / 'output'
+    with open(ES_output / 'DS_Results.p', 'wb') as handle:
+        pickle.dump(inputs[i], handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(results[i], handle, protocol=pickle.HIGHEST_PROTOCOL)
+
     # TODO : reading and storing ESTD results
 
     # run ES with reserves (2nd run)
-    config_es['case_study'] = case_study + '_loop_' + str(i)
+    config_es['case_study'] = case_study + '_loop_' + str(i+1)
+
     # config_es['printing'] = False
     config_es['import_reserves'] = 'from_df'
     reserves[i] = pd.DataFrame(inputs[i]['param_df']['Demand'].loc[:, '2U'].values / 1000, columns=['end_uses_reserve'],
@@ -165,11 +182,8 @@ for i in range(end):
     LL = pd.concat([LL, results[i]['OutputShedLoad']], axis=1)
     Curtailment = pd.concat([Curtailment, results[i]['OutputCurtailedPower']], axis=1)
 
-import pickle
+ENS_max = LL.max()
 
-with open('ES_DS_Results.p', 'wb') as handle:
-    pickle.dump(inputs, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # with open('ES_DS_Results.p', 'rb') as handle:
 #     inputs = pickle.load(handle)
@@ -227,6 +241,7 @@ color3 = plt.cm.viridis(0)
 # p2, = par1.plot([1, 2, 3, 4], [439.6, 177.7, 2.23, 1.37], color=color2, label="ENS_st.dev.")
 # p3, = par2.plot([1, 2, 3, 4], [3216, 3019, 102.74, 76.33], color=color3, label="ENS_max")
 
+#TODO automatise
 p1, = host.plot([1, 2, 3, 4], [84.56, 20.74, 0.07, 0.6], color=color1, label="ENS_mean")
 p2, = par1.plot([1, 2, 3, 4], [438.4, 182.11, 5.0, 15.28], color=color2, label="ENS_st.dev.")
 p3, = par2.plot([1, 2, 3, 4], [3216, 3019, 455.8, 739.4], color=color3, label="ENS_max")
