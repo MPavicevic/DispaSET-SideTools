@@ -19,11 +19,11 @@ sys.path.append(os.path.abspath('..'))
 dst_path = Path(__file__).parents[1]
 # Typical units
 typical_units_folder = dst_path / 'Inputs' / 'EnergyScope'
-scenario = 1e15
-case_study = 'NoGwpLimit_ElecImport=0'
+scenario = 40000
+case_study = '40000_ElecImport=0'
 
 # Energy Scope
-ES_folder = dst_path.parent / 'EnergyScope_coupling_Dispa_set'
+ES_folder = dst_path.parent / 'EnergyScope'
 DST_folder = dst_path.parent / 'DispaSET-SideTools'
 
 data_folders = [ES_folder / 'Data' / 'User_data', ES_folder / 'Data' / 'Developer_data']
@@ -91,7 +91,7 @@ Price_CO2 = dict()
 
 LL = pd.DataFrame()
 Curtailment = pd.DataFrame()
-end = 6
+end = 3
 iteration = {}
 
 for i in range(end):
@@ -167,8 +167,11 @@ for i in range(end):
                                index=np.arange(1, 8761, 1))
 
     if i >= 1:
-        shed_load[i] = pd.DataFrame(results[i]['OutputShedLoad'].values / 1000, columns=['end_uses_reserve'],
-                                    index=np.arange(1, 8761, 1))
+        if results[i]['OutputShedLoad'].empty:
+            shed_load[i] = pd.DataFrame(0, columns=['end_uses_reserve'], index=np.arange(1, 8761, 1))
+        else:
+            shed_load[i] = pd.DataFrame(results[i]['OutputShedLoad'].values / 1000, columns=['end_uses_reserve'],
+                                        index=np.arange(1, 8761, 1))
 
         config_es['reserves'] = config_es['reserves'] + shed_load[i].max()
     else:
@@ -184,32 +187,35 @@ for i in range(end):
 
 ENS_max = LL.max()
 
+with open(case_study + '.p', 'wb') as handle:
+    pickle.dump(inputs, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-# with open('ES_DS_Results.p', 'rb') as handle:
+# with open(case_study + '.p', 'rb') as handle:
 #     inputs = pickle.load(handle)
 #     results = pickle.load(handle)
 
 # Plots
-# import pandas as pd
-#
-# rng = pd.date_range('2015-1-01', '2015-12-31', freq='H')
+import pandas as pd
+
+rng = pd.date_range('2015-1-01', '2015-12-31', freq='H')
 # Generate country-specific plots
-# ds.plot_zone(inputs[3], results[3], rng=rng, z_th='ES_DHN')
-#
-# # Bar plot with the installed capacities in all countries:
-# cap = ds.plot_zone_capacities(inputs, results)
-#
-# # Bar plot with installed storage capacity
-# sto = ds.plot_tech_cap(inputs[3])
-#
-# # Violin plot for CO2 emissions
-# ds.plot_co2(inputs[3], results[3], figsize=(9, 6), width=0.9)
-#
-# # Bar plot with the energy balances in all countries:
-# ds.plot_energy_zone_fuel(inputs, results, ds.get_indicators_powerplant(inputs, results))
-#
-# # Analyse the results for each country and provide quantitative indicators:
-# r = ds.get_result_analysis(inputs, results)
+ds.plot_zone(inputs[2], results[2], rng=rng, z_th='ES_DHN')
+
+# Bar plot with the installed capacities in all countries:
+cap = ds.plot_zone_capacities(inputs[2], results[2])
+
+# Bar plot with installed storage capacity
+sto = ds.plot_tech_cap(inputs[2])
+
+# Violin plot for CO2 emissions
+ds.plot_co2(inputs[2], results[2], figsize=(9, 6), width=0.9)
+
+# Bar plot with the energy balances in all countries:
+ds.plot_energy_zone_fuel(inputs[2], results[2], ds.get_indicators_powerplant(inputs[2], results[2]))
+
+# Analyse the results for each country and provide quantitative indicators:
+r = ds.get_result_analysis(inputs[2], results[2])
 
 
 # Create figure and subplot manually
