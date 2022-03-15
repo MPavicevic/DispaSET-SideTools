@@ -128,16 +128,16 @@ mapping['SORT'] = {u'CCGT': u'ELEC',
                    u'BATT_LI': u'STO',
                    u'BEV_BATT': u'STO',
                    u'PHEV_BATT': u'STO',
-                   u'TS_DEC_DIRECT_ELEC': u'THMS',
-                   u'TS_DEC_HP_ELEC': u'THMS',  # P2HT ?
-                   u'TS_DEC_THHP_GAS': u'THMS',
-                   u'TS_DEC_COGEN_GAS': u'THMS',
-                   u'TS_DEC_COGEN_OIL': u'THMS',
-                   u'TS_DEC_ADVCOGEN_GAS': u'THMS',
-                   u'TS_DEC_ADVCOGEN_H2': u'THMS',
-                   u'TS_DEC_BOILER_GAS': u'THMS',
-                   u'TS_DEC_BOILER_WOOD': u'THMS',
-                   u'TS_DEC_BOILER_OIL': u'THMS',
+                   u'TS_DEC_DIRECT_ELEC': u'STO',
+                   u'TS_DEC_HP_ELEC': u'STO',  # P2HT ?
+                   u'TS_DEC_THHP_GAS': u'STO',
+                   u'TS_DEC_COGEN_GAS': u'STO',
+                   u'TS_DEC_COGEN_OIL': u'STO',
+                   u'TS_DEC_ADVCOGEN_GAS': u'STO',
+                   u'TS_DEC_ADVCOGEN_H2': u'STO',
+                   u'TS_DEC_BOILER_GAS': u'STO',
+                   u'TS_DEC_BOILER_WOOD': u'STO',
+                   u'TS_DEC_BOILER_OIL': u'STO',
                    u'TS_DHN_DAILY': u'STO',  # TO DO
                    u'TS_DHN_SEASONAL': u'STO',  # TO DO
                    u'SEASONAL_NG': u'',  # TO DO
@@ -266,16 +266,16 @@ mapping['FUEL'] = {u'CCGT': u'GAS',
                    u'BATT_LI': u'OTH',  # Right fuel in DS terminology ??
                    u'BEV_BATT': u'OTH',  # Right fuel in DS terminology ??
                    u'PHEV_BATT': u'OTH',  # Right fuel in DS terminology ??
-                   u'TS_DEC_DIRECT_ELEC': u'OTH',  # P2HT ?  #Do I need to specify a fuel for Thermal Storage ?
-                   u'TS_DEC_HP_ELEC': u'OTH',  # P2HT ?
-                   u'TS_DEC_THHP_GAS': u'GAS',
-                   u'TS_DEC_COGEN_GAS': u'GAS',
-                   u'TS_DEC_COGEN_OIL': u'OIL',
-                   u'TS_DEC_ADVCOGEN_GAS': u'GAS',
-                   u'TS_DEC_ADVCOGEN_H2': u'HYD',
-                   u'TS_DEC_BOILER_GAS': u'GAS',
-                   u'TS_DEC_BOILER_WOOD': u'BIO',
-                   u'TS_DEC_BOILER_OIL': u'OIL',
+                   u'TS_DEC_DIRECT_ELEC': u'THE',  # P2HT ?  #Do I need to specify a fuel for Thermal Storage ?
+                   u'TS_DEC_HP_ELEC': u'THE',  # P2HT ?
+                   u'TS_DEC_THHP_GAS': u'THE',
+                   u'TS_DEC_COGEN_GAS': u'THE',
+                   u'TS_DEC_COGEN_OIL': u'THE',
+                   u'TS_DEC_ADVCOGEN_GAS': u'THE',
+                   u'TS_DEC_ADVCOGEN_H2': u'THE',
+                   u'TS_DEC_BOILER_GAS': u'THE',
+                   u'TS_DEC_BOILER_WOOD': u'THE',
+                   u'TS_DEC_BOILER_OIL': u'THE',
                    u'TS_DHN_DAILY': u'THE',  # TO DO
                    u'TS_DHN_SEASONAL': u'THE',  # TO DO
                    u'SEASONAL_NG': u'GAS',  # TO DO
@@ -364,7 +364,7 @@ mapping['FUEL_ES'] = {u'CCGT': u'GAS',
                       u'TS_DEC_HP_ELEC': u'',  # P2HT ?
                       u'TS_DEC_THHP_GAS': u'',  # STO ? Efficiency ?
                       u'TS_DEC_COGEN_GAS': u'',  # STO ? Efficiency ?
-                      u'TS_DEC_COGEN_OIL': u'LFO',  # STO ? Efficiency ?
+                      u'TS_DEC_COGEN_OIL': u'',  # STO ? Efficiency ?
                       u'TS_DEC_ADVCOGEN_GAS': u'',  # STO ? Efficiency ?
                       u'TS_DEC_ADVCOGEN_H2': u'',  # STO ? Efficiency ?
                       u'TS_DEC_BOILER_GAS': u'',  # STO ? Efficiency ?
