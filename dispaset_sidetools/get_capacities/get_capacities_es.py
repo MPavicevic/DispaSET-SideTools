@@ -493,6 +493,13 @@ def get_capacities_from_es(config_es, typical_units_folder, YEAR = 2015, TECHNOL
                     PowerPlants.at[tech, 'Zone_th'] = Zone + '_DEC'
                 StoChargingEfficiency = storage_eff_in.at[tech, 'HEAT_LOW_T_DECEN']
                 Efficiency = storage_eff_out.at[tech, 'HEAT_LOW_T_DECEN']
+            elif tech.startswith('TS_HIGH_'):
+                if Zone is None:
+                    PowerPlants.at[tech, 'Zone_th'] = 'ES_IND'
+                else:  # in GWh
+                    PowerPlants.at[tech, 'Zone_th'] = Zone + '_IND'
+                StoChargingEfficiency = storage_eff_in.at[tech, 'HEAT_HIGH_T']
+                Efficiency = storage_eff_out.at[tech, 'HEAT_HIGH_T']
             else:
                 # Because STO_TECH in my dictionaries only concerns Storing giving back to ELECTTRICITY
                 StoChargingEfficiency = storage_eff_in.at[tech, 'ELECTRICITY']

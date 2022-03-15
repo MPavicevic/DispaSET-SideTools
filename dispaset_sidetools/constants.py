@@ -67,7 +67,7 @@ decen_heat_tech = ['DEC_HP_ELEC', 'DEC_DIRECT_ELEC', 'DEC_COGEN_GAS', 'DEC_COGEN
                    'TS_DEC_BOILER_WOOD_Pin', 'TS_DEC_BOILER_WOOD_Pout',
                    'TS_DEC_BOILER_OIL_Pin', 'TS_DEC_BOILER_OIL_Pout']
 ind_heat_tech = ['IND_DIRECT_ELEC', 'IND_COGEN_GAS', 'IND_COGEN_WOOD', 'IND_COGEN_WASTE', 'IND_BOILER_GAS',
-                 'IND_BOILER_WASTE', 'IND_BOILER_COAL', 'IND_BOILER_WOOD', 'IND_BOILER_OIL']
+                 'IND_BOILER_WASTE', 'IND_BOILER_COAL', 'IND_BOILER_WOOD', 'IND_BOILER_OIL', 'TS_HIGH_TEMP']
 
 # Lists for AvailibilityFactors
 AvailFactors = ['PHOT', 'WTON', 'WTOF', 'HROR']  # Dispa-SET nomenclature
@@ -139,7 +139,8 @@ mapping['SORT'] = {u'CCGT': u'ELEC',
                    u'TS_DEC_BOILER_WOOD': u'STO',
                    u'TS_DEC_BOILER_OIL': u'STO',
                    u'TS_DHN_DAILY': u'STO',  # TO DO
-                   u'TS_DHN_SEASONAL': u'STO',  # TO DO
+                   u'TS_DHN_SEASONAL': u'STO',
+                   u'TS_HIGH_TEMP': u'STO',# TO DO
                    u'SEASONAL_NG': u'',  # TO DO
                    u'SEASONAL_H2': u'P2GS_STO',
                    u'H2_STORAGE': u'P2GS_STO',
@@ -211,7 +212,8 @@ mapping['TECH'] = {u'CCGT': u'COMC',
                    u'TS_DEC_BOILER_WOOD': u'THMS',
                    u'TS_DEC_BOILER_OIL': u'THMS',
                    u'TS_DHN_DAILY': u'THMS',  # TO DO
-                   u'TS_DHN_SEASONAL': u'THMS',  # TO DO
+                   u'TS_DHN_SEASONAL': u'THMS',
+                   u'TS_HIGH_TEMP': u'THMS',# TO DO
                    u'SEASONAL_NG': u'',  # TO DO
                    u'SEASONAL_H2': u'',
                    u'H2_STORAGE': u'',
@@ -278,6 +280,7 @@ mapping['FUEL'] = {u'CCGT': u'GAS',
                    u'TS_DEC_BOILER_OIL': u'THE',
                    u'TS_DHN_DAILY': u'THE',  # TO DO
                    u'TS_DHN_SEASONAL': u'THE',  # TO DO
+                   u'TS_HIGH_TEMP': u'THE',
                    u'SEASONAL_NG': u'GAS',  # TO DO
                    u'SEASONAL_H2': u'HYD',
                    u'H2_STORAGE': u'HYD',
@@ -372,6 +375,7 @@ mapping['FUEL_ES'] = {u'CCGT': u'GAS',
                       u'TS_DEC_BOILER_OIL': u'',  # STO ? Efficiency ?
                       u'TS_DHN_DAILY': u'',  # TO DO #STO ? Efficiency ?
                       u'TS_DHN_SEASONAL': u'',  # TO DO #STO ? Efficiency ?
+                      u'TS_HIGH_TEMP': u'',
                       u'SEASONAL_NG': u'',  # TO DO #STO ? Efficiency ?
                       u'SEASONAL_H2': u'',
                       u'H2_STORAGE': u'',
