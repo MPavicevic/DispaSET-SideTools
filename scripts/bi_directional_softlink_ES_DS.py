@@ -1,4 +1,5 @@
 # Add the root folder of Dispa-SET-side tools to the path so that the library can be loaded:
+import logging
 import sys, os
 
 import matplotlib.pyplot as plt
@@ -19,8 +20,8 @@ sys.path.append(os.path.abspath('..'))
 dst_path = Path(__file__).parents[1]
 # Typical units
 typical_units_folder = dst_path / 'Inputs' / 'EnergyScope'
-scenario = 40000
-case_study = '40000_ElecImport=0'
+scenario = 12500
+case_study = str(scenario) + '_ElecImport=0'
 
 # Energy Scope
 ES_folder = dst_path.parent / 'EnergyScope'
@@ -91,7 +92,7 @@ Price_CO2 = dict()
 
 LL = pd.DataFrame()
 Curtailment = pd.DataFrame()
-end = 3
+end = 4
 iteration = {}
 
 for i in range(end):
@@ -135,6 +136,7 @@ for i in range(end):
     #######################################
     # Load the configuration file
     config = ds.load_config('../ConfigFiles/Config_EnergyScope.xlsx')
+    config['SimulationDirectory'] = str(DST_folder / 'Simulations' / case_study)
     config['default']['PriceOfCO2'] = abs(Price_CO2[i].loc[0, 0] * 1000)
     for j in dst.mapping['FUEL_COST']:
         config['default'][dst.mapping['FUEL_COST'][j]] = costs.loc[j] * 1000
@@ -177,15 +179,63 @@ for i in range(end):
     else:
         config_es['reserves'] = reserves[i]
 
+    LL = pd.concat([LL, results[i]['OutputShedLoad']], axis=1)
+    Curtailment = pd.concat([Curtailment, results[i]['OutputCurtailedPower']], axis=1)
+
+    if (results[i]['OutputOptimizationError'] > 0).any():
+        print('Another iteration required')
+    else:
+        print('Final convergence occurred in loop: ' + str(i) + '. Soft-linking is now complete')
+        break
+
     if i == end - 1:
         print('Last opt')
     else:
         config_es['all_data'] = es.run_ES(config_es)
 
-    LL = pd.concat([LL, results[i]['OutputShedLoad']], axis=1)
-    Curtailment = pd.concat([Curtailment, results[i]['OutputCurtailedPower']], axis=1)
 
-ENS_max = LL.max()
+ENS_max = pd.DataFrame()
+LL = pd.DataFrame()
+LostLoad = pd.DataFrame()
+Generation = {'Ele': pd.DataFrame(),
+              'Heat': pd.DataFrame()}
+Emissions = pd.DataFrame()
+for i in range(end):
+    ENS_max.loc[i, 'Error>Accuracy'] = results[i]['OutputOptimizationError'].max()
+    # ENS_max.loc[i, 'ENS'] = results[i]['OutputShedLoad'].sum(axis=0).values + \
+    #                         results[i]['OutputHeatSlack'].sum(axis=0).values
+    if not (results[i]['OutputHeatSlack'].empty) and (results[i]['OutputShedLoad'].empty):
+        LostLoad = results[i]['OutputShedLoad'] + results[i]['OutputHeatSlack'].values
+    if not results[i]['OutputShedLoad'].empty:
+        LostLoad = results[i]['OutputShedLoad']
+    ENS_max.loc[i, 'ENS'] = LostLoad.sum(axis=0).values / 1e3
+    LL = pd.concat([LL, LostLoad], axis=1)
+    tmp = ds.plot_energy_zone_fuel(inputs[i], results[i], ds.get_indicators_powerplant(inputs[i], results[i]))
+    Generation['Ele'] = pd.concat([Generation['Ele'], tmp[0]], axis=0)
+    Generation['Heat'] = pd.concat([Generation['Heat'], tmp[1]], axis=0)
+    Emissions.loc[i,'CO2'] = results[i]['OutputEmissions'].sum().sum()
+
+LL = LL / 1e3
+Generation['Ele'].reset_index(inplace=True, drop=True)
+Generation['Ele']=Generation['Ele'].loc[:, (Generation['Ele'] != 0).any(axis=0)]
+cols_ele = Generation['Ele'].columns
+Generation['Ele'].loc[:,'Iteration'] = Generation['Ele'].index
+Generation['Ele'].loc[:,'Scenario'] = '12.5 kTCO2'
+Generation['Ele'].loc[:, 'Zone'] = 'ELE'
+Generation['Heat']=Generation['Heat'].loc[:, (Generation['Heat'] != 0).any(axis=0)]
+cols_heat = Generation['Heat'].columns
+Generation['Heat'].loc[:, 'Iteration'] = np.arange(len(Generation['Heat'])) // 3 + 1
+Generation['Heat'].loc[:, 'Iteration'] = Generation['Heat'].loc[:, 'Iteration'] - 1
+Generation['Heat'].loc[:, 'Scenario'] = '12.5 kTCO2'
+Generation['Heat'].loc[:, 'Zone'] = Generation['Heat'].index
+Generation['Heat'].reset_index(inplace=True, drop=True)
+
+
+
+Ele_pivot = pd.melt(Generation['Ele'], id_vars=['Scenario','Iteration', 'Zone'], value_vars=cols_ele, value_name='Generation')
+Heat_pivot = pd.melt(Generation['Heat'], id_vars=['Scenario','Iteration','Zone'], value_vars=cols_heat, value_name='Generation')
+
+# Generation_pivot = pd.pivot_table(df, values='S', index=['P', 'Q'], columns=['R'], aggfunc=np.sum)
 
 with open(case_study + '.p', 'wb') as handle:
     pickle.dump(inputs, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -198,7 +248,7 @@ with open(case_study + '.p', 'wb') as handle:
 # Plots
 import pandas as pd
 
-rng = pd.date_range('2015-1-01', '2015-12-31', freq='H')
+rng = pd.date_range('2015-4-24', '2015-4-28', freq='H')
 # Generate country-specific plots
 ds.plot_zone(inputs[2], results[2], rng=rng, z_th='ES_DHN')
 
@@ -209,48 +259,40 @@ cap = ds.plot_zone_capacities(inputs[2], results[2])
 sto = ds.plot_tech_cap(inputs[2])
 
 # Violin plot for CO2 emissions
-ds.plot_co2(inputs[2], results[2], figsize=(9, 6), width=0.9)
+ds.plot_co2(inputs[3], results[3], figsize=(9, 6), width=0.9)
 
 # Bar plot with the energy balances in all countries:
-ds.plot_energy_zone_fuel(inputs[2], results[2], ds.get_indicators_powerplant(inputs[2], results[2]))
+GenPerZone = ds.plot_energy_zone_fuel(inputs[3], results[3], ds.get_indicators_powerplant(inputs[3], results[3]))
 
 # Analyse the results for each country and provide quantitative indicators:
-r = ds.get_result_analysis(inputs[2], results[2])
+r = ds.get_result_analysis(inputs[0], results[0])
 
 
 # Create figure and subplot manually
-# fig = plt.figure()
-# host = fig.add_subplot(111)
-
-# More versatile wrapper
 fig, host = plt.subplots(figsize=(8, 4))  # (width, height) in inches
 # (see https://matplotlib.org/3.3.3/api/_as_gen/matplotlib.pyplot.subplots.html)
 
 par1 = host.twinx()
 par2 = host.twinx()
 
-host.set_xlim(1, 4)
-host.set_ylim(0, 90)
-par1.set_ylim(0, 450)
-par2.set_ylim(0, 3300)
+host.set_xlim(0, 3)
+host.set_ylim(0, ENS_max['Error>Accuracy'].max()*1.02)
+par1.set_ylim(0, LL.sum().max()*1.03)
+par2.set_ylim(0, LL.max().max()*1.03)
 
 host.set_xlabel("Iteration")
-host.set_ylabel("ENS_mean [MWh]")
-par1.set_ylabel("ENS_st.dev. [MWh]")
-par2.set_ylabel("ENS_max [MWh]")
+host.set_ylabel("Error>Accuracy [EUR]")
+par1.set_ylabel("ENS [GWh]")
+par2.set_ylabel("ENS_max [GW]")
 
 color1 = plt.cm.viridis(0.9)
 color2 = plt.cm.viridis(0.5)
 color3 = plt.cm.viridis(0)
 
-# p1, = host.plot([1, 2, 3, 4], [83.52, 19.99, 0.08, 0.04], color=color1, label="ENS_mean")
-# p2, = par1.plot([1, 2, 3, 4], [439.6, 177.7, 2.23, 1.37], color=color2, label="ENS_st.dev.")
-# p3, = par2.plot([1, 2, 3, 4], [3216, 3019, 102.74, 76.33], color=color3, label="ENS_max")
-
 #TODO automatise
-p1, = host.plot([1, 2, 3, 4], [84.56, 20.74, 0.07, 0.6], color=color1, label="ENS_mean")
-p2, = par1.plot([1, 2, 3, 4], [438.4, 182.11, 5.0, 15.28], color=color2, label="ENS_st.dev.")
-p3, = par2.plot([1, 2, 3, 4], [3216, 3019, 455.8, 739.4], color=color3, label="ENS_max")
+p1, = host.plot(ENS_max.index, ENS_max.loc[:, 'Error>Accuracy'], color=color1, label='Error>Accuracy')
+p2, = par1.plot(ENS_max.index, LL.sum().values, color=color2, label="ENS")
+p3, = par2.plot(ENS_max.index, LL.max().values, color=color3, label="ENS_max")
 
 lns = [p1, p2, p3]
 host.legend(handles=lns, loc='best')
@@ -259,22 +301,13 @@ host.legend(handles=lns, loc='best')
 par2.spines['right'].set_position(('outward', 60))
 
 # no x-ticks
-par2.xaxis.set_ticks([1, 2, 3, 4])
-
-# Sometimes handy, same for xaxis
-# par2.yaxis.set_ticks_position('right')
-
-# Move "Velocity"-axis to the left
-# par2.spines['left'].set_position(('outward', 60))
-# par2.spines['left'].set_visible(True)
-# par2.yaxis.set_label_position('left')
-# par2.yaxis.set_ticks_position('left')
+par2.xaxis.set_ticks([0, 1, 2, 3])
 
 host.yaxis.label.set_color(p1.get_color())
 par1.yaxis.label.set_color(p2.get_color())
 par2.yaxis.label.set_color(p3.get_color())
 
-plt.axhline(y=850, color='r', linestyle='dashed', label='Optimality treshold')
+# plt.axhline(y=850, color='r', linestyle='dashed', label='Optimality treshold')
 
 plt.title('Optimality gap = 0.05%')
 
@@ -284,10 +317,12 @@ fig.tight_layout()
 #                (overwrites figsize)
 
 # Best for professional typesetting, e.g. LaTeX
-plt.savefig("0.005.png")
+# plt.savefig("0.005.png")
 # For raster graphics use the dpi argument. E.g. '[...].png", dpi=200)'
 
 plt.show()
+
+
 
 bb = pd.DataFrame()
 CF = {}
@@ -300,3 +335,206 @@ for i in range(0, end):
     CF[i].fillna(0, inplace=True)
 
     CF[i].to_csv('CF_' + str(scenario) + '_' + str(i) + '.csv')
+
+
+import pandas as pd
+from plotnine import *
+
+scenario = '37.5 kTCO2'
+
+mix1 = pd.read_csv("PivotTable_Generation.csv")
+# mix_min_max1 = pd.read_csv("data_figure13_minmax.csv")
+# mix_min_max1['min'] = mix_min_max1['min'] * 100
+# mix_min_max1['max'] = mix_min_max1['max'] * 100
+cat_order = ['BIO', 'GEO', 'NUC', 'PEA', 'OIL', 'GAS', 'HRD', 'OTH', 'AIR', 'WST', 'WAT', 'SUN', 'WIN']
+mix1['variable'] = pd.Categorical(mix1['variable'], categories=cat_order, ordered=True)
+
+if scenario == '37.5 kTCO2':
+    mix = mix1[mix1['Scenario'] != '12.5 kTCO2']
+    # mix_min_max1['Label'] = mix_min_max1['min'].round(1).astype(str) + '% - ' + mix_min_max1['max'].round(1).astype(
+    #     str) + '%'
+    # mix_min_max = mix_min_max1[mix_min_max1['Scenario'] != "Connected"]
+else:
+    mix = mix1[mix1['Scenario'] != 'Baseline']
+    # mix_min_max1['Label'] = mix_min_max1['min'].round(1).astype(str) + '% - ' + mix_min_max1['max'].round(1).astype(
+    #     str) + '%'
+    # mix_min_max = mix_min_max1[mix_min_max1['Scenario'] != "Baseline"]
+
+mix.reset_index(inplace=True)
+# mix_min_max.reset_index(inplace=True)
+
+fuel_cmap = {'LIG': '#af4b9180', 'PEA': '#af4b9199', 'HRD': 'darkviolet', 'OIL': 'magenta',
+             'GAS': '#d7642dff',
+             'NUC': '#466eb4ff',
+             'SUN': '#e6a532ff',
+             'WIN': '#41afaaff',
+             'WAT': '#00a0e1ff',
+             'BIO': '#7daf4bff', 'GEO': '#7daf4bbf',
+             'Storage': '#b93c46ff', 'FlowIn': '#b93c46b2', 'FlowOut': '#b93c4666',
+             'OTH': '#b9c33799', 'WST': '#b9c337ff',
+             'HDAM': '#00a0e1ff',
+             'HPHS': 'blue',
+             'THMS': '#C04000ff',
+             'BATS': '#41A317ff',
+             'BEVS': '#b9c33799'}
+
+g = (ggplot(mix) +
+     aes(x=mix['Iteration'], y=mix['Generation'], fill=mix['variable']) +
+     geom_bar(stat="identity", width=1, size=0.15, color="black") +
+     facet_wrap('Zone', ncol=2, scales="free_x") +
+     scale_y_continuous(labels=lambda l: ["%d%%" % (v * 100) for v in l]) +
+     scale_fill_manual(values=fuel_cmap, name="") +
+     labs(title = scenario,
+          x="Rank (climate years sorted by \n renewable energy generation)",
+          y="Share of annual generation (%)",
+          fill = 'Fuel') +
+     theme_minimal() +
+     # geom_hline(mix_min_max, aes(yintercept=mix_min_max['max'] / 100), color='white') +
+     # geom_hline(mix_min_max, aes(yintercept=mix_min_max['min'] / 100), color='white') +
+     # annotate('text', x=19, y=0.5, color="white", size=10, label=mix_min_max['Label']) +
+     # theme(axis_text_x=element_text(vjust=0), legend_margin=0, subplots_adjust={'wspace': 0.10, 'hspace': 0.25},
+     #       legend_position=(.5, 0), legend_direction='horizontal') +
+     coord_flip() +
+     guides(fill = guide_legend(nrow = 1, reverse = True))
+     )
+
+g
+
+if scenario == 'Baseline':
+    (ggsave(g, "figure13_Baseline.png", width=15.5 / 2.5, height=12 / 2.5))
+else:
+    (ggsave(g, "figure13_Connected.png", width=15.5 / 2.5, height=12 / 2.5))
+
+import calendar
+from plotnine import *
+aa = pd.DataFrame()
+for itteration in [0,3]:
+    df = results[itteration]['ShadowPrice']
+    df['Month'] = df.index.month
+    df['Day'] = df.index.dayofyear
+    df['Hour'] = df.index.hour
+    df['Zone'] = 'ES_ELE'
+    if itteration == 0:
+        df['Iteration'] = 'No Reserve'
+    elif itteration == 1:
+        df['Iteration'] = 'Initialization'
+    else:
+        df['Iteration'] = 'Iteration ' + str(itteration-1)
+
+    df1 = results[itteration]['HeatShadowPrice']
+    df1['Month'] = df1.index.month
+    df1['Day'] = df1.index.dayofyear
+    df1['Hour'] = df1.index.hour
+    df1 = pd.melt(df1, id_vars=['Month', 'Day','Hour'], value_vars=['ES_DEC','ES_DHN','ES_IND'], value_name='ES', var_name='Zone')
+    if itteration == 0:
+        df1['Iteration'] = 'No Reserve'
+    elif itteration == 1:
+        df1['Iteration'] = 'Initialization'
+    else:
+        df1['Iteration'] = 'Iteration ' + str(itteration-1)
+
+    aa = pd.concat([aa, df, df1])
+
+aa.reset_index(inplace=True,drop=True)
+aa['Month'] = aa['Month'].apply(lambda x: calendar.month_abbr[x])
+cat_order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+aa['Month'] = pd.Categorical(aa['Month'], categories=cat_order, ordered=True)
+aa['Iteration'] = pd.Categorical(aa['Iteration'], categories=['No Reserve', 'Iteration 2'], ordered=True)
+aa['Zone'] = pd.Categorical(aa['Zone'], categories=['ES_ELE', 'ES_DEC','ES_DHN','ES_IND'], ordered=True)
+
+aa.rename({'ES':'EUR/MWh'}, axis='columns',inplace=True)
+
+#%% Build the plot
+g = (ggplot(aa, aes(x='Day',y='Hour',fill='EUR/MWh'))
+     + geom_tile(color='white',size=.01)
+     + facet_grid('Zone ~ Iteration')
+     # + labs(title='Shadow Prices in Electricity and Heating zones')
+     # + scale_fill_cmap('plasma')
+     + scale_y_continuous(breaks=(0,6,12,18,24))
+     + scale_x_continuous(breaks=(0,91,182,273,365))
+     + scale_fill_gradient2(low="green", mid="lightblue", high="red",
+                   midpoint=200,
+                   breaks=(0,100, 200, 300, 400),
+                   limits=(0,420))
+     + theme_minimal()
+     + theme(legend_position = 'right',
+               plot_title = element_text(size=10),
+            legend_title= element_text(size=8)
+               # axis_text_y = element_text(size=10)
+             )
+)
+
+g
+
+(ggsave(g, "ShadowPrice_" + str(scenario) + '.png', width=11.5/2.5, height=11.5/2.5, dpi = 300))
+
+bb=pd.DataFrame()
+for itteration in range(4):
+    df2 = pd.DataFrame(results[itteration]['OutputOptimizationError'], columns=['Error'])
+    df2.reset_index(inplace=True, drop=True)
+    df2.drop(df2.tail(1).index, inplace=True)
+    df2[df2 > 50000] = 50000
+    df2[df2 < -50000] = -50000
+    df2.loc[:,'RollingHorizon'] = df2.index
+    df2.loc[:,'Iteration'] = str(itteration)
+    # df2.loc[:, 'Iteration'] = itteration
+    bb = pd.concat([bb, df2])
+
+bb['Error'] = bb['Error'].astype(float)
+
+g2 = (ggplot(bb, aes(y='RollingHorizon',x='Iteration',fill='Error'))
+     + geom_tile(color='white',size=.01)
+     # + facet_grid('Zone ~ Iteration')
+     # + labs(title='Shadow Prices in Electricity and Heating zones')
+     # + scale_fill_cmap('plasma')
+     # + scale_y_continuous(breaks=(0,6,12,18,24))
+     + scale_y_continuous(breaks=(0,11,22,33,44,55,66,77,88,99,110,121))
+     + xlab("")
+     + scale_fill_gradient2(low="green", mid="lightblue", high="red",
+                   midpoint=0,
+                   breaks=(-50000, 0, 50000),
+                   limits=(-50000, 50000))
+     + theme_minimal()
+     + theme(legend_position = 'right',
+            plot_title = element_text(size=10),
+            legend_title= element_text(size=8),
+            # axis_text_y = element_text(size=10)
+             )
+)
+
+g2
+
+(ggsave(g2, "ItterationError_" + str(scenario) + '.png', width=11.5/2.5, height=6.5/2.5, dpi = 300))
+
+N = 24*3
+cc = pd.DataFrame()
+for i in range(4):
+    results[i]['OutputShedLoad'].set_index('index', inplace=True)
+    df3 = results[i]['OutputShedLoad']
+    df3.reset_index(inplace=True)
+    df3 = df3.groupby(df3.index // N).sum()
+    df3.loc[:,'Iteration'] = i
+    df3.loc[:,'RollingHorizon'] = df3.index
+    cc = pd.concat([cc,df3])
+
+cc = cc.rename(columns={'ES':'ENS'})
+cc['ENS'] = cc['ENS'].astype(float)
+
+ENS_max.loc[:,'Iteration']=ENS_max.index
+
+g3 = (ggplot(ENS_max, aes(x='Iteration', y='ENS'))
+     + geom_col(fill='red')
+     + scale_y_reverse()
+     + theme_minimal()
+     + ylab('ENS [GWh]')
+     + theme(legend_position = 'right',
+            legend_title= element_text(size=8)
+               # axis_text_y = element_text(size=10)
+             )
+)
+
+g3
+
+(ggsave(g3, "ENS_" + str(scenario) + '.png', width=11.5/2.5, height=5.3/2.5, dpi = 300))
+
+
