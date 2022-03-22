@@ -22,10 +22,10 @@ from dispaset_sidetools.common import make_dir
 # %% Adjustable inputs that should be modified
 # Scenario definition
 """ output file: SOURCE + SCENARIO + '_' + str(YEAR) + '_' + CASE """
-YEAR = 2050  # considered year
+YEAR = 2019  # considered year
 WRITE_CSV_FILES = True  # Write csv database
 SCENARIO = 'ProRes1'  # Scenario name, used for data and naming the files. ProRes1 or NearZeroCarbon
-CASE = 'NOFLEX'  # Case name, used for naming csv files
+CASE = 'NOP2H'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 
 # Technology definition
@@ -39,6 +39,7 @@ BATS_Liion_CAPACITY = 0 # No of storage hours for batteries
 BATS_Lead_CAPACITY = 0
 V2G_CAPACITY = 0 # No of storage for vehicles 2 grid 
 H2_STORAGE = False
+INCLUDE_HEAT = False
 
 CHP_TYPE = 'Extraction'  # Define CHP type: None, back-pressure or Extraction
 V2G_SHARE = 0  # Define how many EV's are V2G
@@ -49,7 +50,7 @@ OCEAN = 'WAT'  # Define what ocean fuel equals to (WAT or OTH)
 CSP = True  # Turn Concentrated solar power on/off (when False grouped with PHOT)
 HYDRO_CLUSTERING = 'OFF'  # Define type of hydro clustering (OFF, HPHS, HROR)
 TECH_CLUSTERING = True  # Clusters technologies by treshold (efficient way to reduce total number of units)
-CLUSTER_TRESHOLD = 0.3  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
+CLUSTER_TRESHOLD = 0.7  # Treshold for clustering technologies together 0-1 (if 0 no clustering)
 
 STOSELFDISCHARGE_SUN = 0.03
 STOSELFDISCHARGE_P2H = 0.03
@@ -781,7 +782,8 @@ for c in country:
     tmp_gas['ICEN']=tech_shares['GAS'].loc[c,'ICEN_PCT']-chp_gas1.loc[c,'ICEN']
     tmp_gas['GTUR']=tech_shares['GAS'].loc[c,'GTUR_PCT']-chp_gas1.loc[c,'GTUR']
     tmp_gas['STUR']=tech_shares['GAS'].loc[c,'STUR_PCT']-chp_gas1.loc[c,'STUR']
-    tmp_gas['HOBO']=BOIL_cap.loc[c,'HOBO']
+    if INCLUDE_HEAT is True:
+        tmp_gas['HOBO']=BOIL_cap.loc[c,'HOBO']
     tmp_gas=tmp_gas.transpose()
     tmp_gas.rename(columns={c: 'GAS'}, inplace=True)
     
@@ -840,7 +842,8 @@ for c in country:
     df_merged = df_merged.merge(tmp_wat, how='outer', left_index=True, right_index=True)
     df_merged = df_merged.merge(tmp_win, how='outer', left_index=True, right_index=True)
     df_merged = df_merged.merge(tmp_sun, how='outer', left_index=True, right_index=True)
-    df_merged = df_merged.merge(tmp_P2Ha, how='outer', left_index=True, right_index=True)
+    if INCLUDE_HEAT is True:
+        df_merged = df_merged.merge(tmp_P2Ha, how='outer', left_index=True, right_index=True)
     df_merged.fillna(0,inplace=True)
     total_cap = df_merged.sum().sum()
     min_cap = total_cap * TECHNOLOGY_THRESHOLD
