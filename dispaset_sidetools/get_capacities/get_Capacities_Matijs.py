@@ -25,7 +25,7 @@ from dispaset_sidetools.common import make_dir
 YEAR = 2019  # considered year
 WRITE_CSV_FILES = True  # Write csv database
 SCENARIO = 'ProRes1'  # Scenario name, used for data and naming the files. ProRes1 or NearZeroCarbon
-CASE = 'NOP2H'  # Case name, used for naming csv files
+CASE = 'NOP2H_STO'  # Case name, used for naming csv files
 SOURCE = 'JRC_EU_TIMES_'  # Source name, used for naming csv files
 
 # Technology definition
@@ -35,8 +35,8 @@ CHP_TES_CAPACITY = 0  # No of storage hours in TES
 CSP_TES_CAPACITY = 8  # No of storage hours in CSP units (usually 7.5 hours)
 P2G_TES_CAPACITY = 0  # No of storage hours in P2H units (500l tank = 5h of storage)
 HYDRO_CAPACITY = 5 # No of storage hours in HPHS and HDAM
-BATS_Liion_CAPACITY = 0 # No of storage hours for batteries
-BATS_Lead_CAPACITY = 0
+BATS_Liion_CAPACITY = 4 # No of storage hours for batteries
+BATS_Lead_CAPACITY = 4
 V2G_CAPACITY = 0 # No of storage for vehicles 2 grid 
 H2_STORAGE = False
 INCLUDE_HEAT = False
@@ -1022,6 +1022,10 @@ for c in cap1:
                 tmp_tes['STOSelfDischarge'] = STOSELFDISCHARGE_TES
                 tmp_tes = tmp_tes.T
                 units_chp.update(tmp_tes)
+   
+    #Change the PartLoadMin of NUC to 0.9
+    units.loc[units.Fuel=='NUC','PartLoadMin']=0.9
+    
     if len(units_chp) > 0:
         units_chp = units_chp.transpose()
         del units_chp['Year']
@@ -1146,20 +1150,26 @@ for c in cap1:
         sys.exit('Too many P2G units!')
         
     # Special treatment for bats units
-    tmp=units[units.Technology == 'BATS']
-    if len(tmp) == 0:
+    #tmp=units[units.Technology == 'BATS']
+    if c not in bats_capacities.index:
         print('[INFO    ]: ' + 'Country ' + c + ' batteries are not present')
-    elif len(tmp) == 1:
-        batsdata = tmp
-        batsindex = tmp.index
+    elif c in bats_capacities.index:
+        tmp=bats_capacities.loc[c]
+        batsdata=typical[(typical.Technology=='BATS') & (typical.Fuel=='OTH') ]
+        batsindex = c + '_BATS_OTH'
         if BATS_Lead_CAPACITY == 0:
             units.drop(c+'_BATS_OTH', inplace=True)
         else:
-            batsdata['PowerCapacity'] = batsdata['PowerCapacity'].values/(3.6e-6) # From PJ/h to MW
+            batsdata['PowerCapacity'] = tmp['BATS']*1000
+            batsdata['Unit']=batsindex
+            batsdata['Zone']=c
             batsdata['STOCapacity'] = BATS_Liion_CAPACITY * bats_capacities_copy.loc[c,'Li-ion'] + BATS_Lead_CAPACITY * bats_capacities_copy.loc[c,'Lead-acid']
             batsdata['STOCapacity'] = batsdata['STOCapacity'].values/(3.6e-6) # From PJ to MWh
             batsdata['STOMaxChargingPower'] = batsdata['PowerCapacity'].copy()
-            units.loc[batsindex,:] = batsdata
+            batsdata['Nunits']=1
+            batsdata=batsdata[batsdata.columns[batsdata.columns.isin(units.columns)]]
+            batsdata.rename(index={1:batsindex}, inplace=True)
+            units=units.append(batsdata)
     else:
        sys.exit('Too many bats units!') 
     
