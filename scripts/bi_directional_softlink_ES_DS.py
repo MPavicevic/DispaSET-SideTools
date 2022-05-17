@@ -20,11 +20,11 @@ sys.path.append(os.path.abspath('..'))
 dst_path = Path(__file__).parents[1]
 # Typical units
 typical_units_folder = dst_path / 'Inputs' / 'EnergyScope'
-scenario = 12500
+scenario = 37500
 case_study = str(scenario) + '_ElecImport=0'
 
 # Energy Scope
-ES_folder = dst_path.parent / 'EnergyScope'
+ES_folder = dst_path.parent / 'EnergyScope_coupling_Dispa_set'
 DST_folder = dst_path.parent / 'DispaSET-SideTools'
 
 data_folders = [ES_folder / 'Data' / 'User_data', ES_folder / 'Data' / 'Developer_data']
@@ -75,7 +75,7 @@ config_es['importing'] = False
 config_es['printing'] = True
 config_es['printing_td'] = True
 config_es['run_ES'] = True
-config_es['all_data'] = es.run_ES(config_es)
+# config_es['all_data'] = es.run_ES(config_es)
 
 # Static Data - to be created only once
 el_demand = dst.get_demand_from_es(config_es)
@@ -103,9 +103,14 @@ for i in range(end):
     GWP_op[i].to_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'GWP_op.txt',
                      sep='\t')  # TODO automate
     # TODO update with new possibility of changing output folder
-    capacities[i] = dst.get_capacities_from_es(config_es, typical_units_folder=typical_units_folder)
+    assets = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'assets.txt',
+                          delimiter='\t', skiprows=[1], index_col=False).set_index('TECHNOLOGIES') #TODO: improve get_capacities (read outputs from ES -> function to convert to DS syntax)
+    assets.rename(columns=lambda x: x.strip(), inplace=True)
+    assets.rename(index=lambda x: x.strip(), inplace=True)
+    capacities[i] = dst.get_capacities_from_es(config_es, typical_units_folder=typical_units_folder) #TODO: remove really small technologies
     Price_CO2[i] = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'CO2_cost.txt',
                                delimiter='\t', header=None)
+
 
     # compute fuel prices according to the use of RE vs NON-RE fuels
     yearbal = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'year_balance.txt',
@@ -130,6 +135,28 @@ for i in range(end):
     h2_ts = h2_ts.merge(h2_td, left_on=['TD', 'hour'], right_index=True).sort_index()
     h2_ts.drop(columns=['TD', 'hour'], inplace=True)
     dst.write_csv_files('H2_demand', h2_ts * 1000, 'H2_demand', index=True, write_csv=True)
+
+    # compute outage factors for technologies using local resources (WOOD, WET_BIOMASS, WASTE)
+    def compute_OutageFactor(config_es, assets, layer_name:str):
+        """Computes the Outage Factor in a layer for each TD
+
+        """
+        layer = es.read_layer(config_es['case_study'], 'layer_'+layer_name).dropna(axis=1)
+        layer = layer.loc[:, layer.min(axis=0) < -0.01]
+        layer = layer / config_es['all_data']['Layers_in_out'].loc[
+            layer.columns, layer_name]  # compute GWh of output layer
+        layer = 1 - layer / assets.loc[layer.columns, 'f']
+        return layer.loc[:,layer.max(axis=0)>1e-3]
+
+    local_res = ['WASTE', 'WOOD', 'WET_BIOMASS']
+    OutageFactors = compute_OutageFactor(config_es, assets, local_res[0])
+    for r in local_res[1:]:
+        OutageFactors = OutageFactors.merge(compute_OutageFactor(config_es, assets, r), left_index=True, right_index=True)
+
+    OutageFactors_yr = TD_DF.loc[:, ['TD', 'hour']]
+    OutageFactors_yr = OutageFactors_yr.merge(OutageFactors, left_on=['TD', 'hour'], right_index=True).sort_index()
+    OutageFactors_yr.drop(columns=['TD', 'hour'], inplace=True)
+    dst.write_csv_files('OutageFactor', OutageFactors_yr, 'OutageFactor', index=True, write_csv=True)
 
     # %% ###################################
     ########## Execute Dispa-SET ##########
