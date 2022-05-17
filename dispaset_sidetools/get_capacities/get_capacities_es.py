@@ -829,7 +829,7 @@ def get_capacities_from_es(config_es, typical_units_folder, YEAR = 2015, TECHNOL
     PowerPlants.loc[:, 'WaterConsumption'] = 0
 
     allunits = PowerPlants
-    allunits = allunits[allunits['PowerCapacity'] != 0]
+    allunits = allunits[allunits['PowerCapacity']*allunits['Nunits'] >= TECHNOLOGY_THRESHOLD]
     write_csv_files('PowerPlants', allunits, 'PowerPlants', index=False, write_csv=True)
 
     return allunits

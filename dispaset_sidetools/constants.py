@@ -67,7 +67,8 @@ decen_heat_tech = ['DEC_HP_ELEC', 'DEC_DIRECT_ELEC', 'DEC_COGEN_GAS', 'DEC_COGEN
                    'TS_DEC_BOILER_WOOD_Pin', 'TS_DEC_BOILER_WOOD_Pout',
                    'TS_DEC_BOILER_OIL_Pin', 'TS_DEC_BOILER_OIL_Pout']
 ind_heat_tech = ['IND_DIRECT_ELEC', 'IND_COGEN_GAS', 'IND_COGEN_WOOD', 'IND_COGEN_WASTE', 'IND_BOILER_GAS',
-                 'IND_BOILER_WASTE', 'IND_BOILER_COAL', 'IND_BOILER_WOOD', 'IND_BOILER_OIL', 'TS_HIGH_TEMP']
+                 'IND_BOILER_WASTE', 'IND_BOILER_COAL', 'IND_BOILER_WOOD', 'IND_BOILER_OIL', 'TS_HIGH_TEMP_Pin',
+                 'TS_HIGH_TEMP_Pout']
 
 # Lists for AvailibilityFactors
 AvailFactors = ['PHOT', 'WTON', 'WTOF', 'HROR']  # Dispa-SET nomenclature

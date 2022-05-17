@@ -24,7 +24,7 @@ scenario = 37500
 case_study = str(scenario) + '_ElecImport=0'
 
 # Energy Scope
-ES_folder = dst_path.parent / 'EnergyScope_coupling_Dispa_set'
+ES_folder = dst_path.parent / 'EnergyScope'
 DST_folder = dst_path.parent / 'DispaSET-SideTools'
 
 data_folders = [ES_folder / 'Data' / 'User_data', ES_folder / 'Data' / 'Developer_data']
@@ -79,7 +79,7 @@ config_es['run_ES'] = True
 
 # Static Data - to be created only once
 el_demand = dst.get_demand_from_es(config_es)
-th_demand = dst.get_heat_demand_from_es(config_es)
+# th_demand = dst.get_heat_demand_from_es(config_es)
 af = dst.get_availability_factors_from_es(config_es)
 
 inputs = dict()
@@ -97,6 +97,8 @@ iteration = {}
 
 for i in range(end):
     print('loop number', i)
+    # Reading the ES outputs
+    es_outputs = es.read_outputs(config_es['case_study'],True,[])
     # Dynamic Data - to be modified in a loop
     # compute the actual average annual emission factors for each resource
     GWP_op[i] = es.compute_gwp_op(config_es['data_folders'], ES_folder / 'case_studies' / config_es['case_study'])
@@ -107,7 +109,8 @@ for i in range(end):
                           delimiter='\t', skiprows=[1], index_col=False).set_index('TECHNOLOGIES') #TODO: improve get_capacities (read outputs from ES -> function to convert to DS syntax)
     assets.rename(columns=lambda x: x.strip(), inplace=True)
     assets.rename(index=lambda x: x.strip(), inplace=True)
-    capacities[i] = dst.get_capacities_from_es(config_es, typical_units_folder=typical_units_folder) #TODO: remove really small technologies
+    capacities[i] = dst.get_capacities_from_es(config_es, typical_units_folder=typical_units_folder,
+                                               TECHNOLOGY_THRESHOLD=0.1) #TODO: remove really small technologies
     Price_CO2[i] = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'CO2_cost.txt',
                                delimiter='\t', header=None)
 
@@ -156,13 +159,23 @@ for i in range(end):
     OutageFactors_yr = TD_DF.loc[:, ['TD', 'hour']]
     OutageFactors_yr = OutageFactors_yr.merge(OutageFactors, left_on=['TD', 'hour'], right_index=True).sort_index()
     OutageFactors_yr.drop(columns=['TD', 'hour'], inplace=True)
+    OutageFactors_yr.rename(columns= lambda x: 'ES_' + x, inplace=True)
     dst.write_csv_files('OutageFactor', OutageFactors_yr, 'OutageFactor', index=True, write_csv=True)
+
+    th_demand = dst.get_heat_demand_from_es(config_es)
+
+    sto_size = es_outputs['assets'].loc[config_es['all_data']['Storage_eff_in'].index,'f']
+    sto_size = sto_size[sto_size >= 0.01]
+    soc = es_outputs['energy_stored'].loc[1,sto_size.index] / sto_size
+    soc.rename(index= lambda x: 'ES_' + x, inplace=True)
 
     # %% ###################################
     ########## Execute Dispa-SET ##########
     #######################################
     # Load the configuration file
     config = ds.load_config('../ConfigFiles/Config_EnergyScope.xlsx')
+    config['Outages'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'OutageFactor' / '##' /
+                                  'OutageFactor.csv')
     config['SimulationDirectory'] = str(DST_folder / 'Simulations' / case_study)
     config['default']['PriceOfCO2'] = abs(Price_CO2[i].loc[0, 0] * 1000)
     for j in dst.mapping['FUEL_COST']:
