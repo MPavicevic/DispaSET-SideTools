@@ -537,7 +537,7 @@ def fix_na(series,fillzeros=True,verbose=True,name='',Nstd=4,outliers=None):
 
 def make_dir(path):
     if not os.path.isdir(path):
-        os.mkdir(path)
+        os.makedirs(path)
 
 def invert_dic_df(dic,tablename=''):
     """
