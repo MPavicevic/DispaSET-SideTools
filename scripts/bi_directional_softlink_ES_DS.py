@@ -166,8 +166,10 @@ for i in range(end):
 
     sto_size = es_outputs['assets'].loc[config_es['all_data']['Storage_eff_in'].index,'f']
     sto_size = sto_size[sto_size >= 0.01]
-    soc = es_outputs['energy_stored'].loc[1,sto_size.index] / sto_size
-    soc.rename(index= lambda x: 'ES_' + x, inplace=True)
+    soc = es_outputs['energy_stored'].loc[:,sto_size.index] / sto_size
+    soc.rename(columns= lambda x: 'ES_' + x, inplace=True)
+    dst.write_csv_files('ReservoirLevels', soc, 'ReservoirLevels', index=True, write_csv=True)
+
 
     # %% ###################################
     ########## Execute Dispa-SET ##########
@@ -176,6 +178,8 @@ for i in range(end):
     config = ds.load_config('../ConfigFiles/Config_EnergyScope.xlsx')
     config['Outages'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'OutageFactor' / '##' /
                                   'OutageFactor.csv')
+    config['ReservoirLevels'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'ReservoirLevels' / '##' /
+                                  'ReservoirLevels.csv')
     config['SimulationDirectory'] = str(DST_folder / 'Simulations' / case_study)
     config['default']['PriceOfCO2'] = abs(Price_CO2[i].loc[0, 0] * 1000)
     for j in dst.mapping['FUEL_COST']:
@@ -288,9 +292,9 @@ with open(case_study + '.p', 'wb') as handle:
 # Plots
 import pandas as pd
 
-rng = pd.date_range('2015-4-24', '2015-4-28', freq='H')
+rng = pd.date_range('2015-1-1', '2015-12-31', freq='H')
 # Generate country-specific plots
-ds.plot_zone(inputs[2], results[2], rng=rng, z_th='ES_DHN')
+ds.plot_zone(inputs[0], results[0], rng=rng, z_th='ES_DHN')
 
 # Bar plot with the installed capacities in all countries:
 cap = ds.plot_zone_capacities(inputs[2], results[2])
