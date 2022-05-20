@@ -50,7 +50,7 @@ inputfile_en_hror = input_folder + "/JRC_EU_TIMES/" + scenario + "/TIMES_Energy_
 inputfile_en_sun = input_folder + "/JRC_EU_TIMES/" + scenario + "/TIMES_Energy_SUN.xlsx"
 
 #File with the BEVS AF 
-inputfile_ev_af_curve = input_folder + "RAMP-mobility\RAMP-mobility_AF.csv"
+inputfile_ev_af_curve = input_folder + "RAMP-mobility/RAMP-mobility_AF.csv"
 
 #%% ################### AF #######################
 
@@ -66,7 +66,7 @@ af = {}
 #hour = pd.date_range(start=str(year) + '-01-01', end= str(year) + '-12-31 23:00', freq='H')
 
 for c in countries: 
-    af[c] = pd.read_csv(inputfolder_af + r"/" + c + r"\1h\2016.csv", index_col = 0, header = 0)
+    af[c] = pd.read_csv(inputfolder_af + r"/" + c + r"/1h/2016.csv", index_col = 0, header = 0)
 #    af[c].set_index(hour, inplace= True)
 
 #%% Fix missing columns 

@@ -36,7 +36,7 @@ os.chdir(dispaset_sidetools_path)
 
 from dispaset_sidetools.common import make_dir
 
-WRITE_CSV_FILES = False  # Write csv database
+WRITE_CSV_FILES = True  # Write csv database
 
 #Output File name
 scenario = 'ProRes1'
@@ -66,7 +66,7 @@ inputfile_ev =  input_folder + source_folder + '/' + scenario + "/TIMES_EV_Deman
 inputfile_power = input_folder + 'Default/' + "TotalLoadValue/%s/1h/2016.csv"
 
 #File with the demand curve for EV 
-inputfile_ev_curve = input_folder + "RAMP-mobility\RAMP-mobility_EV_Demand_Profiles.csv"
+inputfile_ev_curve = input_folder + "RAMP-mobility/RAMP-mobility_EV_Demand_Profiles.csv"
 
 #%% Input demands
 

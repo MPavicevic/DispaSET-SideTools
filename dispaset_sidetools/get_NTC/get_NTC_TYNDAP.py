@@ -21,7 +21,7 @@ from dispaset_sidetools.common import mapping,outliers_vre,fix_na,make_dir,entso
 input_folder = '../../Inputs/'  # Standard input folder
 output_folder = '../../Outputs/'# Standard output folder
 
-data = pd.read_excel(input_folder + '/NTCCapacities/NTC_2040.xlsx')
+data = pd.read_excel(input_folder + '/Default/NTC_2040.xlsx')
 
 data['Unnamed: 0'] = data['Unnamed: 0'].str.replace('LUB','LU')
 data['Unnamed: 0'] = data['Unnamed: 0'].str.replace('LUG','LU')
