@@ -21,13 +21,14 @@ dst_path = Path(__file__).parents[1]
 # Typical units
 typical_units_folder = dst_path / 'Inputs' / 'EnergyScope'
 scenario = 37500
-case_study = str(scenario) + '_ElecImport=0'
+case_study = str(scenario) + '_ElecImport=0'#_WIND_ONSHORE_and_PHS_fmax=1e15'
 
 # Energy Scope
-ES_folder = dst_path.parent / 'EnergyScope'
+ES_folder = dst_path.parent / 'EnergyScope_coupling_Dispa_set'
 DST_folder = dst_path.parent / 'DispaSET-SideTools'
 
-data_folders = [ES_folder / 'Data' / 'User_data', ES_folder / 'Data' / 'Developer_data']
+year = 2050
+data_folder = ES_folder / 'Data' / str(year)
 ES_path = ES_folder / 'energyscope' / 'STEP_2_Energy_Model'
 step1_output = ES_folder / 'energyscope' / 'STEP_1_TD_selection' / 'TD_of_days.out'
 
@@ -43,8 +44,7 @@ config_es = {'case_study': case_study+ '_loop_0',
              'printing': False,
              'printing_td': False,
              'GWP_limit': scenario,  # [ktCO2-eq./year]	# Minimum GWP reduction
-             'import_capacity': 9.72,  # [GW] Electrical interconnections with neighbouring countries
-             'data_folders': data_folders,  # Folders containing the csv data files
+             'data_folder': data_folder,  # Folders containing the csv data files
              'ES_folder': ES_folder,  # Path to th directory of energyscope
              'ES_path': ES_path,  # Path to the energy model (.mod and .run files)
              'step1_output': step1_output,  # Output of the step 1 selection of typical days
@@ -69,6 +69,11 @@ config_es['all_data']['Technologies'].loc['CCGT_AMMONIA', 'f_max'] = 0
 # Allow infinite PV
 # config_es['all_data']['Technologies'].loc['CCGT', 'f_max'] = 15
 # config_es['user_defined']['solar_area'] = 1e15
+#
+# # Allow infinite WIND_ONSHORE
+# config_es['all_data']['Technologies'].loc['WIND_ONSHORE', 'f_max'] = 1e15
+# # Allow infinite PHS
+# config_es['all_data']['Technologies'].loc['PHS', 'f_max'] = 1e15
 
 # Printing and running
 config_es['importing'] = False
@@ -97,13 +102,14 @@ iteration = {}
 
 for i in range(end):
     print('loop number', i)
-    # Reading the ES outputs
-    es_outputs = es.read_outputs(config_es['case_study'],True,[])
+
     # Dynamic Data - to be modified in a loop
     # compute the actual average annual emission factors for each resource
-    GWP_op[i] = es.compute_gwp_op(config_es['data_folders'], ES_folder / 'case_studies' / config_es['case_study'])
+    GWP_op[i] = es.compute_gwp_op(config_es['data_folder'], ES_folder / 'case_studies' / config_es['case_study'])
     GWP_op[i].to_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'GWP_op.txt',
                      sep='\t')  # TODO automate
+    # Reading the ES outputs
+    es_outputs = es.read_outputs(config_es['case_study'], True, [])
     # TODO update with new possibility of changing output folder
     assets = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' / 'assets.txt',
                           delimiter='\t', skiprows=[1], index_col=False).set_index('TECHNOLOGIES') #TODO: improve get_capacities (read outputs from ES -> function to convert to DS syntax)
@@ -226,7 +232,7 @@ for i in range(end):
     LL = pd.concat([LL, results[i]['OutputShedLoad']], axis=1)
     Curtailment = pd.concat([Curtailment, results[i]['OutputCurtailedPower']], axis=1)
 
-    if (results[i]['OutputOptimizationError'] > 0).any():
+    if (results[i]['OutputOptimizationError'].abs() > results[i]['OutputOptimalityGap']).any():
         print('Another iteration required')
     else:
         print('Final convergence occurred in loop: ' + str(i) + '. Soft-linking is now complete')
