@@ -46,8 +46,8 @@ def get_heat_demand_from_es(config_es, countries = ['ES'], separator = ';'):
         DHN_Sto_losses = DHN_Sto_losses_list[countries.index(x)]
 
         # Input file
-        timeseries = pd.read_csv(config_es['data_folders'][1]/'Time_series.csv', header=0, sep=separator)
-        demands = pd.read_csv(config_es['data_folders'][0]/'Demand.csv', sep=separator)
+        timeseries = pd.read_csv(config_es['data_folder']/'Time_series.csv', header=0, sep=separator)
+        demands = pd.read_csv(config_es['data_folder']/'Demand.csv', sep=separator)
         yearbal = pd.read_csv(ES_output/'year_balance.txt', delimiter='\t', index_col='Tech')
 
         heat_demand = demands.loc[3, 'HOUSEHOLDS'] + demands.loc[3, 'SERVICES'] + demands.loc[3, 'INDUSTRY']

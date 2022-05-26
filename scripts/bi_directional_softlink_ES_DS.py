@@ -21,10 +21,10 @@ dst_path = Path(__file__).parents[1]
 # Typical units
 typical_units_folder = dst_path / 'Inputs' / 'EnergyScope'
 scenario = 37500
-case_study = str(scenario) + '_ElecImport=0'#_WIND_ONSHORE_and_PHS_fmax=1e15'
+case_study = str(scenario) + '_ElecImport=0_WIND_ONSHORE_and_PHS_fmax=1e15'
 
 # Energy Scope
-ES_folder = dst_path.parent / 'EnergyScope_coupling_Dispa_set'
+ES_folder = dst_path.parent / 'EnergyScope'
 DST_folder = dst_path.parent / 'DispaSET-SideTools'
 
 year = 2050
@@ -70,10 +70,10 @@ config_es['all_data']['Technologies'].loc['CCGT_AMMONIA', 'f_max'] = 0
 # config_es['all_data']['Technologies'].loc['CCGT', 'f_max'] = 15
 # config_es['user_defined']['solar_area'] = 1e15
 #
-# # Allow infinite WIND_ONSHORE
-# config_es['all_data']['Technologies'].loc['WIND_ONSHORE', 'f_max'] = 1e15
-# # Allow infinite PHS
-# config_es['all_data']['Technologies'].loc['PHS', 'f_max'] = 1e15
+# Allow infinite WIND_ONSHORE
+config_es['all_data']['Technologies'].loc['WIND_ONSHORE', 'f_max'] = 1e15
+# Allow infinite PHS
+config_es['all_data']['Technologies'].loc['PHS', 'f_max'] = 1e15
 
 # Printing and running
 config_es['importing'] = False

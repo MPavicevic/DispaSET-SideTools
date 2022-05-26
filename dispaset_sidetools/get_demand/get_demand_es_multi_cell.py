@@ -44,8 +44,8 @@ def get_demand_from_es(config_es, countries=['ES'], separator=';'):
         grid_losses = grid_losses_list[countries.index(x)]
 
         # input file
-        timeseries = pd.read_csv(config_es['data_folders'][1]/'Time_series.csv', header=0, sep=separator)
-        demands = pd.read_csv(config_es['data_folders'][0]/'Demand.csv', sep=separator)
+        timeseries = pd.read_csv(config_es['data_folder']/'Time_series.csv', header=0, sep=separator)
+        demands = pd.read_csv(config_es['data_folder']/'Demand.csv', sep=separator)
         el_demand_baseload = demands.loc[0,'HOUSEHOLDS'] + demands.loc[0,'SERVICES'] + demands.loc[0,'INDUSTRY']
         el_demand_variable = demands.loc[1,'HOUSEHOLDS'] + demands.loc[1,'SERVICES'] + demands.loc[1,'INDUSTRY']
         yearbal = pd.read_csv(ES_output/'year_balance.txt', delimiter='\t', index_col='Tech')

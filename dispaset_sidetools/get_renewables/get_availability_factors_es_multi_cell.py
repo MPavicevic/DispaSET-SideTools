@@ -54,7 +54,7 @@ def get_availability_factors_from_es(config_es, countries = ['ES'], seprator = '
     for x in countries:
 
         #input files
-        timeseries = pd.read_csv(config_es['data_folders'][1]/'Time_series.csv', header=0, sep=seprator)
+        timeseries = pd.read_csv(config_es['data_folder']/'Time_series.csv', header=0, sep=seprator)
         timeseries.set_index(drange, inplace=True)
 
         Storage = pd.read_csv(hourly_data/'energy_stored.txt', delimiter='\t', index_col=0)

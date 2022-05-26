@@ -104,7 +104,7 @@ def get_capacities_from_es(config_es, typical_units_folder, YEAR = 2015, TECHNOL
     #         2) CHP PowerToHeatRatio
     #         3) P2HT COP_nom
 
-    layers_in_out = pd.read_csv(config_es['data_folders'][1]/'Layers_in_out.csv', sep=separator)
+    layers_in_out = pd.read_csv(config_es['data_folder']/'Layers_in_out.csv', sep=separator)
     layers_in_out.set_index(layers_in_out['param layers_in_out:'], inplace=True)
     layers_in_out.index = layers_in_out.index.str.strip()
 
@@ -113,7 +113,7 @@ def get_capacities_from_es(config_es, typical_units_folder, YEAR = 2015, TECHNOL
     #         2) STOSellfDischarge for STO TECH
     #         3) STOMaxChargingPower for STO TECH
 
-    storage_characteristics = pd.read_csv(config_es['data_folders'][1]/'Storage_characteristics.csv', sep=separator)
+    storage_characteristics = pd.read_csv(config_es['data_folder']/'Storage_characteristics.csv', sep=separator)
     storage_characteristics.set_index(storage_characteristics['param :'], inplace=True)
     storage_characteristics.rename(columns=lambda x: x.strip(), inplace=True)
     storage_characteristics.index = storage_characteristics.index.str.strip()
@@ -121,15 +121,15 @@ def get_capacities_from_es(config_es, typical_units_folder, YEAR = 2015, TECHNOL
     # %% Get Storage_eff_in will be used to get :
     #         1) Efficiency for STO TECH
 
-    storage_eff_in = pd.read_csv(config_es['data_folders'][1]/'Storage_eff_in.csv', sep=separator)
-    storage_eff_in.set_index(storage_eff_in['param storage_eff_in:'], inplace=True)
+    storage_eff_in = pd.read_csv(config_es['data_folder']/'Storage_eff_in.csv', sep=separator)
+    storage_eff_in.set_index(storage_eff_in['param storage_eff_in :'], inplace=True)
     storage_eff_in.rename(columns=lambda x: x.strip(), inplace=True)
     storage_eff_in.index = storage_eff_in.index.str.strip()
 
     # %% Get Storage_eff_out will be used to get :
     #         1) STOChargingEfficiency for STO TECH
 
-    storage_eff_out = pd.read_csv(config_es['data_folders'][1]/'Storage_eff_out.csv', sep=separator)
+    storage_eff_out = pd.read_csv(config_es['data_folder']/'Storage_eff_out.csv', sep=separator)
     storage_eff_out.set_index(storage_eff_out['param storage_eff_out:'], inplace=True)
     storage_eff_out.rename(columns=lambda x: x.strip(), inplace=True)
     storage_eff_out.index = storage_eff_out.index.str.strip()
