@@ -97,16 +97,16 @@ def get_elec_yearly_profiles(x):
     Elec_Sto = get_DistriStorage(x,'Elec')
     if 'PHS' in ElecLayerDF.columns or 'PHS_Pin' in ElecLayerDF.columns or 'PHES_Pin' in ElecLayerDF.columns:
         try:
-            if search_YearBalance(x,'PHS','ELECTRICITY') != 0:
+            if search_year_balance(x, 'PHS', 'ELECTRICITY') != 0:
                 ElecLayer_year['PHS'] = Elec_Sto['PHS'].multiply(1000)
         except:
-            if search_YearBalance(x,'PHES','ELECTRICITY') != 0:
+            if search_year_balance(x, 'PHES', 'ELECTRICITY') != 0:
                 ElecLayer_year['PHES'] = Elec_Sto['PHES'].multiply(1000)
     if 'BATT_LI' in ElecLayerDF.columns or 'BATT_LI_Pin' in ElecLayerDF.columns:
-        if search_YearBalance(x,'BATT_LI','ELECTRICITY') != 0:
+        if search_year_balance(x, 'BATT_LI', 'ELECTRICITY') != 0:
             ElecLayer_year['BATT_LI'] = Elec_Sto['BATT_LI'].multiply(1000)
     if 'DAM_STORAGE' in ElecLayerDF.columns or 'DAM_STORAGE_Pin' in ElecLayerDF.columns:
-        if search_YearBalance(x,'DAM_STORAGE','ELECTRICITY') != 0 or search_YearBalance(x,'HYDRO_DAM','ELECTRICITY') != 0:
+        if search_year_balance(x, 'DAM_STORAGE', 'ELECTRICITY') != 0 or search_year_balance(x, 'HYDRO_DAM', 'ELECTRICITY') != 0:
             ElecLayer_year['DAM_STORAGE'] = Elec_Sto['DAM_STORAGE'].multiply(1000)
 
     ElecLayer_year.to_csv(case_studied + '/ElecLayers_year_'+ case_studied + '_' + x + '.csv')
@@ -192,9 +192,9 @@ def get_HeatSlack():
                 value_LT_DEC = 0
                 value_LT_DHN = 0
                 try:
-                    value_HT = abs(search_YearBalance(Country,y,'HEAT_HIGH_T'))
-                    value_LT_DEC = abs(search_YearBalance(Country,y,'HEAT_LOW_T_DECEN'))
-                    value_LT_DHN = abs(search_YearBalance(Country,y,'HEAT_LOW_T_DHN'))
+                    value_HT = abs(search_year_balance(Country, y, 'HEAT_HIGH_T'))
+                    value_LT_DEC = abs(search_year_balance(Country, y, 'HEAT_LOW_T_DECEN'))
+                    value_LT_DHN = abs(search_year_balance(Country, y, 'HEAT_LOW_T_DHN'))
                 except:
                     print('INFO : ' + y + ' not present in ' + Country)
                 techno = y
@@ -241,9 +241,9 @@ def get_ES_heatprod(x,list_tech):
         value_LT_DEC = 0
         value_LT_DHN = 0
         if t[:2] == 'TS':
-            value_HT = search_YearBalance(x,t, 'HEAT_HIGH_T')
-            value_LT_DEC = search_YearBalance(x,t, 'HEAT_LOW_T_DECEN')
-            value_LT_DHN = search_YearBalance(x,t, 'HEAT_LOW_T_DHN')
+            value_HT = search_year_balance(x, t, 'HEAT_HIGH_T')
+            value_LT_DEC = search_year_balance(x, t, 'HEAT_LOW_T_DECEN')
+            value_LT_DHN = search_year_balance(x, t, 'HEAT_LOW_T_DHN')
             if value_HT < 0:
                 total_HT = total_HT + value_HT
                 Heat_prod.at[t, 'High_Temp'] = value_HT
@@ -254,9 +254,9 @@ def get_ES_heatprod(x,list_tech):
                 total_LT_dhn = total_LT_dhn + value_LT_DHN
                 Heat_prod.at[t, 'Low_Temp_DHN'] = value_LT_DHN
         else:
-            value_HT = abs(search_YearBalance(x,t, 'HEAT_HIGH_T'))
-            value_LT_DEC = abs(search_YearBalance(x,t, 'HEAT_LOW_T_DECEN'))
-            value_LT_DHN = abs(search_YearBalance(x,t, 'HEAT_LOW_T_DHN'))
+            value_HT = abs(search_year_balance(x, t, 'HEAT_HIGH_T'))
+            value_LT_DEC = abs(search_year_balance(x, t, 'HEAT_LOW_T_DECEN'))
+            value_LT_DHN = abs(search_year_balance(x, t, 'HEAT_LOW_T_DHN'))
 
         if value_HT > 0:
             total_HT = total_HT + value_HT
@@ -734,37 +734,37 @@ def get_Sankey_ES(x,includemob,Flow_Treshold):
             df_prod.at[i + '_Pout', 'EnergyScope'] = ES_Output_Power[i + '_Pout'].sum(axis=0) / 1000
     for i in PowColumn:
         if 'COGEN' in i:
-            df_prod.at[i+ '_Elec', 'EnergyScope'] = search_YearBalance(x,i, 'ELECTRICITY')
+            df_prod.at[i+ '_Elec', 'EnergyScope'] = search_year_balance(x, i, 'ELECTRICITY')
         else:
-            df_prod.at[i, 'EnergyScope'] = search_YearBalance(x,i, 'ELECTRICITY')
+            df_prod.at[i, 'EnergyScope'] = search_year_balance(x, i, 'ELECTRICITY')
     for i in HeatColumn:
         if 'IND' in i:
             if 'COGEN' in i:
-                df_prod.at[i + '_Heat', 'EnergyScope'] = search_YearBalance(x,i, 'HEAT_HIGH_T')
+                df_prod.at[i + '_Heat', 'EnergyScope'] = search_year_balance(x, i, 'HEAT_HIGH_T')
             else:
-               df_prod.at[i, 'EnergyScope'] = search_YearBalance(x,i,'HEAT_HIGH_T')
+               df_prod.at[i, 'EnergyScope'] = search_year_balance(x, i, 'HEAT_HIGH_T')
         elif 'DHN' in i:
             if 'COGEN' in i:
-                df_prod.at[i + '_Heat', 'EnergyScope'] = search_YearBalance(x, i, 'HEAT_LOW_T_DHN')
+                df_prod.at[i + '_Heat', 'EnergyScope'] = search_year_balance(x, i, 'HEAT_LOW_T_DHN')
             else:
-                df_prod.at[i, 'EnergyScope'] = search_YearBalance(x,i,'HEAT_LOW_T_DHN')
+                df_prod.at[i, 'EnergyScope'] = search_year_balance(x, i, 'HEAT_LOW_T_DHN')
         else:
             if 'COGEN' in i:
-                df_prod.at[i + '_Heat' , 'EnergyScope'] = search_YearBalance(x, i, 'HEAT_LOW_T_DECEN')
+                df_prod.at[i + '_Heat' , 'EnergyScope'] = search_year_balance(x, i, 'HEAT_LOW_T_DECEN')
             else:
-                df_prod.at[i, 'EnergyScope'] = search_YearBalance(x,i,'HEAT_LOW_T_DECEN')
+                df_prod.at[i, 'EnergyScope'] = search_year_balance(x, i, 'HEAT_LOW_T_DECEN')
     for i in MobColumn:
         if 'PUB' in i or 'TRAMWAY' in i or 'BUS_COACH_HYDIESEL' in i:
-            df_prod.at[i, 'EnergyScope'] = search_YearBalance(x,i, 'MOB_PUBLIC')
+            df_prod.at[i, 'EnergyScope'] = search_year_balance(x, i, 'MOB_PUBLIC')
         elif 'REIGHT' in i or 'TRUCK_NG' in i:
             if 'TRAIN' in i:
-                df_prod.at[i, 'EnergyScope'] = search_YearBalance(x,i, 'MOB_FREIGHT_RAIL')
+                df_prod.at[i, 'EnergyScope'] = search_year_balance(x, i, 'MOB_FREIGHT_RAIL')
             elif 'BOAT' in i:
-                df_prod.at[i, 'EnergyScope'] = search_YearBalance(x,i, 'MOB_FREIGHT_BOAT')
+                df_prod.at[i, 'EnergyScope'] = search_year_balance(x, i, 'MOB_FREIGHT_BOAT')
             else:
-                df_prod.at[i, 'EnergyScope'] = search_YearBalance(x,i, 'MOB_FREIGHT_ROAD')
+                df_prod.at[i, 'EnergyScope'] = search_year_balance(x, i, 'MOB_FREIGHT_ROAD')
         else:
-            df_prod.at[i, 'EnergyScope'] = search_YearBalance(x,i, 'MOB_PRIVATE')
+            df_prod.at[i, 'EnergyScope'] = search_year_balance(x, i, 'MOB_PRIVATE')
 
     #build links
     mysource = []
@@ -1065,7 +1065,7 @@ def get_Sankey_ES(x,includemob,Flow_Treshold):
             elif 'UEL_CELL' in i:
                 ThisSource = 'H2'
                 mysource.append(mylabels.index(ThisSource))
-                ThisValue = abs(search_YearBalance(x,i,'H2'))
+                ThisValue = abs(search_year_balance(x, i, 'H2'))
                 myvalue.append(ThisValue)
             else:
                 if 'CAR_HEV' in i:
@@ -1103,14 +1103,14 @@ def get_Sankey_ES(x,includemob,Flow_Treshold):
         if 'ELECTROLYSIS' in i:
             ThisSource = 'ELECTRICITY'
             mysource.append(mylabels.index(ThisSource))
-            ThisValue = abs(search_YearBalance(x,i, 'ELECTRICITY'))
+            ThisValue = abs(search_year_balance(x, i, 'ELECTRICITY'))
             myvalue.append(ThisValue)
             ThisTarget = 'H2'
             mytarget.append(mylabels.index(ThisTarget))
         elif 'H2_NG' in i:
             ThisSource = 'NG'
             mysource.append(mylabels.index(ThisSource))
-            ThisValue = abs(search_YearBalance(x,i, 'NG'))
+            ThisValue = abs(search_year_balance(x, i, 'NG'))
             myvalue.append(ThisValue)
             ThisTarget = 'H2'
             mytarget.append(mylabels.index(ThisTarget))
@@ -1298,7 +1298,7 @@ def get_results_comparison(x,n_th_version):
     #ES elec used for mobility
     total_elec_mob = 0
     for i in elec_mobi_tech:
-        total_elec_mob = total_elec_mob - search_YearBalance(x,i,'ELECTRICITY')
+        total_elec_mob = total_elec_mob - search_year_balance(x, i, 'ELECTRICITY')
     comp_df.at['Total_Elec_Mobility','EnergyScope'] = total_elec_mob
     comp_df.at['Total_Elec_Mobility','Dispa-SET'] = 0
 
@@ -1311,7 +1311,7 @@ def get_results_comparison(x,n_th_version):
 #        tech = ''.join(c for c in tech if c not in '-(){}<>[], ')
 #        tech = ''.join([i for i in tech if not i.isdigit()])
         if tech[3:] != 'BATT_LI' and i[3:] != 'PHS' and i[3:] in YearBal_DF_index:
-            total_elec_prod_ES = total_elec_prod_ES + search_YearBalance(x,tech[3:], 'ELECTRICITY')
+            total_elec_prod_ES = total_elec_prod_ES + search_year_balance(x, tech[3:], 'ELECTRICITY')
             total_elec_prod_DS = total_elec_prod_DS + int(DS_Output_Power[i].sum(axis=0))/ 1000
     comp_df.at['Total_Elec_Prod', 'EnergyScope'] = total_elec_prod_ES
     comp_df.at['Total_Elec_Prod', 'Dispa-SET'] = total_elec_prod_DS
@@ -1361,13 +1361,13 @@ def get_results_comparison(x,n_th_version):
         ES_tech = ''.join([i for i in ES_tech if not i.isdigit()])
         if 'DHN' in tech:
             total_LT_DHN_Prod_DS = total_LT_DHN_Prod_DS + int(DS_Output_StorageInput[tech].sum(axis=0)) / 1000
-            total_LT_DHN_Prod_ES = total_LT_DHN_Prod_ES + search_YearBalance(x,ES_tech[3:],'HEAT_LOW_T_DHN')
+            total_LT_DHN_Prod_ES = total_LT_DHN_Prod_ES + search_year_balance(x, ES_tech[3:], 'HEAT_LOW_T_DHN')
         elif 'DEC' in tech:
             total_LT_DEC_Prod_DS = total_LT_DEC_Prod_DS + int(DS_Output_StorageInput[tech].sum(axis=0)) / 1000
-            total_LT_DEC_Prod_ES = total_LT_DEC_Prod_ES + search_YearBalance(x,ES_tech[3:],'HEAT_LOW_T_DECEN')
+            total_LT_DEC_Prod_ES = total_LT_DEC_Prod_ES + search_year_balance(x, ES_tech[3:], 'HEAT_LOW_T_DECEN')
         else:
             total_HT_Prod_DS = total_HT_Prod_DS + int(DS_Output_StorageInput[tech].sum(axis=0)) / 1000
-            total_HT_Prod_ES = total_HT_Prod_ES + search_YearBalance(x,ES_tech[3:],'HEAT_HIGH_T')
+            total_HT_Prod_ES = total_HT_Prod_ES + search_year_balance(x, ES_tech[3:], 'HEAT_HIGH_T')
 
     comp_df.at['Total_LT_DHN_Prod','EnergyScope'] = total_LT_DHN_Prod_ES
     comp_df.at['Total_LT_DHN_Prod', 'Dispa-SET'] = total_LT_DHN_Prod_DS
@@ -1418,7 +1418,7 @@ def get_results_comparison(x,n_th_version):
     prod_RES_DS = 0
     AF_tech = ES_Input_AvailFactors.columns
     for i in AF_tech[1:]:
-        prod_RES_ES = search_YearBalance(x,i[3:],'ELECTRICITY')*1000
+        prod_RES_ES = search_year_balance(x, i[3:], 'ELECTRICITY') * 1000
         prod_RES_DS = DS_Output_Power[i].sum(axis=0)
 
         curtail_ES = ES_Input_AvailFactors[i].sum(axis=0)*search_assets(x,i[3:], 'f')*1000 - prod_RES_ES
@@ -1471,7 +1471,7 @@ def get_results_comparison(x,n_th_version):
             comp_df_prod.at['Total Prod Elec ' + i + '_Pout', 'Dispa-SET'] = DS_Output_Power[i].sum(axis=0) / 1000
             comp_df_prod.at['Total Prod Elec ' + i + '_Pout', 'EnergyScope'] = ES_Output_Power[i[3:] + '_Pout'].sum(axis=0) /1000
         else:
-            comp_df_prod.at['Total Prod Elec ' + i, 'EnergyScope'] = search_YearBalance(x,i[3:],'ELECTRICITY')
+            comp_df_prod.at['Total Prod Elec ' + i, 'EnergyScope'] = search_year_balance(x, i[3:], 'ELECTRICITY')
             comp_df_prod.at['Total Prod Elec ' + i, 'Dispa-SET'] = DS_Output_Power[i].sum(axis=0) / 1000
 
     for i in heat_tech_out:
@@ -1481,15 +1481,15 @@ def get_results_comparison(x,n_th_version):
         if i in DS_Output_HeatSlack.columns:
             comp_df_prod.at['HeatSlack ' + Heat_tech_ES, 'Dispa-SET'] = DS_Output_HeatSlack[i].sum(axis=0) / 1000
         if 'IND' in i:
-            comp_df_prod.at['Total Prod Heat ' + Heat_tech_ES, 'EnergyScope'] = search_YearBalance(x,Heat_tech_ES[3:], 'HEAT_HIGH_T')
+            comp_df_prod.at['Total Prod Heat ' + Heat_tech_ES, 'EnergyScope'] = search_year_balance(x, Heat_tech_ES[3:], 'HEAT_HIGH_T')
             if i in DS_Output_HeatSlack.columns:
                 comp_df_prod.at['HeatSlack ' + Heat_tech_ES, 'EnergyScope'] = ' '
         elif 'DHN' in i:
-            comp_df_prod.at['Total Prod Heat ' + Heat_tech_ES, 'EnergyScope'] = search_YearBalance(x,Heat_tech_ES[3:], 'HEAT_LOW_T_DHN')
+            comp_df_prod.at['Total Prod Heat ' + Heat_tech_ES, 'EnergyScope'] = search_year_balance(x, Heat_tech_ES[3:], 'HEAT_LOW_T_DHN')
             if i in DS_Output_HeatSlack.columns:
                 comp_df_prod.at['HeatSlack ' + Heat_tech_ES, 'EnergyScope'] = ' '
         else:
-            comp_df_prod.at['Total Prod Heat ' + Heat_tech_ES, 'EnergyScope'] = search_YearBalance(x,Heat_tech_ES[3:], 'HEAT_LOW_T_DECEN')
+            comp_df_prod.at['Total Prod Heat ' + Heat_tech_ES, 'EnergyScope'] = search_year_balance(x, Heat_tech_ES[3:], 'HEAT_LOW_T_DECEN')
             if i in DS_Output_HeatSlack.columns:
                 comp_df_prod.at['HeatSlack ' + Heat_tech_ES, 'EnergyScope'] = ' '
 

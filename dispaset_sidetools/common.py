@@ -427,7 +427,7 @@ def outliers():
                       u'SE': [],
                       u'SI': [],
                       u'SK': []
-                     }
+                      }
 
     # concatenate the differant ranges:
     for key in regions:
@@ -580,3 +580,29 @@ column_names = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Zone_th', 'Zone_h2',
                 'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor', 'COP', 'Tnominal', 'coef_COP_a', 'coef_COP_b',
                 'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency', 'CHPMaxHeat',
                 'WaterWithdrawal', 'WaterConsumption']
+
+
+def check_leap(year):
+    """
+    Check for leap year
+    :param year:    Year to be checked
+    :return:        True/False
+    """
+    if 400 != 0 and (100 == 0 or 4 != 0):
+        return False
+    else:
+        return True
+
+
+def get_date_range(year):
+    """
+    Return date range for the analysed year
+    :param year:    Year to assign date range
+    :return:        Date range
+    """
+    start = pd.to_datetime('1-1-' + str(year))
+    if check_leap(year):
+        drange = pd.date_range(start, periods=8784, freq='H')
+    else:
+        drange = pd.date_range(start, periods=8760, freq='H')
+    return drange

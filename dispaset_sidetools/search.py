@@ -2,6 +2,7 @@ import pandas as pd
 import glob
 import time
 import logging
+import energyscope as es
 
 # import sys, os
 # sys.path.append(os.path.abspath(r'..'))
@@ -38,16 +39,14 @@ def search_assets(tech, feat, assets, country=None):
     return output
 
 
-########################################################################################################################
-
-#
-#
-# Input :    tech = technology studied
-#           feat = feature needed regarding to the technology studied
-# Output :   Value of the feature asked
-#
-#
-def search_YearBalance(yearbal, tech, feat):
+def search_year_balance(yearbal, tech, feat):
+    """
+    Search year balance for individual technologies of interest
+    :param yearbal:     Energy Scope year balance
+    :param tech:        Technology of interest
+    :param feat:        Feature needed regarding to the technology of interest
+    :return:            Value of the feature asked
+    """
     techno = list(yearbal.index)
     techno2 = [x.strip(' ') for x in techno]
     yearbal.set_index([techno2], inplace=True)
@@ -182,46 +181,6 @@ def search_Dict_list(old_list, type):
         if mapping['TECH'][i] == type:
             mylist.append(i)
     return mylist
-
-
-########################################################################################################################
-#
-#
-# Input:    -numbTD =  the number of typical days in the studied case
-#           - x = country of interest
-# Output: - list of TD's distribution
-#
-def get_TDFile(x, input_folder):
-    # Enter the starting date
-    date_str = '1/1/2015'
-    start = pd.to_datetime(date_str)
-    hourly_periods = 8760
-    drange = pd.date_range(start, periods=hourly_periods, freq='H')
-
-    TD_final = pd.DataFrame(index=range(0, 8760), columns=['#', 'hour', 'TD'])
-
-    # Select lines of ESTD_12TD where TD are described
-    newfile = open("newfile.txt", 'r+')
-    ESTD_TD = input_folder + x + '/' + 'ESTD_' + str(n_TD) + 'TD.dat'
-
-    with open(ESTD_TD) as f:
-        for line in f:
-            if line[0] == '(':
-                newfile.write(line)
-
-    df = pd.read_csv('newfile.txt', delimiter='\t', index_col=0)
-    cols = list(df.columns.values)
-
-    TD_final.at[0, '#'] = int(cols[0])
-    TD_final.at[0, 'hour'] = 1
-    TD_final.at[0, 'TD'] = int(float(cols[4]))
-
-    for index in range(1, 8760):
-        TD_final.at[index, '#'] = int(df.iloc[index - 1, 0])
-        TD_final.at[index, 'hour'] = int(df.iloc[index - 1, 2])
-        TD_final.at[index, 'TD'] = int(df.iloc[index - 1, 4])
-
-    TD_final.to_csv(input_folder + x + '/' + 'TD_file.csv')
 
 
 ########################################################################################################################
@@ -490,6 +449,11 @@ def from_excel_to_dataFrame(filename, tab):
 
 
 def process_TD(td_final):
+    """
+    Process typical days of the year into hourly format, i.e. assign xxx values to 8760 hours of the year
+    :param td_final:    typical day dataframe, each typical day assigned to one day of the year
+    :return:            hourly dataframe with typical days assigned to each hour of the year
+    """
 
     td_unique = td_final[0].unique()
     td_unique_sorted = pd.DataFrame({'TD_day': np.sort(td_unique), 'TD': range(1, len(np.sort(td_unique).tolist()) + 1, 1)})
@@ -505,7 +469,63 @@ def process_TD(td_final):
     return td_hourly
 
 
+# compute outage factors for technologies using local resources (WOOD, WET_BIOMASS, WASTE)
+def compute_outage_factor(config_es, assets, layer_name: str):
+    """Computes the Outage Factor in a layer for each TD
+    :param config_es:   EnergyScope config
+    :param assets:      EnergyScope assets
+    :param layer_name:  Name of the layer to compute outages
+    :return :           Outage factors for the layer
+    """
+
+    layer = es.read_layer(config_es['case_study'], 'layer_' + layer_name).dropna(axis=1)
+    layer = layer.loc[:, layer.min(axis=0) < -0.01]
+    layer = layer / config_es['all_data']['Layers_in_out'].loc[layer.columns, layer_name]  # compute GWh of output layer
+    layer = 1 - layer / assets.loc[layer.columns, 'f']
+    return layer.loc[:, layer.max(axis=0) > 1e-3]
+
+
+def clean_blanks(df, cols=True, idx=True):
+    """
+    Clean blak spaces in columns and indexes
+    :param df:      dataframe to be cleaned
+    :param cols:    bool cols True/False
+    :param idx:     bool index True/False
+    :return:        cleaned dataframe
+    """
+    if cols:
+        df.rename(columns=lambda x: x.strip(), inplace=True)
+    if idx:
+        df.rename(index=lambda x: x.strip(), inplace=True)
+    return df
+
+
+def assign_td(df, td_df):
+    """
+    Assign typical days to a dataframe and process to hourly timeseries
+    :param df:      dataframe to be processed
+    :param td_df:   typical day dataframe
+    :return:        new dataframe
+    """
+    assigned_df = td_df.loc[:, ['TD', 'hour']]
+    assigned_df = assigned_df.merge(df, left_on=['TD', 'hour'], right_index=True).sort_index()
+    assigned_df.drop(columns=['TD', 'hour'], inplace=True)
+    return assigned_df
+
+
 def write_csv_files(file_name, demand, var_name, index=True, write_csv=None, country=None, inflows=None, heating=False):
+    """
+    Write csv files in appropriate dispaset format
+    :param file_name:   name of the csv file
+    :param demand:      timeseries to be saved as csv file
+    :param var_name:    name of the variable, can be same as file_name
+    :param index:       index bool True/False
+    :param write_csv:   write csv file trigger on/off
+    :param country:     country demand is located in, one csv file per country/zone
+    :param inflows:     special case for inflows
+    :param heating:     special case for heating
+    :return:
+    """
     filename = file_name + '.csv'
     if write_csv:
         make_dir(output_folder)
