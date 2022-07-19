@@ -1,11 +1,6 @@
-import pandas as pd
 import glob
-import time
 import logging
 import energyscope as es
-
-# import sys, os
-# sys.path.append(os.path.abspath(r'..'))
 
 from .common import *
 from .constants import *
@@ -294,7 +289,8 @@ def sto_dhn(tech_names, TYPE, numTD, assets, layer_t, td_hourly, country=None): 
 
     # 4) groupby, TD, sum
     #       - Add the TD column from the original
-    lt_layers_df['Td'] = lt_layers_df_ori.iloc[:, 0].copy()  # Copy the first column which contains the Td
+    # lt_layers_df['Td'] = lt_layers_df_ori.iloc[:, 0].copy()  # Copy the first column which contains the Td
+    lt_layers_df['Td'] = lt_layers_df.index.get_level_values(0).values
     #       - Drop the SUM column
     lt_layers_df.drop('SUM', axis=1, inplace=True)
     #       - GroupBy

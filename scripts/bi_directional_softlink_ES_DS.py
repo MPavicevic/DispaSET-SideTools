@@ -97,20 +97,42 @@ for i in range(max_loops):
 
     # %% Reading the ES outputs
     es_outputs = es.read_outputs(config_es['case_study'], True, [])
+    es_outputs['GWP_op'] = GWP_op[i]
     es_outputs['timeseries'] = pd.read_csv(config_es['data_folder'] / 'Time_series.csv', header=0, sep=separator)
     es_outputs['demands'] = pd.read_csv(config_es['data_folder'] / 'Demand.csv', sep=separator)
+    es_outputs['layers_in_out'] = pd.read_csv(config_es['data_folder'] / 'Layers_in_out.csv', sep=separator,
+                                              index_col='param layers_in_out:')
+    es_outputs['storage_characteristics'] = pd.read_csv(config_es['data_folder'] / 'Storage_characteristics.csv',
+                                                        sep=separator, index_col='param :')
+    es_outputs['storage_eff_in'] = pd.read_csv(config_es['data_folder'] / 'Storage_eff_in.csv',
+                                               sep=separator, index_col='param storage_eff_in :')
+    es_outputs['storage_eff_out'] = pd.read_csv(config_es['data_folder'] / 'Storage_eff_out.csv',
+                                                sep=separator, index_col='param storage_eff_out:')
+    es_outputs['high_t_Layers'] = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' /
+                                              'hourly_data' / 'layer_HEAT_HIGH_T.txt', delimiter='\t', index_col=[0, 1])
+    es_outputs['low_t_decen_Layers'] = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' /
+                                                   'hourly_data' / 'layer_HEAT_LOW_T_DECEN.txt', delimiter='\t',
+                                                   index_col=[0, 1])
+    es_outputs['low_t_dhn_Layers'] = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' /
+                                                 'hourly_data' / 'layer_HEAT_LOW_T_DHN.txt', delimiter='\t',
+                                                 index_col=[0, 1])
 
     # TODO update with new possibility of changing output folder
     # Clean ES outputs i.e. remove blank spaces
     es_outputs['assets'] = dst.clean_blanks(es_outputs['assets'])
     es_outputs['year_balance'] = dst.clean_blanks(es_outputs['year_balance'])
+    es_outputs['layers_in_out'] = dst.clean_blanks(es_outputs['layers_in_out'])
+    es_outputs['storage_characteristics'] = dst.clean_blanks(es_outputs['storage_characteristics'])
+    es_outputs['storage_eff_in'] = dst.clean_blanks(es_outputs['storage_eff_in'])
+    es_outputs['storage_eff_out'] = dst.clean_blanks(es_outputs['storage_eff_out'])
 
     # transforming TD time series into yearly time series
     td_df = dst.process_TD(td_final=pd.read_csv(config_es['step1_output'], header=None))
 
     # %% Get capacities from ES, map them to DS with external typical unit database
-    ds_inputs['Capacities'][i] = dst.get_capacities_from_es(config_es, typical_units_folder=typical_units_folder,
-                                               TECHNOLOGY_THRESHOLD=0.1)  # TODO: remove really small technologies
+    typical_units = pd.read_csv(config_link['TypicalUnits'] / 'Typical_Units.csv')
+    ds_inputs['Capacities'][i] = dst.get_capacities_from_es(es_outputs, typical_units=typical_units, td_df=td_df,
+                                                            technology_threshold=0.1)  # TODO: remove really small technologies
 
     # %% compute fuel prices according to the use of RE vs NON-RE fuels
     resources = config_es['all_data']['Resources']
@@ -140,14 +162,6 @@ for i in range(max_loops):
                                                            local_res=['WASTE', 'WOOD', 'WET_BIOMASS'], td_df=td_df)
 
     # %% Compute heat demand for different heating layers
-    es_outputs['high_t_Layers'] = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' /
-                                              'hourly_data' / 'layer_HEAT_HIGH_T.txt', delimiter='\t', index_col=[0, 1])
-    es_outputs['low_t_decen_Layers'] = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' /
-                                                   'hourly_data' / 'layer_HEAT_LOW_T_DECEN.txt', delimiter='\t',
-                                                   index_col=[0, 1])
-    es_outputs['low_t_dhn_Layers'] = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' /
-                                                 'hourly_data' / 'layer_HEAT_LOW_T_DHN.txt', delimiter='\t',
-                                                 index_col=[0, 1])
     ds_inputs['HeatDemand'][i] = dst.get_heat_demand(es_outputs, td_df, config_link['DateRange'],
                                                      countries=['ES'], file_name='2015_ES_th')
 
@@ -191,7 +205,7 @@ for i in range(max_loops):
     # %% Run ES with reserves (2nd+ run)
     config_es['case_study'] = case_study + '_loop_' + str(i + 1)
     config_es['import_reserves'] = 'from_df'
-    #TODO: check if leap year can be introduced
+    # TODO: check if leap year can be introduced
     reserves[i] = pd.DataFrame(inputs[i]['param_df']['Demand'].loc[:, '2U'].values / 1000, columns=['end_uses_reserve'],
                                index=np.arange(1, 8761, 1))
     # Check if it is necessary to apply additional reserve requirements
