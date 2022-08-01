@@ -36,8 +36,8 @@ step1_output = ES_folder / 'energyscope' / 'STEP_1_TD_selection' / 'TD_of_days.o
 ########################################
 separator = ';'
 scenario = 37000
-case_study = str(scenario) + '_ElecImport=0_WIND_ONSHORE_and_PHS_fmax=1e15_v2'
-initialize_ES = False
+case_study = str(scenario) + '_ELEImp=0_WIND_ONSHORE=Inf_H2STORAGE=6-2h_v2'
+initialize_ES = True
 
 # EnergyScope inputs
 config_es = {'case_study': case_study + '_loop_0', 'comment': 'Test with low emissions', 'run_ES': False,
@@ -55,15 +55,24 @@ config_es['all_data'] = es.run_ES(config_es)
 # No electricity imports
 config_es['all_data']['Resources'].loc['ELECTRICITY', 'avail'] = 0
 config_es['all_data']['Resources'].loc['ELEC_EXPORT', 'avail'] = 0
+# Limited ammonia imports
+config_es['all_data']['Resources'].loc['AMMONIA', 'avail'] = 0
 # No CCGT_AMMONIA
 config_es['all_data']['Technologies'].loc['CCGT_AMMONIA', 'f_max'] = 0
+# config_es['all_data']['Technologies'].loc['CCGT', 'f_max'] = 10
 # Allow infinite PV
 # config_es['all_data']['Technologies'].loc['CCGT', 'f_max'] = 15
 config_es['user_defined']['solar_area'] = 1e15
 # Allow infinite WIND_ONSHORE
 config_es['all_data']['Technologies'].loc['WIND_ONSHORE', 'f_max'] = 1e15
 # Allow infinite PHS
-config_es['all_data']['Technologies'].loc['PHS', 'f_max'] = 1e15
+# config_es['all_data']['Technologies'].loc['PHS', 'f_max'] = 1e15
+# Change storage parameters
+config_es['all_data']['Storage_characteristics'].loc['H2_STORAGE', 'storage_charge_time'] = 6
+config_es['all_data']['Storage_characteristics'].loc['H2_STORAGE', 'storage_discharge_time'] = 2
+config_es['all_data']['Technologies'].loc['H2_STORAGE', 'c_inv'] = 3.66
+# Change prices
+config_es['all_data']['Resources'].loc['GAS', 'c_op'] = 0.15
 
 # Printing and running
 config_es['importing'] = False
@@ -81,11 +90,13 @@ LL, Curtailment = pd.DataFrame(), pd.DataFrame()
 iteration = {}
 
 # Assign soft-linking iteration parameters
-max_loops = 1
+max_loops = 4
 
 # %% ###################################
 ######## Soft-linking procedure ########
 ########################################
+# for i in [2]:
+#     config_es['case_study'] = case_study + '_loop_' + str(i)
 for i in range(max_loops):
     print('loop number', i)
 
@@ -125,6 +136,9 @@ for i in range(max_loops):
     es_outputs['storage_characteristics'] = dst.clean_blanks(es_outputs['storage_characteristics'])
     es_outputs['storage_eff_in'] = dst.clean_blanks(es_outputs['storage_eff_in'])
     es_outputs['storage_eff_out'] = dst.clean_blanks(es_outputs['storage_eff_out'])
+    es_outputs['high_t_Layers'] = dst.clean_blanks(es_outputs['high_t_Layers'], idx=False)
+    es_outputs['low_t_decen_Layers'] = dst.clean_blanks(es_outputs['low_t_decen_Layers'], idx=False)
+    es_outputs['low_t_dhn_Layers'] = dst.clean_blanks(es_outputs['low_t_dhn_Layers'], idx=False)
 
     # transforming TD time series into yearly time series
     td_df = dst.process_TD(td_final=pd.read_csv(config_es['step1_output'], header=None))
@@ -182,8 +196,10 @@ for i in range(max_loops):
     config['default']['PriceOfCO2'] = abs(es_outputs['CO2_cost'].loc['CO2_cost', 'CO2_cost'] * 1000)
     for j in dst.mapping['FUEL_COST']:
         config['default'][dst.mapping['FUEL_COST'][j]] = ds_inputs['Costs'][i].loc[j] * 1000
-    config['H2RigidDemand'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'H2_demand' / 'ES' /
-                                  'H2_demand.csv')
+    config['H2FlexibleDemand'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'H2_demand' / 'ES' /
+                                     'H2_demand.csv')
+    config['H2FlexibleCapacity'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'H2_demand' / 'ES' /
+                                       'PtLCapacities.csv')
 
     # Build the simulation environment:
     SimData = ds.build_simulation(config)
@@ -206,7 +222,7 @@ for i in range(max_loops):
     config_es['case_study'] = case_study + '_loop_' + str(i + 1)
     config_es['import_reserves'] = 'from_df'
     # TODO: check if leap year can be introduced
-    reserves[i] = pd.DataFrame(inputs[i]['param_df']['Demand'].loc[:, '2U'].values / 1000, columns=['end_uses_reserve'],
+    reserves[i] = pd.DataFrame(results[i]['OutputDemand_3U'].values / 1000, columns=['end_uses_reserve'],
                                index=np.arange(1, 8761, 1))
     # Check if it is necessary to apply additional reserve requirements
     if i >= 1:
@@ -222,7 +238,7 @@ for i in range(max_loops):
     LL = pd.concat([LL, results[i]['OutputShedLoad']], axis=1)
     Curtailment = pd.concat([Curtailment, results[i]['OutputCurtailedPower']], axis=1)
 
-    if (results[i]['OutputOptimizationError'].abs() > results[i]['OutputOptimalityGap']).any():
+    if (results[i]['OutputOptimizationCheck'].abs() > 0).any():
         print('Another iteration required')
     else:
         print('Final convergence occurred in loop: ' + str(i) + '. Soft-linking is now complete')
@@ -237,6 +253,14 @@ for i in range(max_loops):
 with open(case_study + '.p', 'wb') as handle:
     pickle.dump(inputs, handle, protocol=pickle.HIGHEST_PROTOCOL)
     pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+aa=pd.DataFrame()
+for i in range(max_loops):
+    for j in ['COMC', 'GTUR']:
+        tmp = inputs[i]['units'].loc[(inputs[i]['units']['Technology']==j) & (inputs[i]['units']['Fuel']=='GAS')]
+        aa.loc[i, [j+'_GAS']] = (tmp['PowerCapacity'] * tmp['Nunits']).values[0]
+
+aa['Total'] = aa.sum(axis=1)
 
 # with open(case_study + '.p', 'rb') as handle:
 #     inputs = pickle.load(handle)
@@ -286,12 +310,12 @@ with open(case_study + '.p', 'wb') as handle:
 # # Generation_pivot = pd.pivot_table(df, values='S', index=['P', 'Q'], columns=['R'], aggfunc=np.sum)
 #
 #
-# # Plots
-# import pandas as pd
-#
-# rng = pd.date_range('2015-1-1', '2015-12-31', freq='H')
-# # Generate country-specific plots
-# ds.plot_zone(inputs[1], results[1], rng=rng, z_th='ES_DHN')
+# Plots
+import pandas as pd
+
+rng = pd.date_range('2015-1-1', '2015-12-31', freq='H')
+# Generate country-specific plots
+ds.plot_zone(inputs[1], results[1], rng=rng, z_th='ES_DEC')
 #
 # # Bar plot with the installed capacities in all countries:
 # cap = ds.plot_zone_capacities(inputs[2], results[2])

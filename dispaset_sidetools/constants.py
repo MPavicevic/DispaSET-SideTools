@@ -317,6 +317,7 @@ mapping['RESOURCE'] = {u'BIODIESEL': u'BIODIESEL',
 # DICO used to get efficiency of tech in layers_in_out
 mapping['FUEL_ES'] = {u'CCGT': u'GAS',
                       u'CCGT_AMMONIA': u'AMMONIA',
+                      u'OCGT': u'GAS',
                       u'COAL_IGCC': u'COAL',
                       u'COAL_US': u'COAL',
                       u'PV': u'RES_SOLAR',

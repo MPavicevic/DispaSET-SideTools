@@ -89,9 +89,13 @@ def get_heat_demand(es_outputs, td_df, drange, countries=None, write_csv=True, f
         decen_heat_es_input = assign_td(es_outputs['low_t_decen_Layers'], td_df) * 1000  # GW to MW
 
         # %% sum all technologies of same layer
-        ind_heat_es = ind_heat_es_input[ind_heat_tech].sum(axis=1)
-        dhn_heat_es = dhn_heat_es_input[dhn_heat_tech].sum(axis=1)
-        decen_heat_es = decen_heat_es_input[decen_heat_tech].sum(axis=1)
+        # ind_heat_es = ind_heat_es_input[ind_heat_tech].sum(axis=1)
+        # dhn_heat_es = dhn_heat_es_input[dhn_heat_tech].sum(axis=1)
+        # decen_heat_es = decen_heat_es_input[decen_heat_tech].sum(axis=1)
+
+        ind_heat_es = -ind_heat_es_input.loc[:, 'END_USE']
+        dhn_heat_es = -dhn_heat_es_input.loc[:, 'END_USE']
+        decen_heat_es = -decen_heat_es_input.loc[:, 'END_USE']
 
         # %% create a dataframe
         heat_es_input = pd.DataFrame()
@@ -122,8 +126,10 @@ def get_h2_demand(h2_layer, td_df, drange, write_csv=True, file_name='H2_demand'
     h2_td = pd.DataFrame(-h2_layer[h2_layer < 0].sum(axis=1), columns=['ES_H2'])
     h2_ts = assign_td(h2_td, td_df) * 1000  # Convert to MW
     h2_ts.set_index(drange, inplace=True)
+    h2_max_demand = pd.DataFrame(h2_ts.max(), columns=['Capacity'])
     if write_csv:
         write_csv_files(file_name, h2_ts, 'H2_demand', index=True, write_csv=True)
+        write_csv_files('PtLCapacities', h2_max_demand, 'H2_demand', index=True, write_csv=True)
     return h2_ts
 
 

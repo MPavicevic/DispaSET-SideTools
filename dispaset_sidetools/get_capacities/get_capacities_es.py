@@ -87,6 +87,11 @@ def get_capacities_from_es(es_outputs, typical_units, td_df, zone=None, write_cs
 
     # Keep the original data just in case
     original_units = power_plants.copy()
+    # Assign more technologies to gas units based on occurance in real life
+    comc, gt = 4279.6, 1550.7
+    power_plants.loc['OCGT', ['PowerCapacity', 'Technology', 'Fuel', 'Sort']] = \
+        [power_plants.loc['CCGT', 'PowerCapacity']*gt/(comc+gt), 'GTUR', 'GAS', 'ELEC']
+    power_plants.loc['CCGT', 'PowerCapacity'] = power_plants.loc['CCGT', 'PowerCapacity']*comc/(gt+comc)
     power_plants.drop(index_to_drop, inplace=True)
 
     # Getting all CHP/P2HT/ELEC/STO TECH present in the ES implementation
@@ -113,9 +118,13 @@ def get_capacities_from_es(es_outputs, typical_units, td_df, zone=None, write_cs
     for tech in electricity_tech:
         tech_resource = mapping['FUEL_ES'][tech]  # gets the correct column electricity to look up per CHP tech
         try:
+            if tech == 'OCGT':
+                efficiency = typical_units.loc[(typical_units['Technology'] == 'GTUR') &
+                                               (typical_units['Fuel'] == 'GAS'), 'Efficiency'].values[0]
             # If the TECH is ELEC , Efficiency is simply abs(ELECTRICITY/RESSOURCES)
-            efficiency = abs(es_outputs['layers_in_out'].at[tech, 'ELECTRICITY'] /
-                             es_outputs['layers_in_out'].at[tech, tech_resource])
+            else:
+                efficiency = abs(es_outputs['layers_in_out'].at[tech, 'ELECTRICITY'] /
+                                 es_outputs['layers_in_out'].at[tech, tech_resource])
             power_plants.loc[power_plants.index == tech, 'Efficiency'] = efficiency
         except:
             logging.warning(' Technology ' + tech + 'has not been found in layers_in_out')
