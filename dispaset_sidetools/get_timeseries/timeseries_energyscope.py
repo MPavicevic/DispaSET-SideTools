@@ -14,6 +14,8 @@ Output : Database/Heat_demand/##/... .csv
 """
 from __future__ import division
 
+import pandas as pd
+
 from ..search import *
 from ..common import *
 from ..constants import *
@@ -71,7 +73,8 @@ def get_electricity_demand(es_outputs, td_df, drange, countries=['ES'], write_cs
     return electricity
 
 
-def get_heat_demand(es_outputs, td_df, drange, countries=None, write_csv=True, file_name='HeatDemand'):
+def get_heat_demand(es_outputs, td_df, drange, countries=None, write_csv=True, file_name='HeatDemand',
+                    dispaset_version='2.5'):
     """
     Mapping function for heat demands
     :param es_outputs:  Energyscope outputs
@@ -111,7 +114,7 @@ def get_heat_demand(es_outputs, td_df, drange, countries=None, write_csv=True, f
     return heat_es_input
 
 
-def get_h2_demand(h2_layer, td_df, drange, write_csv=True, file_name='H2_demand'):
+def get_h2_demand(h2_layer, td_df, drange, write_csv=True, file_name='H2_demand', dispaset_version='2.5'):
     """
     Get h2 demand from ES and convert it into DS demand timeseries
     :param h2_layer:    H2 inputs layer
@@ -120,16 +123,19 @@ def get_h2_demand(h2_layer, td_df, drange, write_csv=True, file_name='H2_demand'
     :return:            h2 demand timeseries
     """
     h2_layer = clean_blanks(h2_layer, idx=False)
-    h2_layer.drop(columns=['H2_STORAGE_Pin', 'H2_STORAGE_Pout'], inplace=True)
+    if any(item in ['H2_STORAGE_Pin', 'H2_STORAGE_Pout'] for item in h2_layer.columns):
+        h2_layer.drop(columns=['H2_STORAGE_Pin', 'H2_STORAGE_Pout'], inplace=True)
     # computing consumption of H2
     # TODO automatise name zone assignment
     h2_td = pd.DataFrame(-h2_layer[h2_layer < 0].sum(axis=1), columns=['ES_H2'])
     h2_ts = assign_td(h2_td, td_df) * 1000  # Convert to MW
     h2_ts.set_index(drange, inplace=True)
-    h2_max_demand = pd.DataFrame(h2_ts.max(), columns=['Capacity'])
+    if dispaset_version == '2.5':
+        h2_max_demand = pd.DataFrame(h2_ts.max(), columns=['Capacity'])
     if write_csv:
         write_csv_files(file_name, h2_ts, 'H2_demand', index=True, write_csv=True)
-        write_csv_files('PtLCapacities', h2_max_demand, 'H2_demand', index=True, write_csv=True)
+        if dispaset_version == '2.5':
+            write_csv_files('PtLCapacities', h2_max_demand, 'H2_demand', index=True, write_csv=True)
     return h2_ts
 
 

@@ -31,12 +31,14 @@ data_folder = ES_folder / 'Data' / str(target_year)
 ES_path = ES_folder / 'energyscope' / 'STEP_2_Energy_Model'
 step1_output = ES_folder / 'energyscope' / 'STEP_1_TD_selection' / 'TD_of_days.out'
 
+dispaset_version = '2.5'  # 2.5 or 2.5_BS
+
 # %% ###################################
 ########### Editable inputs ############
 ########################################
 separator = ';'
 scenario = 37000
-case_study = str(scenario) + '_ELEImp=0_WIND_ONSHORE=Inf_H2STORAGE=6-2h_v2'
+case_study = str(scenario) + '_ELEImp=0_WIND_ONOFFSHORE=70_LOCALAMONIA_NUC=4_CURT=0'
 initialize_ES = True
 
 # EnergyScope inputs
@@ -57,14 +59,18 @@ config_es['all_data']['Resources'].loc['ELECTRICITY', 'avail'] = 0
 config_es['all_data']['Resources'].loc['ELEC_EXPORT', 'avail'] = 0
 # Limited ammonia imports
 config_es['all_data']['Resources'].loc['AMMONIA', 'avail'] = 0
+config_es['all_data']['Resources'].loc['AMMONIA_RE', 'avail'] = 0
 # No CCGT_AMMONIA
-config_es['all_data']['Technologies'].loc['CCGT_AMMONIA', 'f_max'] = 0
+config_es['all_data']['Technologies'].loc['CCGT_AMMONIA', 'f_max'] = 1e15
+config_es['all_data']['Technologies'].loc['NUCLEAR', 'f_max'] = 4
 # config_es['all_data']['Technologies'].loc['CCGT', 'f_max'] = 10
 # Allow infinite PV
-# config_es['all_data']['Technologies'].loc['CCGT', 'f_max'] = 15
+config_es['all_data']['Technologies'].loc['PV', 'f_max'] = 1e15
 config_es['user_defined']['solar_area'] = 1e15
+config_es['user_defined']['curt_perc_cap'] = 0
 # Allow infinite WIND_ONSHORE
-config_es['all_data']['Technologies'].loc['WIND_ONSHORE', 'f_max'] = 1e15
+config_es['all_data']['Technologies'].loc['WIND_ONSHORE', 'f_max'] = 70
+config_es['all_data']['Technologies'].loc['WIND_OFFSHORE', 'f_max'] = 70
 # Allow infinite PHS
 # config_es['all_data']['Technologies'].loc['PHS', 'f_max'] = 1e15
 # Change storage parameters
@@ -72,7 +78,7 @@ config_es['all_data']['Storage_characteristics'].loc['H2_STORAGE', 'storage_char
 config_es['all_data']['Storage_characteristics'].loc['H2_STORAGE', 'storage_discharge_time'] = 2
 config_es['all_data']['Technologies'].loc['H2_STORAGE', 'c_inv'] = 3.66
 # Change prices
-config_es['all_data']['Resources'].loc['GAS', 'c_op'] = 0.15
+config_es['all_data']['Resources'].loc['GAS', 'c_op'] = 0.2
 
 # Printing and running
 config_es['importing'] = False
@@ -85,6 +91,7 @@ if initialize_ES:
 # %% Assign empty variables (to be populated inside the loop)
 ds_inputs = {'Capacities': dict(), 'Costs': dict(), 'ElectricityDemand': dict(), 'HeatDemand': dict(),
              'H2Demand': dict(), 'OutageFactors': dict(), 'ReservoirLevels': dict(), 'AvailabilityFactors': dict()}
+inputs_mts, results_mts = dict(), dict()
 inputs, results, GWP_op, reserves, shed_load, Price_CO2 = dict(), dict(), dict(), dict(), dict(), dict()
 LL, Curtailment = pd.DataFrame(), pd.DataFrame()
 iteration = {}
@@ -143,11 +150,6 @@ for i in range(max_loops):
     # transforming TD time series into yearly time series
     td_df = dst.process_TD(td_final=pd.read_csv(config_es['step1_output'], header=None))
 
-    # %% Get capacities from ES, map them to DS with external typical unit database
-    typical_units = pd.read_csv(config_link['TypicalUnits'] / 'Typical_Units.csv')
-    ds_inputs['Capacities'][i] = dst.get_capacities_from_es(es_outputs, typical_units=typical_units, td_df=td_df,
-                                                            technology_threshold=0.1)  # TODO: remove really small technologies
-
     # %% compute fuel prices according to the use of RE vs NON-RE fuels
     resources = config_es['all_data']['Resources']
     df = es_outputs['year_balance'].loc[resources.index, es_outputs['year_balance'].columns.isin(list(resources.index))]
@@ -169,7 +171,14 @@ for i in range(max_loops):
     # %% compute H2 yearly consumption and power capacity of electrolyser
     es_outputs['h2_layer'] = pd.read_csv(ES_folder / 'case_studies' / config_es['case_study'] / 'output' /
                                          'hourly_data' / 'layer_H2.txt', delimiter='\t', index_col=[0, 1])
-    ds_inputs['H2Demand'][i] = dst.get_h2_demand(es_outputs['h2_layer'], td_df, config_link['DateRange'])
+    ds_inputs['H2Demand'][i] = dst.get_h2_demand(es_outputs['h2_layer'], td_df, config_link['DateRange'],
+                                                 dispaset_version=dispaset_version)
+
+    # %% Get capacities from ES, map them to DS with external typical unit database
+    typical_units = pd.read_csv(config_link['TypicalUnits'] / 'Typical_Units.csv')
+    ds_inputs['Capacities'][i] = dst.get_capacities_from_es(es_outputs, typical_units=typical_units, td_df=td_df,
+                                                            technology_threshold=0.1, dispaset_version=dispaset_version,
+                                                            config_link=config_link)  # TODO: remove really small technologies
 
     # %% Assign outage factors for technologies that generate more than available
     ds_inputs['OutageFactors'][i] = dst.get_outage_factors(config_es, es_outputs, drange=config_link['DateRange'],
@@ -177,7 +186,8 @@ for i in range(max_loops):
 
     # %% Compute heat demand for different heating layers
     ds_inputs['HeatDemand'][i] = dst.get_heat_demand(es_outputs, td_df, config_link['DateRange'],
-                                                     countries=['ES'], file_name='2015_ES_th')
+                                                     countries=['ES'], file_name='2015_ES_th',
+                                                     dispaset_version=dispaset_version)
 
     # %% Assign storage levels
     ds_inputs['ReservoirLevels'][i] = dst.get_soc(es_outputs, config_es, config_link['DateRange'])
@@ -185,21 +195,42 @@ for i in range(max_loops):
     # %% ###################################
     ########## Execute Dispa-SET ##########
     #######################################
-    # Load the configuration file
-    config = ds.load_config('../ConfigFiles/Config_EnergyScope.xlsx')
+    # Load the appropriate configuration file (2.5 or boundary sector version)
+    if dispaset_version == '2.5':
+        config = ds.load_config('../ConfigFiles/Config_EnergyScope.xlsx')
+    if dispaset_version == '2.5_BS':
+        config = ds.load_config('../ConfigFiles/Config_EnergyScope_BS.xlsx')
     # Assign new input csv files if needed
-    config['Outages'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'OutageFactor' / '##' /
-                            'OutageFactor.csv')
     config['ReservoirLevels'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'ReservoirLevels' / '##' /
                                     'ReservoirLevels.csv')
-    config['SimulationDirectory'] = str(DST_folder / 'Simulations' / case_study)
+
+    config['SimulationDirectory'] = str(DST_folder / 'Simulations' / str(case_study + '_loop_' + str(i)))
     config['default']['PriceOfCO2'] = abs(es_outputs['CO2_cost'].loc['CO2_cost', 'CO2_cost'] * 1000)
+    config['default']['CostCurtailment'] = abs(es_outputs['Curtailment_cost'].loc['Curtailment_cost',
+                                                                                  'Curtailment_cost'] * 1000)
     for j in dst.mapping['FUEL_COST']:
         config['default'][dst.mapping['FUEL_COST'][j]] = ds_inputs['Costs'][i].loc[j] * 1000
-    config['H2FlexibleDemand'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'H2_demand' / 'ES' /
-                                     'H2_demand.csv')
-    config['H2FlexibleCapacity'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'H2_demand' / 'ES' /
-                                       'PtLCapacities.csv')
+
+    #%% Dispa-SET version 2.5
+    if dispaset_version == '2.5':
+        config['H2FlexibleDemand'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'H2_demand' / 'ES' /
+                                         'H2_demand.csv')
+        config['H2FlexibleCapacity'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'H2_demand' / 'ES' /
+                                           'PtLCapacities.csv')
+        config['Outages'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'OutageFactor' / '##' /
+                                'OutageFactor.csv')
+
+    #%% Dispa-SET version boundary sector
+    if dispaset_version == '2.5_BS':
+        # config['BoundarySectorDemand'] = 137
+        config['BoundarySectorData'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'H2_demand' / 'ES' /
+                                           'PtLCapacities.csv')
+        # config['BoundarySectorNTC'] = 139
+        # config['BoundarySectorInterconnections'] = 140
+        config['BSFlexibleDemand'] = str(DST_folder / 'Outputs' / 'EnergyScope' / 'Database' / 'H2_demand' / 'ES' /
+                                         'H2_demand.csv')
+        # config['BSFlexibleSupply'] = 142
+        # config['CostBoundarySectorSlack'] = 170
 
     # Build the simulation environment:
     SimData = ds.build_simulation(config)
@@ -208,7 +239,9 @@ for i in range(max_loops):
     _ = ds.solve_GAMS(config['SimulationDirectory'], config['GAMS_folder'])
 
     # Load the simulation results:
-    inputs[i], results[i] = ds.get_sim_results(config['SimulationDirectory'], cache=False)
+    inputs_mts[i], results_mts[i] = ds.get_sim_results(config, cache=False, inputs_file='Inputs_MTS.p',
+                                                       results_file='Results_MTS.gdx')
+    inputs[i], results[i] = ds.get_sim_results(config, cache=False)
 
     # %% Save DS results to pickle file
     ES_output = ES_folder / 'case_studies' / config_es['case_study'] / 'output'
@@ -235,6 +268,9 @@ for i in range(max_loops):
     else:
         config_es['reserves'] = reserves[i]
 
+    with open('ES_reserve_' + case_study + '_loop_' + str(i) + '.p', 'wb') as handle:
+        pickle.dump(config_es['reserves'], handle, protocol=pickle.HIGHEST_PROTOCOL)
+
     LL = pd.concat([LL, results[i]['OutputShedLoad']], axis=1)
     Curtailment = pd.concat([Curtailment, results[i]['OutputCurtailedPower']], axis=1)
 
@@ -253,6 +289,8 @@ for i in range(max_loops):
 with open(case_study + '.p', 'wb') as handle:
     pickle.dump(inputs, handle, protocol=pickle.HIGHEST_PROTOCOL)
     pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump(inputs_mts, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump(results_mts, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 aa=pd.DataFrame()
 for i in range(max_loops):
@@ -265,6 +303,8 @@ aa['Total'] = aa.sum(axis=1)
 # with open(case_study + '.p', 'rb') as handle:
 #     inputs = pickle.load(handle)
 #     results = pickle.load(handle)
+#     inputs_mts = pickle.load(handle)
+#     results_mts = pickle.load(handle)
 
 # ENS_max = pd.DataFrame()
 # LL = pd.DataFrame()
@@ -315,7 +355,7 @@ import pandas as pd
 
 rng = pd.date_range('2015-1-1', '2015-12-31', freq='H')
 # Generate country-specific plots
-ds.plot_zone(inputs[1], results[1], rng=rng, z_th='ES_DEC')
+ds.plot_zone(inputs[3], results[3], rng=rng, z_th='ES_DHN')
 #
 # # Bar plot with the installed capacities in all countries:
 # cap = ds.plot_zone_capacities(inputs[2], results[2])

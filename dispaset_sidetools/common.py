@@ -581,6 +581,13 @@ column_names = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Zone_th', 'Zone_h2',
                 'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency', 'CHPMaxHeat',
                 'WaterWithdrawal', 'WaterConsumption']
 
+column_names_bs = ['Unit', 'PowerCapacity', 'Nunits', 'Zone', 'Zone_th', 'Zone_h2', 'Technology', 'Fuel', 'Efficiency',
+                   'MinUpTime', 'MinDownTime', 'RampUpRate', 'RampDownRate', 'StartUpCost_pu', 'NoLoadCost_pu',
+                   'RampingCost', 'PartLoadMin', 'MinEfficiency', 'StartUpTime', 'CO2Intensity',
+                   'CHPType', 'CHPPowerToHeat', 'CHPPowerLossFactor', 'COP', 'Tnominal', 'coef_COP_a', 'coef_COP_b',
+                   'STOCapacity', 'STOSelfDischarge', 'STOMaxChargingPower', 'STOChargingEfficiency', 'CHPMaxHeat',
+                   'WaterWithdrawal', 'WaterConsumption', 'Sector1', 'EfficiencySector1', 'ChargingEfficiencySector1']
+
 
 def check_leap(year):
     """
